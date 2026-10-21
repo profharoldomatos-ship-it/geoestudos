@@ -845,7 +845,7 @@ function vCalendario(){
   }
   const dsel=new Date(y,m,S.sel),isoSel=ISO(dsel),doDia=ag.filter(e=>e.data===isoSel),prox=proximos(4).filter(e=>e.data!==isoSel);
   return `<section class="section">
-    <div><span class="ypill">Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Calendário</h1></div>
+    <div><span class="ypill">${Y().label}</span><h1 style="margin-top:6px">Calendário Turma ${esc(S.turma)}</h1></div>
     <div class="card" style="display:flex;flex-direction:column;gap:10px">
       <div class="cal-head"><button class="icon-btn" id="prevM" aria-label="Mês anterior"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
       <h2 style="text-transform:capitalize">${MESES[m]} ${y}</h2>
