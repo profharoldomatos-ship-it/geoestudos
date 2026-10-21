@@ -420,22 +420,16 @@ body.m-escuro .tt-act,body.m-escuro .tt-hero{background:var(--surface)!important
 .ev-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .ev-acts .btn{padding:8px 12px;font-size:.86rem;min-height:0}
 .ev-go{background:var(--evc);color:#fff;text-decoration:none}
-.ev-caderno,u.ev-caderno{--evc:#1D3F8F;--evs:#E3E9F7}
+.ev-caderno,u.ev-caderno{--evc:color-mix(in srgb,var(--year) 88%,#000);--evs:color-mix(in srgb,var(--year) 13%,var(--surface))}
 .ev-atv,u.ev-atv{--evc:#8A6400;--evs:#FFF0B3}
 .ev-aval,u.ev-aval{--evc:#A33A2C;--evs:#F9E1DC}
 .ev-aviso,u.ev-aviso{--evc:#5B6472;--evs:#ECEDEF}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ev{--evs:var(--surface-2)}:root:not([data-theme="light"]) .ev-caderno{--evc:#9DB8FF}:root:not([data-theme="light"]) .ev-atv{--evc:#E3C24A}:root:not([data-theme="light"]) .ev-aval{--evc:#F08B7D}:root:not([data-theme="light"]) .ev-aviso{--evc:#A3A8B2}}
-body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:#9DB8FF} body.m-escuro .ev-atv{--evc:#E3C24A} body.m-escuro .ev-aval{--evc:#F08B7D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ev{--evs:var(--surface-2)}:root:not([data-theme="light"]) .ev-caderno{--evc:color-mix(in srgb,var(--year) 50%,#fff)}:root:not([data-theme="light"]) .ev-atv{--evc:#E3C24A}:root:not([data-theme="light"]) .ev-aval{--evc:#F08B7D}:root:not([data-theme="light"]) .ev-aviso{--evc:#A3A8B2}}
+body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-mix(in srgb,var(--year) 50%,#fff)} body.m-escuro .ev-atv{--evc:#E3C24A} body.m-escuro .ev-aval{--evc:#F08B7D}
 .day{position:relative}
 .day .dots{position:absolute;bottom:4px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:2.5px}
-/* Pontos na cor do ano da turma; o formato indica o tipo */
-.day .dots u,.legend u{display:block;width:6px;height:6px;background:var(--year);border-radius:50%;flex:none}
-:is(.dots,.legend) u.ev-atv{border-radius:1px}
-:is(.dots,.legend) u.ev-aval{border-radius:1px;transform:rotate(45deg);width:5.5px;height:5.5px}
-:is(.dots,.legend) u.ev-tema{background:transparent;border:1.6px solid var(--year);width:7px;height:7px}
-:is(.dots,.legend) u.ev-aviso{width:8px;height:2.4px;border-radius:2px}
+.day .dots u,.legend u{display:block;width:6px;height:6px;border-radius:50%;background:var(--evc);flex:none}
 .day.sel .dots u{background:var(--on-pen)}
-.day.sel .dots u.ev-tema{background:transparent;border-color:var(--on-pen)}
 .day.has{font-weight:700;background:color-mix(in srgb,var(--year) 13%,transparent);color:color-mix(in srgb,var(--year) 75%,var(--ink))}
 .day.has.sel{background:var(--pen);color:var(--on-pen)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.76rem;color:var(--muted)}
@@ -1046,7 +1040,7 @@ function vTurma(){
     ${sec('Resumos da Unidade '+y.atual,'ano','livro')}
     <div class="capgrid">${capsDe(y,y.atual).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>
     ${temasDe(y,y.atual).length?`${sec('Temas Transversais','tt','globo','','Aulas extras · valem ponto na recuperação paralela')}<div class="capgrid">${temasDe(y,y.atual).map(temaBtn).join('')}</div>`:''}
-    ${sec('Próximas datas','pen','cal','<button class="meta link" data-go="calendario">Calendário</button>')}
+    ${sec('Próximas datas','ano','cal','<button class="meta link" data-go="calendario">Calendário</button>')}
     ${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}
     <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
   </section>`;
@@ -1212,7 +1206,7 @@ function vCalendario(){
     </div>
     <h3>${(SEM[dsel.getDay()]+', '+S.sel+' de '+MESES[m]).replace(/^./,c=>c.toUpperCase())}</h3>
     ${doDia.length?`<div class="evlist">${doDia.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nada marcado para este dia</b></div>`}
-    ${prox.length?`${sec('Próximas datas','pen','cal')}<div class="evlist">${prox.map(evCard).join('')}</div>`:''}
+    ${prox.length?`${sec('Próximas datas','ano','cal')}<div class="evlist">${prox.map(evCard).join('')}</div>`:''}
   </section>`;
 }
 
