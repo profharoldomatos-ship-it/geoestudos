@@ -1,6 +1,6 @@
 /* GeoEstudos: guarda o aplicativo no celular para abrir sem internet.
    Os resumos ficam guardados pelo próprio app (armazenamento do navegador). */
-const VERSAO = 'geo-v17';
+const VERSAO = 'geo-v18';
 const BASE = ['./', 'index.html', 'config.js', 'manifest.webmanifest',
   'icones/geoestudos.svg', 'icones/geoestudos-96.png', 'icones/geoestudos-192.png', 'icones/geoestudos-512.png'];
 
@@ -8,7 +8,7 @@ self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSAO).then(c => c.addAll(BASE)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSAO && k !== 'geo-push').map(k => caches.delete(k))))
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSAO && k !== 'geo-push' && k !== 'geo-midia').map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
@@ -18,6 +18,11 @@ self.addEventListener('fetch', e => {
   // Fontes do Google: guarda na primeira vez
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(caches.open(VERSAO).then(c => c.match(req).then(r => r || fetch(req).then(res => { c.put(req, res.clone()); return res; }))));
+    return;
+  }
+  // Imagens das aulas (publicadas pelo robô no Drive): guarda para ver sem internet
+  if ((url.hostname === 'drive.google.com' && url.pathname === '/thumbnail') || url.hostname.endsWith('googleusercontent.com')) {
+    e.respondWith(caches.open('geo-midia').then(c => c.match(req).then(r => r || fetch(req).then(res => { c.put(req, res.clone()); return res; }))));
     return;
   }
   if (url.origin !== location.origin) return; // dados do robô: o app cuida

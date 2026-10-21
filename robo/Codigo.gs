@@ -14,13 +14,16 @@
  *  - verificar ........ mostra no registro um resumo do que o app está recebendo.
  *  - testarAviso ...... manda um aviso de teste para os celulares que ativaram os avisos.
  *
+ * Vídeos, áudios e links: cole o endereço sozinho numa linha do Doc (YouTube vira player no app).
+ * Imagens: cole a imagem no Doc normalmente; o robô publica uma cópia para o app mostrar.
+ *
  * Temas Transversais: pasta "Temas Transversais" dentro da unidade, com Docs "1 Título" (a aula)
  * e, se a atividade for no próprio app, "1 Atividade". O link do formulário vai na aba "Temas Transversais".
  *
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-21 · avisos v3';
+const VERSAO_ROBO = '2026-10-21 · mídias v4';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -348,16 +351,36 @@ function docParaTexto_(doc) {
   const usados = els.filter(e => e.getType() === T.PARAGRAPH).map(e => nivel_(e.asParagraph().getHeading())).filter(n => n > 0);
   const topo = usados.length ? Math.min.apply(null, usados) : 1;
   const out = [];
+  const docId = doc.getId();
+  let nImg = 0;
+  // Imagens coladas no Doc: viram arquivos públicos no Drive e aparecem no app
+  const imagens = (el) => {
+    const linhas = [];
+    try {
+      for (let i = 0; i < el.getNumChildren(); i++) {
+        const c = el.getChild(i);
+        if (c.getType() !== T.INLINE_IMAGE) continue;
+        const img = c.asInlineImage();
+        const url = imagemPublica_(img);
+        if (url) linhas.push('![' + limpar_(img.getAltDescription() || img.getAltTitle() || '').replace(/[\[\]]/g, '') + '](' + url + ')');
+        nImg++;
+      }
+    } catch (err) { Logger.log('Imagem do Doc ' + docId + ': ' + err); }
+    return linhas;
+  };
   els.forEach(e => {
     const t = e.getType();
     if (t === T.PARAGRAPH) {
       const p = e.asParagraph(), n = nivel_(p.getHeading());
       if (n < 0) return;                            // título do documento: o app já mostra
+      const imgs = imagens(p);
       const txt = n > 0 ? limpar_(p.getText()) : textoComEstilo_(p);
-      if (!txt.trim()) { out.push(''); return; }
+      if (!txt.trim()) { if (imgs.length) { out.push(''); imgs.forEach(l => out.push(l)); } out.push(''); return; }
+      if (imgs.length) { out.push(''); imgs.forEach(l => out.push(l)); out.push(''); }
       out.push(n === 0 ? txt : (n === topo ? '## ' : '### ') + txt);
     } else if (t === T.LIST_ITEM) {
       const li = e.asListItem();
+      imagens(li).forEach(l => { out.push(''); out.push(l); out.push(''); });
       const txt = textoComEstilo_(li);
       if (!txt.trim()) return;
       const g = li.getGlyphType();
@@ -391,11 +414,21 @@ function textoComEstilo_(el) {
     const a = idx[i], b = i + 1 < idx.length ? idx[i + 1] : s.length;
     if (b <= a) continue;
     const st = t.isBold(a) ? 'b' : (t.isItalic(a) ? 'i' : '');
+    const ln = t.getLinkUrl ? (t.getLinkUrl(a) || '') : '';
     const seg = s.substring(a, b);
-    if (partes.length && partes[partes.length - 1].st === st) partes[partes.length - 1].tx += seg;
-    else partes.push({ st: st, tx: seg });
+    const ult = partes[partes.length - 1];
+    if (ult && ult.st === st && ult.ln === ln) ult.tx += seg;
+    else partes.push({ st: st, ln: ln, tx: seg });
   }
+  // Parágrafo que é só um link: vira o endereço sozinho (o app mostra vídeo, áudio ou botão)
+  const reais = partes.filter(p => p.tx.trim());
+  if (reais.length && reais.every(p => p.ln && p.ln === reais[0].ln)) return reais[0].ln;
   return partes.map(p => {
+    if (p.ln) {
+      const tx = limpar_(p.tx).replace(/[\[\]]/g, '');
+      const pre = /^\s/.test(p.tx) ? ' ' : '', pos = /\s$/.test(p.tx) ? ' ' : '';
+      return pre + (tx && tx !== p.ln ? '[' + tx + '](' + p.ln + ')' : p.ln) + pos;
+    }
     const tx = limpar_(p.tx.replace(/^\s+|\s+$/g, m => m.replace(/./g, ' ')));
     if (!p.st || !tx) return p.tx.replace(/[\r\u000b\u2028]+/g, ' ').replace(/\*/g, '∗');
     const pre = /^\s/.test(p.tx) ? ' ' : '', pos = /\s$/.test(p.tx) ? ' ' : '';
@@ -874,4 +907,31 @@ function prepararAbaTemas_() {
     if (!t.aula || tem[a + '-' + u + '-' + n]) return;
     sh.appendRow([a + 'º ano', +u, +n, t.aula.nome, '', '']);
   })));
+}
+
+/* ---------- Imagens dos Docs ---------- */
+function pastaImagens_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('pastaImagens');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) { } }
+  const p = DriveApp.getFolderById(GEO.PASTA_APP).createFolder('GeoEstudos - imagens do app (não apagar)');
+  props.setProperty('pastaImagens', p.getId());
+  return p;
+}
+/** Guarda a imagem (uma vez só, mesmo que o Doc seja lido de novo) e devolve um endereço público para o app. */
+function imagemPublica_(img) {
+  const blob = img.getBlob();
+  const bytes = blob.getBytes();
+  const hash = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, bytes).map(b => ((b & 255) + 256).toString(16).slice(1)).join('').slice(0, 20);
+  const tipo = (blob.getContentType() || 'image/png').split('/')[1].replace('jpeg', 'jpg').replace(/[^a-z0-9]/g, '');
+  const nome = 'img-' + hash + '.' + tipo;
+  const pasta = pastaImagens_();
+  const it = pasta.getFilesByName(nome);
+  let f;
+  if (it.hasNext()) f = it.next();
+  else {
+    f = pasta.createFile(blob.setName(nome));
+    f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  }
+  return 'https://drive.google.com/thumbnail?id=' + f.getId() + '&sz=w1600';
 }
