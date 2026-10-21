@@ -1,6 +1,6 @@
 /* GeoEstudos: guarda o aplicativo no celular para abrir sem internet.
    Os resumos ficam guardados pelo próprio app (armazenamento do navegador). */
-const VERSAO = 'geo-v10';
+const VERSAO = 'geo-v11';
 const BASE = ['./', 'index.html', 'config.js', 'manifest.webmanifest',
   'icones/geoestudos.svg', 'icones/geoestudos-96.png', 'icones/geoestudos-192.png', 'icones/geoestudos-512.png'];
 
