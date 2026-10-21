@@ -887,7 +887,8 @@ async function carregar(){
   }catch(e){if(!DATA){LOAD='offline';render()}}
   finally{fetching=false}
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastFetch>5*60e3)carregar()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastFetch>60e3)carregar()});
+setInterval(()=>{if(document.visibilityState==='visible')carregar()},3*60e3);
 
 let selTimer=null;
 document.addEventListener('selectionchange',()=>{

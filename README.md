@@ -11,6 +11,7 @@ Aplicativo de estudos das aulas de Geografia do **Prof. Haroldo Matos** (Rede Mu
   - os resumos em Google Docs na pasta *App Geografia › Nº ano › Unidade N* (nome começando pelo número do capítulo; `[rascunho]` no início esconde o Doc);
   - as planilhas *Configurações*, *Mensagens de incentivo* e *Conteúdo do App Geografia*;
   - as agendas *Geografia 71*, *Geografia 72*, *Geografia 81*, *Geografia 82*, *Geografia 91*, *Geografia 92*.
+- O robô atualiza os dados a cada 5 minutos e, na hora, quando o professor edita uma das planilhas ou das agendas. O app busca dados novos ao abrir e a cada 3 minutos enquanto está aberto.
 - O endereço do robô fica em `config.js`.
 
 ## Arquivos

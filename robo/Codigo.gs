@@ -2,14 +2,14 @@
  * GeoEstudos — robô do aplicativo
  * Prof. Haroldo Matos · Geografia · Rede Municipal de São Luís
  *
- * O que este robô faz, a cada 15 minutos:
+ * O que este robô faz, a cada 5 minutos (e na hora, quando você edita as planilhas ou as agendas):
  *  1. Lê os resumos (Google Docs) em App Geografia › Nº ano › Unidade N.
  *  2. Lê as planilhas "Configurações", "Mensagens de incentivo" e "Conteúdo".
  *  3. Lê as agendas "Geografia 71", "Geografia 72"... (datas de entrega e atividades).
  *  4. Junta tudo num arquivo de dados que o aplicativo baixa.
  *
  * Funções que você pode rodar pelo menu ▶ Executar:
- *  - instalar ......... rodar UMA vez: liga a atualização automática e faz a primeira leitura.
+ *  - instalar ......... liga a atualização automática e faz a primeira leitura (rode de novo sempre que colar um código novo).
  *  - atualizar ........ atualiza o app na hora (ex.: depois de publicar um resumo).
  *  - verificar ........ mostra no registro um resumo do que o app está recebendo.
  *
@@ -26,7 +26,7 @@ const GEO = {
   FUSO: 'America/Fortaleza',
   DIAS_ANTES: 60,                 // a agenda do app mostra eventos de até 60 dias atrás...
   DIAS_DEPOIS: 300,               // ...até 300 dias à frente
-  MINUTOS: 15,
+  MINUTOS: 5,
   AVISOS_DIAS: 21,                // avisos de novidade ficam visíveis por 21 dias
   AVISOS_MAX: 80
 };
@@ -54,13 +54,44 @@ function doGet(e) {
 /* Instalação e atualização                                             */
 /* ------------------------------------------------------------------ */
 function instalar() {
+  const nossas = ['atualizar', 'atualizarAgendado', 'aoMudarAlgo'];
   ScriptApp.getProjectTriggers().forEach(t => {
-    if (t.getHandlerFunction() === 'atualizar') ScriptApp.deleteTrigger(t);
+    if (nossas.indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t);
   });
-  ScriptApp.newTrigger('atualizar').timeBased().everyMinutes(GEO.MINUTOS).create();
+  // 1) A cada 5 minutos (pega Docs novos ou editados)
+  ScriptApp.newTrigger('atualizarAgendado').timeBased().everyMinutes(GEO.MINUTOS).create();
+  // 2) Na hora, quando você edita uma das planilhas
+  [GEO.PLANILHA_CONFIG, GEO.PLANILHA_MENSAGENS, GEO.PLANILHA_CONTEUDO].forEach(id => {
+    ScriptApp.newTrigger('aoMudarAlgo').forSpreadsheet(id).onEdit().create();
+  });
+  // 3) Na hora, quando você cria ou muda um evento nas agendas das turmas
+  let agendas = 0;
+  CalendarApp.getAllCalendars().forEach(c => {
+    if (c.getName().indexOf(GEO.PREFIXO_AGENDA) === 0) {
+      ScriptApp.newTrigger('aoMudarAlgo').forUserCalendar(c.getId()).onEventUpdated().create();
+      agendas++;
+    }
+  });
   const d = atualizar();
-  Logger.log('Atualização automática ligada: a cada ' + GEO.MINUTOS + ' minutos.');
+  Logger.log('Atualização automática ligada: a cada ' + GEO.MINUTOS + ' minutos, e na hora quando você edita as planilhas ou as ' + agendas + ' agendas.');
   Logger.log(resumoTexto_(d));
+}
+
+/** Rodado a cada 5 minutos. De madrugada (0h às 6h) descansa, para poupar a cota do Google. */
+function atualizarAgendado() {
+  const h = parseInt(Utilities.formatDate(new Date(), GEO.FUSO, 'H'), 10);
+  if (h < 6) return;
+  atualizar();
+}
+
+/** Rodado quando uma planilha ou agenda muda. Espera alguns segundos para juntar várias edições seguidas. */
+function aoMudarAlgo() {
+  const props = PropertiesService.getScriptProperties();
+  const marca = String(Date.now());
+  props.setProperty('ultimaMudanca', marca);
+  Utilities.sleep(8000);
+  if (props.getProperty('ultimaMudanca') !== marca) return; // veio outra edição depois; ela cuida
+  atualizar();
 }
 
 function atualizar() {
