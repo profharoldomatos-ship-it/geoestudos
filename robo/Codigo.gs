@@ -572,7 +572,10 @@ function calcularAvisos_(dados, anterior, conf) {
   const agora = dados.versao;
   const hoje = Utilities.formatDate(new Date(), GEO.FUSO, 'yyyy-MM-dd');
   const limite = new Date(Date.now() - GEO.AVISOS_DIAS * 864e5).toISOString();
-  const avisos = (anterior.avisos || []).filter(a => a.quando >= limite);
+  const pubDuv = {};
+  (dados.duvidas || []).forEach(d => pubDuv['d-' + d.id] = true);
+  // Avisos de dúvidas que foram despublicadas ou apagadas também somem
+  const avisos = (anterior.avisos || []).filter(a => a.quando >= limite && (a.tipo !== 'duvida' || pubDuv[a.id.replace(/-[^-]+$/, '')]));
   const ja = {};
   avisos.forEach(a => ja[a.id] = true);
 
