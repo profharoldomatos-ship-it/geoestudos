@@ -113,13 +113,15 @@ body.m-escuro .sec-pen{--sc:var(--pen);--sc-on:var(--on-pen)} body.m-escuro .sec
 .year-h{display:flex;flex-direction:column;gap:2px}
 .year-t{font-family:var(--display);font-size:1.2rem;color:var(--yc)}
 .choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.choice button{border:1.5px solid var(--yc);border-radius:12px;padding:12px 0;font-family:var(--display);font-weight:700;font-size:1.3rem;background:var(--yc);color:#fff;display:flex;flex-direction:column;align-items:center;line-height:1.15;box-shadow:0 2px 0 rgba(0,0,0,.18);transition:transform .12s,filter .12s}
-.choice button span{font-family:var(--body);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff}
-.choice button small{font-family:var(--body);font-size:.68rem;font-weight:700;color:#1E2430;background:#FFE27A;border-radius:999px;padding:1px 8px;margin-top:5px}
-.choice button:hover{filter:brightness(1.08)}
-.choice button:active{transform:translateY(1px);box-shadow:none}
+.choice button{--ct:color-mix(in srgb,var(--yc) 78%,#000);border:1.5px solid color-mix(in srgb,var(--yc) 35%,transparent);border-left:4px solid var(--yc);border-radius:12px;padding:12px 0;font-family:var(--display);font-weight:700;font-size:1.3rem;background:color-mix(in srgb,var(--yc) 14%,var(--surface));color:var(--ct);display:flex;flex-direction:column;align-items:center;line-height:1.15;transition:transform .12s,background-color .12s}
+.choice button span{font-family:var(--body);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ct)}
+.choice button small{font-family:var(--body);font-size:.68rem;font-weight:700;color:#fff;background:var(--yc);border-radius:999px;padding:1px 8px;margin-top:5px}
+.choice button:hover{background:color-mix(in srgb,var(--yc) 22%,var(--surface))}
+.choice button:active{transform:translateY(1px)}
 .choice button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
-.choice button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--surface),0 0 0 5.5px var(--yc)}
+.choice button[aria-pressed="true"]{border-color:var(--yc);background:color-mix(in srgb,var(--yc) 20%,var(--surface))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .choice button{--ct:color-mix(in srgb,var(--yc) 45%,#fff);background:color-mix(in srgb,var(--yc) 22%,var(--surface))}}
+body.m-escuro .choice button{--ct:color-mix(in srgb,var(--yc) 45%,#fff);background:color-mix(in srgb,var(--yc) 22%,var(--surface))}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .year-t{color:color-mix(in srgb,var(--yc) 55%,#fff)}}
 body.m-escuro .year-t{color:color-mix(in srgb,var(--yc) 55%,#fff)}
 .hello{background:var(--year);color:#fff;border:0;position:relative;overflow:hidden}
