@@ -813,8 +813,11 @@ function b64u8(s){const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g
 async function avisarSW(turmas){try{const c=await caches.open('geo-push');await c.put('turma',new Response([].concat(turmas||[]).join(',')));await c.put('dataurl',new Response(CFG.DATA_URL||''))}catch(e){}}
 async function enviarInscricao(sub,turmas,acao){
   turmas=[].concat(turmas||[]);
-  const r=await fetch(CFG.DATA_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({acao:acao||'inscrever',turma:turmas[0],turmas,sub:sub.toJSON?sub.toJSON():sub})});
-  const j=await r.json();if(!j.ok)throw new Error(j.erro||'falha');
+  let r,txt;
+  try{r=await fetch(CFG.DATA_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({acao:acao||'inscrever',turma:turmas[0],turmas,sub:sub.toJSON?sub.toJSON():sub})});txt=await r.text()}
+  catch(e){const x=new Error('sem conexão com o robô');x.etapa='rede';throw x}
+  let j;try{j=JSON.parse(txt)}catch(e){const x=new Error(/doPost/i.test(txt)?'o robô ainda não tem a parte de avisos publicada':'resposta inesperada do robô');x.etapa='robo';throw x}
+  if(!j.ok){const x=new Error(j.erro||'falha');x.etapa='robo';throw x}
 }
 async function ativarPush(lista){
   if(!pushOk()||!(DATA&&DATA.push&&DATA.push.chave))return toast('Este celular não aceita avisos.');
@@ -824,12 +827,15 @@ async function ativarPush(lista){
   try{
     const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
-    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u8(DATA.push.chave)});
+    if(!sub){try{sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u8(DATA.push.chave)})}catch(e){const x=new Error('o celular recusou a inscrição ('+(e&&e.name||'erro')+')');x.etapa='celular';throw x}}
     const ts=lista&&lista.length?lista:[MINHA||S.turma];
     await enviarInscricao(sub,ts);await avisarSW(ts);
     PUSH={turmas:ts,endpoint:sub.endpoint};store.set('push',PUSH);render();
     toast(ts.length>1?'Avisos ativados para as turmas '+listaT(ts)+'.':'Avisos ativados para a turma '+ts[0]+'.');
-  }catch(e){toast('Não foi possível ativar agora. Tente de novo com internet.')}
+  }catch(e){
+    const msg=e&&e.etapa==='rede'?'Sem conexão. Tente de novo com internet.':'Não foi possível ativar os avisos.';
+    sheet(`<h2>Avisos não ativados</h2><p style="margin:0">${msg}</p><p class="meta" style="margin:0">Detalhe para o professor: <b>${esc((e&&e.etapa||'?')+' · '+(e&&e.message||e))}</b></p><button class="btn btn-primary" data-close>Ok</button>`);
+  }
 }
 async function desativarPush(){
   try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub){enviarInscricao(sub,PUSH?PUSH.turmas:[],'remover').catch(()=>{});await sub.unsubscribe()}}catch(e){}
