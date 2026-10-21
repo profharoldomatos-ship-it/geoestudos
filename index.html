@@ -172,6 +172,23 @@ body.m-escuro:is(.my7,.my8,.my9) .tab{color:color-mix(in srgb,var(--mc) 45%,#fff
 .day.sel{background:var(--pen);color:var(--on-pen)}
 /* Leitor */
 .reader-bar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+/* Leitura na horizontal: só nas telas de texto (resumos, aulas e atividades) */
+@media (orientation:landscape) and (max-height:560px){
+  body.lendo .tabs,body.lendo .top,body.lendo .foot,body.lendo .tip{display:none}
+  body.lendo .app{max-width:min(94vw,860px);padding-top:0;padding-bottom:28px}
+  body.lendo .reader-bar{position:sticky;top:0;z-index:6;background:var(--bg);padding:6px 0;margin:0 -4px;box-shadow:0 6px 8px -8px rgba(0,0,0,.25)}
+  body.lendo .paper{padding-left:clamp(18px,4vw,44px);padding-right:clamp(18px,4vw,44px)}
+  body.lendo .resumo,body.lendo .tt-texto{line-height:1.7}
+  body.lendo article.section{gap:12px}
+  body.lendo .media-video{max-width:620px;margin-left:auto;margin-right:auto}
+  body.lendo .copy-card,body.lendo .pdf-card,body.lendo .act{max-width:640px;margin-left:auto;margin-right:auto;width:100%}
+  body.lendo .markbar{max-width:min(94vw,860px)}
+}
+/* Dica para girar o celular (aparece só uma vez, na vertical) */
+.girar{display:none}
+@media (orientation:portrait) and (max-width:520px){body.lendo .girar{display:flex}}
+.girar{gap:8px;align-items:center;font-size:.8rem;color:var(--muted);justify-content:center}
+.girar svg{flex:none}
 .back{display:inline-flex;align-items:center;gap:6px;color:var(--pen);font-weight:700;padding:4px 0}
 .tools{display:flex;gap:6px}
 .tool{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--surface);font-weight:700;font-size:.86rem}
@@ -1052,6 +1069,7 @@ function vCap(n){
   return `<article class="section">
     <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>
       <span class="tools"><button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button></span></div>
+    ${girarDica()}
     <div><span class="ypill">${y.label} · Unidade ${c.u} · Capítulo ${n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo">Resumo</span> ${c.atividade?(isSent(n)?`<button class="qact ok" data-jump="1">${CHECK}Atividade enviada</button>`:`<button class="qact" data-jump="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg>Atividade de fixação · vale nota</button>`):''}
     ${pCad?`<div class="prazo">Entrega do caderno: <b>${dm(pCad)}</b> · ${quando(pCad).toLowerCase()}</div>`:''}</div>
     ${S.tip?`<div class="tip"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none;color:var(--pen)"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra. Para corrigir uma marcação, toque nela: dá para trocar a cor, ajustar o trecho ou apagar. O texto do resumo não muda.</span><button id="tipOk">Entendi</button></div>`:''}
@@ -1090,11 +1108,17 @@ function temaBtn(t){
   return `<div class="capitem ttitem"><button class="capbtn" ${t.resumo?`data-cap="${id}"`:'disabled'}><span class="cn tt-cn">${TTIC}</span><span class="ct"><span class="eyebrow">Tema Transversal ${t.n} · vale ponto</span><b>${esc(t.titulo)}</b>${t.resumo?'':'<span class="meta">Aula ainda não publicada</span>'}</span>${t.resumo?CHEVR:''}</button>
     <div class="capacts${temAtv(t)?'':' one'}">${t.resumo?`<button data-cap="${id}" class="ca-res${done?' ok':''}">${done?CHECK+'Aula estudada':'Abrir aula'}</button>`:''}${temAtv(t)?`<button data-act="${id}" class="ca-act tt-act-b${sent?' ok':''}">${sent?CHECK+'Atividade feita':'Atividade'}</button>`:''}</div></div>`;
 }
+function girarDica(){
+  if(store.get('girouDica',0)>=3)return '';
+  return `<div class="girar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2" transform="rotate(-90 12 12)"/><path d="M4 7a8 8 0 0 1 6-4M10 3l-1.5 1.8M10 3l-2.2-.6"/></svg>Dica: gire o celular para ler na horizontal.</div>`;
+}
+addEventListener('orientationchange',()=>{if(S.cap)store.set('girouDica',(store.get('girouDica',0)||0)+1)});
 function vTema(n,c){
   const y=Y(),done=isCopied(n),sent=isSent(n),pr=prazoDe(n,'tema');
   return `<article class="section">
     <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>
       <span class="tools"><button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button></span></div>
+    ${girarDica()}
     <div><span class="ypill">${y.label} · Unidade ${c.u} · Tema Transversal ${c.n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo tt-lbl">Aula extra</span> <button class="qact tt-q${sent?' ok':''}" data-jump="1">${sent?CHECK+'Atividade feita':'Vale ponto · recuperação paralela'}</button>
     ${pr?`<div class="prazo">Prazo da atividade: <b>${dm(pr)}</b> · ${quando(pr).toLowerCase()}</div>`:''}</div>
     ${S.tip?`<div class="tip"><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra.</span><button id="tipOk">Entendi</button></div>`:''}
@@ -1193,6 +1217,7 @@ function render(){
   document.querySelector('.tabs').hidden=!S.turma||!DATA||(S.tab==='home'&&!S.cap&&!S.turma);
   const tl=document.querySelector('[data-tab=turma] .tl');if(tl)tl.textContent=S.turma?'Turma '+S.turma:'Turma';
   const dot=document.querySelector('[data-tab=turma]');if(dot)dot.classList.toggle('has-new',!!(S.turma&&DATA&&avisosNovos().length));
+  document.body.classList.toggle('lendo',!!S.cap);
   document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
   $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario}[S.tab]();
   if(MINHA&&S.turma&&S.turma!==MINHA&&S.tab!=='home'&&S.tab!=='turma')$('#view').insertAdjacentHTML('afterbegin',`<div class="outra mini"><span>Vendo a <b>Turma ${esc(S.turma)}</b> · sua turma é a ${esc(MINHA)}</span><button class="link" data-turma="${esc(MINHA)}">Voltar</button></div>`);
