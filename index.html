@@ -813,10 +813,13 @@ function b64u8(s){const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g
 async function avisarSW(turmas){try{const c=await caches.open('geo-push');await c.put('turma',new Response([].concat(turmas||[]).join(',')));await c.put('dataurl',new Response(CFG.DATA_URL||''))}catch(e){}}
 async function enviarInscricao(sub,turmas,acao){
   turmas=[].concat(turmas||[]);
-  let r,txt;
-  try{r=await fetch(CFG.DATA_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({acao:acao||'inscrever',turma:turmas[0],turmas,sub:sub.toJSON?sub.toJSON():sub})});txt=await r.text()}
-  catch(e){const x=new Error('sem conexão com o robô');x.etapa='rede';throw x}
-  let j;try{j=JSON.parse(txt)}catch(e){const x=new Error(/doPost/i.test(txt)?'o robô ainda não tem a parte de avisos publicada':'resposta inesperada do robô');x.etapa='robo';throw x}
+  const corpo=JSON.stringify({acao:acao||'inscrever',turma:turmas[0],turmas,sub:sub.toJSON?sub.toJSON():sub});
+  let txt=null;
+  // 1º: pelo mesmo caminho que baixa os resumos (GET). 2º: envio direto (POST).
+  try{const r=await fetch(CFG.DATA_URL+(CFG.DATA_URL.includes('?')?'&':'?')+'inscrever='+encodeURIComponent(corpo)+'&t='+Date.now(),{cache:'no-store'});txt=await r.text()}catch(e){}
+  if(txt===null||!/^\s*\{/.test(txt)){try{const r=await fetch(CFG.DATA_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:corpo});txt=await r.text()}catch(e){if(txt===null){const x=new Error('sem conexão com o robô');x.etapa='rede';throw x}}}
+  let j;try{j=JSON.parse(txt)}catch(e){const x=new Error('o robô publicado é antigo: faça uma nova versão da implantação');x.etapa='robo';throw x}
+  if(j.anos&&j.ok===undefined){const x=new Error('o robô publicado é antigo: faça uma nova versão da implantação');x.etapa='robo';throw x}
   if(!j.ok){const x=new Error(j.erro||'falha');x.etapa='robo';throw x}
 }
 async function ativarPush(lista){

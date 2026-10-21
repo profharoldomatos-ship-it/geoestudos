@@ -20,6 +20,8 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
+const VERSAO_ROBO = '2026-10-21 · avisos v3';
+
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
   PLANILHA_CONFIG: '1NhIqN5p2rL720MS5IojsCBcB7zKQp2kX42MJxw0GncI', // "Configurações do App Geografia"
@@ -40,6 +42,15 @@ const GEO = {
 /* ------------------------------------------------------------------ */
 function doGet(e) {
   const p = (e && e.parameter) || {};
+  if (p.inscrever !== undefined) {
+    // Inscrição de avisos pelo mesmo caminho que baixa os dados (mais confiável no celular)
+    let b = {};
+    try { b = JSON.parse(p.inscrever); } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify(processarInscricao_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.robo !== undefined) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, versao: VERSAO_ROBO })).setMimeType(ContentService.MimeType.JSON);
+  }
   let txt = lerCache_();
   if (!txt) {
     const f = arquivoDados_();
@@ -62,25 +73,29 @@ function doGet(e) {
 
 /** O app chama aqui para ligar ou desligar os avisos de um celular (sem nome nem dado pessoal do aluno). */
 function doPost(e) {
-  const resp = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+  let b = {};
+  try { b = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) {}
+  return ContentService.createTextOutput(JSON.stringify(processarInscricao_(b))).setMimeType(ContentService.MimeType.JSON);
+}
+
+function processarInscricao_(b) {
   try {
-    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     const ep = String((b.sub && b.sub.endpoint) || b.endpoint || '');
-    if (!enderecoValido_(ep)) return resp({ ok: false, erro: 'endereço inválido' });
+    if (!enderecoValido_(ep)) return { ok: false, erro: 'endereço inválido' };
     const lock = LockService.getScriptLock();
     lock.waitLock(20000);
     try {
-      if (b.acao === 'remover') { removerInscricoes_([ep]); return resp({ ok: true }); }
+      if (b.acao === 'remover') { removerInscricoes_([ep]); return { ok: true }; }
       const conf = lerConfig_();
       const validas = [].concat.apply([], Object.keys(conf.turmas).map(k => conf.turmas[k]));
       // Um celular pode receber avisos de várias turmas (celular compartilhado)
       const turmas = [].concat(b.turmas || b.turma || []).map(String).filter(t => validas.indexOf(t) >= 0);
-      if (!turmas.length) return resp({ ok: false, erro: 'turma inválida' });
+      if (!turmas.length) return { ok: false, erro: 'turma inválida' };
       salvarInscricao_(ep, turmas.join('; '));
-      return resp({ ok: true });
+      return { ok: true, versao: VERSAO_ROBO };
     } finally { lock.releaseLock(); }
   } catch (err) {
-    return resp({ ok: false, erro: String(err) });
+    return { ok: false, erro: String(err) };
   }
 }
 
@@ -609,7 +624,7 @@ function resumoTexto_(d) {
 function paginaStatus_(d) {
   const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const html = '<meta name="viewport" content="width=device-width,initial-scale=1"><div style="font:16px/1.5 system-ui,sans-serif;max-width:640px;margin:24px auto;padding:0 16px">' +
-    '<h2 style="color:#1D3F8F">Robô do GeoEstudos: funcionando</h2><pre style="white-space:pre-wrap;background:#FBF8F1;padding:12px;border-radius:8px">' +
+    '<h2 style="color:#1D3F8F">Robô do GeoEstudos: funcionando</h2><p>Versão publicada: <b>' + VERSAO_ROBO + '</b></p><pre style="white-space:pre-wrap;background:#FBF8F1;padding:12px;border-radius:8px">' +
     esc(resumoTexto_(d)) + '</pre></div>';
   return HtmlService.createHtmlOutput(html).setTitle('GeoEstudos · robô');
 }
