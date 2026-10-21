@@ -389,7 +389,7 @@ const anoT=()=>T2A[S.turma]||(S.turma||'7')[0];
 const capsDe=(y,u)=>((y.units||{})[u]||{caps:[]}).caps;
 function capOf(n,y){y=y||Y();for(const u of (y.list||[])){const c=u.caps.find(x=>x.n==n);if(c)return Object.assign({u:u.n},c)}return null}
 const pubs=y=>capsDe(y,y.atual).filter(c=>c.resumo);
-const agendaT=()=>((DATA&&DATA.agenda)||{})[S.turma]||[];
+const agendaT=()=>(((DATA&&DATA.agenda)||{})[S.turma]||[]).slice().sort((x,y)=>(x.data+(x.hora||'')).localeCompare(y.data+(y.hora||''))||(x.cap||0)-(y.cap||0));
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -613,7 +613,7 @@ const dataBR=iso=>{const [y,m,d]=iso.split('-').map(Number);return {d,m:m-1,y,dt
 function quando(iso){
   const {dt}=dataBR(iso),dias=Math.round((dt-TODAY)/864e5);
   if(dias===0)return 'Hoje';if(dias===1)return 'Amanhã';if(dias===-1)return 'Ontem';
-  if(dias>1&&dias<7)return SEM[dt.getDay()].replace(/^./,c=>c.toUpperCase())+(dt.getDay()===0||dt.getDay()===6?'':'-feira');
+  if(dias>1&&dias<7)return ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][dt.getDay()];
   if(dias>0)return 'Em '+dias+' dias';return 'Há '+(-dias)+' dias';
 }
 const TIPO={caderno:['Entrega do caderno','ev-caderno'],atividade:['Atividade de fixação','ev-atv'],avaliacao:['Avaliação','ev-aval'],aviso:['Aviso','ev-aviso']};
