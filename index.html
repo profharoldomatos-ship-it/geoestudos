@@ -373,6 +373,25 @@ body.m-escuro .tt-act .act-why,body.m-escuro .tt-act .act-t{color:#5EEAD4}
 .atv.tt{border-left-color:#0F766E}
 body.m-escuro .tt-act,body.m-escuro .tt-hero{background:var(--surface)!important}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tt-act,:root:not([data-theme="light"]) .tt-hero{background:var(--surface)!important}}
+/* Dúvidas */
+.sec-duv{--sc:#0369A1}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sec-duv{--sc:#7DD3FC;--sc-on:#0C1A24}}
+body.m-escuro .sec-duv{--sc:#7DD3FC;--sc-on:#0C1A24}
+.duvbtn{display:flex;gap:12px;align-items:center;text-align:left;width:100%;border:1.5px dashed color-mix(in srgb,#0369A1 45%,transparent)}
+.duvbtn>svg{margin-left:auto}
+.duv-ic{flex:none;width:38px;height:38px;border-radius:11px;background:color-mix(in srgb,#0369A1 14%,var(--surface));color:#0369A1;display:grid;place-items:center}
+.duv-ic.sm{width:26px;height:26px;border-radius:8px}
+.duvnova{display:flex;align-items:center;justify-content:center;gap:8px}
+.duvlist{display:flex;flex-direction:column;gap:8px}
+.duv{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.duv summary{cursor:pointer;display:flex;flex-direction:column;gap:2px;list-style:none}
+.duv summary::-webkit-details-marker{display:none}
+.duv-r{margin-top:8px;padding:10px 12px;border-left:3px solid #0369A1;background:color-mix(in srgb,#0369A1 7%,var(--surface));border-radius:0 10px 10px 0;font-size:.94rem;line-height:1.5}
+.duv-p{display:block;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#0369A1;margin-bottom:3px}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:.86rem;font-weight:700}
+.fld input,.fld select,.fld textarea{font:inherit;font-weight:400;font-size:1rem;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
+.fld textarea{resize:vertical;min-height:96px}
+.fld .cont{align-self:flex-end;font-weight:400}
 /* Outra turma */
 .outra{display:flex;flex-direction:column;gap:8px;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:var(--r);padding:12px;font-size:.92rem}
 .outra-b{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -968,6 +987,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 /* Faixas de seção: dão ritmo à página. Cor = tipo de conteúdo (ano, tema, agenda, novidades). */
 const SECIC={
+ duv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M10 9a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2M12 14h.01"/></svg>',
  livro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg>',
  globo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/></svg>',
  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
@@ -1016,9 +1036,61 @@ function capBtn(c){
   return `<div class="capitem"><button class="capbtn" data-cap="${c.n}"><span class="cn">${c.n}</span><span class="ct"><span class="eyebrow">Capítulo ${c.n}</span><b>${esc(c.titulo)}</b></span>${CHEVR}</button>
     <div class="capacts${c.atividade?'':' one'}"><button data-cap="${c.n}" class="ca-res${done?' ok':''}">${done?CHECK:''}${done?'Resumo copiado':'Copiar resumo'}</button>${c.atividade?`<button data-act="${c.n}" class="ca-act${sent?' ok':''}">${sent?CHECK+'Atividade enviada':'Atividade de fixação'}</button>`:''}</div></div>`;
 }
+/* Caixa de dúvidas: a pergunta vai para uma planilha que só o professor vê.
+   As respostas publicadas aparecem aqui, sem o nome de quem perguntou. */
+const duvOn=()=>!!(DATA&&DATA.app&&DATA.app.duvidas!==false&&CFG.DATA_URL);
+const DUVIC='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M10 9a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2M12 14h.01"/></svg>';
+function duvidaCard(){
+  if(!duvOn())return '';
+  const c=capOf(S.cap);
+  return `<button class="card duvbtn" data-duvida="${c?esc(c.tema?'Tema '+c.n+' – '+c.titulo:'Cap. '+c.n+' – '+c.titulo):''}"><span class="duv-ic">${DUVIC}</span><span><b>Ficou com dúvida?</b><br><span class="meta">Pergunte ao professor. A resposta vem na aula ou em "Dúvidas respondidas".</span></span>${CHEVR}</button>`;
+}
+function duvidasDaTurma(){return ((DATA&&DATA.duvidas)||[]).filter(d=>d.turmas.includes(S.turma))}
+function duvidasSecao(){
+  if(!duvOn()&&!duvidasDaTurma().length)return '';
+  const ds=duvidasDaTurma(),ab=S.duvAberta||false;
+  return `${sec('Dúvidas respondidas','duv','duv','','Perguntas da turma respondidas pelo professor')}
+    ${ds.length?`<div class="duvlist">${ds.slice(0,ab?50:3).map(d=>`<details class="duv"><summary>${d.sobre?`<span class="eyebrow">${esc(d.sobre)}</span>`:''}<b>${esc(d.pergunta)}</b></summary><div class="duv-r"><span class="duv-p">Prof. Haroldo</span>${esc(d.resposta).replace(/\n/g,'<br>')}</div></details>`).join('')}${ds.length>3&&!ab?`<button class="meta link" id="duvMais" style="align-self:center">Ver todas (${ds.length})</button>`:''}</div>`:`<p class="meta" style="margin:0">Ainda não há dúvidas respondidas para a turma ${esc(S.turma)}.</p>`}
+    ${duvOn()?`<button class="btn btn-ghost duvnova" data-duvida=""><span class="duv-ic sm">${DUVIC}</span>Enviar uma dúvida</button>`:''}`;
+}
+function duvidaSheet(sobre){
+  const y=Y(),ts=Object.values(YEARS).flatMap(a=>a.turmas),tur=S.turma||MINHA||'';
+  const ops=[...capsDe(y,y.atual).filter(c=>c.resumo).map(c=>'Cap. '+c.n+' – '+c.titulo),...temasDe(y,y.atual).filter(t=>t.resumo).map(t=>'Tema '+t.n+' – '+t.titulo)];
+  if(sobre&&!ops.includes(sobre))ops.unshift(sobre);
+  const nomeSalvo=COMP?'':store.get('duvNome','');
+  sheet(`<h2>Enviar uma dúvida</h2>
+    <p class="meta" style="margin:0">Esta caixa é para <b>dúvidas sobre o conteúdo</b>. O professor lê todas as mensagens. Escreva com respeito.</p>
+    <label class="fld"><span>Seu nome completo *</span><input id="dvNome" maxlength="60" autocomplete="name" value="${esc(nomeSalvo)}"></label>
+    <label class="fld"><span>Sua turma *</span><select id="dvTurma">${ts.map(t=>`<option${t===tur?' selected':''}>${t}</option>`).join('')}</select></label>
+    <label class="fld"><span>Sobre</span><select id="dvSobre">${ops.map(o=>`<option${o===sobre?' selected':''}>${esc(o)}</option>`).join('')}<option${!sobre?' selected':''}>Outro assunto da aula</option></select></label>
+    <label class="fld"><span>Sua dúvida *</span><textarea id="dvTexto" maxlength="300" rows="4" placeholder="Ex.: não entendi a diferença entre clima semiárido e clima tropical."></textarea><span class="meta cont"><span id="dvCont">0</span>/300</span></label>
+    <p id="dvErr" class="meta" style="color:var(--rust);margin:0" hidden></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="dvEnviar">Enviar dúvida</button><button class="btn btn-ghost" data-close>Cancelar</button></div>
+    <p class="meta" style="margin:0">Seu nome não aparece para os colegas. Se a resposta for publicada no app, aparece só a pergunta.</p>`,
+  (o,close)=>{
+    const $o=q=>o.querySelector(q),err=m=>{$o('#dvErr').textContent=m;$o('#dvErr').hidden=false};
+    $o('#dvTexto').addEventListener('input',e=>$o('#dvCont').textContent=e.target.value.length);
+    $o('#dvEnviar').onclick=async()=>{
+      const nome=$o('#dvNome').value.trim(),texto=$o('#dvTexto').value.trim(),turma=$o('#dvTurma').value,so=$o('#dvSobre').value;
+      if(nome.length<3)return err('Escreva o seu nome.');
+      if(texto.length<5)return err('Escreva a sua dúvida.');
+      const hoje=HOJE,cnt=store.get('duvCont',{});if((cnt[hoje]||0)>=5)return err('Você já enviou 5 dúvidas hoje. Tente amanhã ou pergunte na aula.');
+      let ap=store.get('aparelho','');if(!ap){ap=Math.random().toString(36).slice(2)+Date.now().toString(36);store.set('aparelho',ap)}
+      $o('#dvEnviar').disabled=true;$o('#dvEnviar').textContent='Enviando…';
+      try{
+        const corpo=JSON.stringify({acao:'duvida',nome,turma,sobre:so==='Outro assunto da aula'?'':so,texto,aparelho:ap});
+        const r=await fetch(CFG.DATA_URL+(CFG.DATA_URL.includes('?')?'&':'?')+'duvida='+encodeURIComponent(corpo)+'&t='+Date.now(),{cache:'no-store'});
+        const j=await r.json();
+        if(!j.ok){$o('#dvEnviar').disabled=false;$o('#dvEnviar').textContent='Enviar dúvida';return err(j.erro||(j.anos?'O robô ainda não tem a caixa de dúvidas publicada.':'Não foi possível enviar.'))}
+        cnt[hoje]=(cnt[hoje]||0)+1;store.set('duvCont',{[hoje]:cnt[hoje]});if(!COMP)store.set('duvNome',nome);
+        close();toast('Dúvida enviada ao professor.');
+      }catch(e){$o('#dvEnviar').disabled=false;$o('#dvEnviar').textContent='Enviar dúvida';err('Sem conexão. Tente de novo com internet.')}
+    };
+  });
+}
 function avisosHtml(){
   const av=avisosNovos();if(!av.length)return '';
-  return `<div class="avisos">${sec('Novidades','nov','sino','<button class="meta link" id="avisosOk">Marcar como vistas</button>')}${av.slice(0,5).map(a=>`<div class="aviso"><span class="av-ic" aria-hidden="true">${a.tipo==='resumo'?'✎':'◷'}</span><span style="min-width:0"><b>${esc(a.titulo)}</b><br><span>${esc(a.texto)}</span></span>${a.cap&&capOf(a.cap)&&capOf(a.cap).resumo?`<button class="av-go" data-cap="${a.cap}" data-aviso="${a.id}" aria-label="Abrir">${CHEVR}</button>`:''}</div>`).join('')}</div>`;
+  return `<div class="avisos">${sec('Novidades','nov','sino','<button class="meta link" id="avisosOk">Marcar como vistas</button>')}${av.slice(0,5).map(a=>`<div class="aviso"><span class="av-ic" aria-hidden="true">${a.tipo==='resumo'?'✎':a.tipo==='duvida'?'?':'◷'}</span><span style="min-width:0"><b>${esc(a.titulo)}</b><br><span>${esc(a.texto)}</span></span>${a.cap&&capOf(a.cap)&&capOf(a.cap).resumo?`<button class="av-go" data-cap="${a.cap}" data-aviso="${a.id}" aria-label="Abrir">${CHEVR}</button>`:''}</div>`).join('')}</div>`;
 }
 function vTurma(){
   const y=Y(),pub=pubs(y),total=pub.length,done=pub.filter(c=>isCopied(c.n)).length,acts=capsDe(y,y.atual).filter(c=>c.atividade),sent=acts.filter(c=>isSent(c.n)).length;
@@ -1042,6 +1114,7 @@ function vTurma(){
     ${temasDe(y,y.atual).length?`${sec('Temas Transversais','tt','globo','','Aulas extras · valem ponto na recuperação paralela')}<div class="capgrid">${temasDe(y,y.atual).map(temaBtn).join('')}</div>`:''}
     ${sec('Próximas datas','ano','cal','<button class="meta link" data-go="calendario">Calendário</button>')}
     ${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}
+    ${duvidasSecao()}
     <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
   </section>`;
 }
@@ -1094,6 +1167,7 @@ function vCap(n){
       <button class="copy-btn${isSent(n)?' on':''}" id="sentBtn" aria-pressed="${isSent(n)}">${isSent(n)?CHECK+' Atividade enviada':'Já enviei esta atividade'}</button>
       <span class="meta">Depois de enviar o formulário, volte aqui e marque.</span>
     </div>`:''}
+    ${duvidaCard()}
   </article>`;
 }
 
@@ -1138,6 +1212,7 @@ function vTema(n,c){
       ${temAtv(c)?`<button class="copy-btn${sent?' on':''}" id="sentBtn" aria-pressed="${sent}">${sent?CHECK+' Atividade feita':'Já fiz esta atividade'}</button><span class="meta">${c.atividade?'Depois de enviar o formulário, volte aqui e marque.':'Siga as orientações do professor para a entrega e marque aqui quando terminar.'}</span>`
       :`<p class="meta" style="margin:0"><b>Aguarde:</b> a atividade deste tema será publicada em breve. Você recebe um aviso quando ela sair.</p>`}
     </div>
+    ${duvidaCard()}
   </article>`;
 }
 function ttAtvCard(t){
@@ -1299,6 +1374,8 @@ document.addEventListener('click',ev=>{
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
   if(t.closest('#modeBtn'))return modeSheet();
+  const dv=t.closest('[data-duvida]');if(dv)return duvidaSheet(dv.dataset.duvida);
+  if(t.closest('#duvMais')){S.duvAberta=true;return render()}
   if(t.closest('#pushOn'))return ativarPush();
   if(t.closest('#pushOff'))return desativarPush();
   if(t.closest('#pushHelp'))return pushHelp();

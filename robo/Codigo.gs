@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-21 · mídias v4';
+const VERSAO_ROBO = '2026-10-21 · dúvidas v5';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -50,6 +50,11 @@ function doGet(e) {
     let b = {};
     try { b = JSON.parse(p.inscrever); } catch (err) {}
     return ContentService.createTextOutput(JSON.stringify(processarInscricao_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.duvida !== undefined) {
+    let b = {};
+    try { b = JSON.parse(p.duvida); } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify(receberDuvida_(b))).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.robo !== undefined) {
     return ContentService.createTextOutput(JSON.stringify({ ok: true, versao: VERSAO_ROBO })).setMimeType(ContentService.MimeType.JSON);
@@ -78,7 +83,8 @@ function doGet(e) {
 function doPost(e) {
   let b = {};
   try { b = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) {}
-  return ContentService.createTextOutput(JSON.stringify(processarInscricao_(b))).setMimeType(ContentService.MimeType.JSON);
+  const res = b.acao === 'duvida' ? receberDuvida_(b) : processarInscricao_(b);
+  return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
 }
 
 function processarInscricao_(b) {
@@ -113,7 +119,7 @@ function instalar() {
   // 1) A cada 5 minutos (pega Docs novos ou editados)
   ScriptApp.newTrigger('atualizarAgendado').timeBased().everyMinutes(GEO.MINUTOS).create();
   // 2) Na hora, quando você edita uma das planilhas
-  [GEO.PLANILHA_CONFIG, GEO.PLANILHA_MENSAGENS, GEO.PLANILHA_CONTEUDO].forEach(id => {
+  [GEO.PLANILHA_CONFIG, GEO.PLANILHA_MENSAGENS, GEO.PLANILHA_CONTEUDO, planilhaDuvidas_().getParent().getId()].forEach(id => {
     ScriptApp.newTrigger('aoMudarAlgo').forSpreadsheet(id).onEdit().create();
   });
   // 3) Na hora, quando você cria ou muda um evento nas agendas das turmas
@@ -127,6 +133,7 @@ function instalar() {
   chavesAvisos_();
   planilhaInscricoes_();
   prepararAbaTemas_();
+  prepararConfigDuvidas_();
   const d = atualizar();
   Logger.log('Atualização automática ligada: a cada ' + GEO.MINUTOS + ' minutos, e na hora quando você edita as planilhas ou as ' + agendas + ' agendas.');
   Logger.log(resumoTexto_(d));
@@ -168,12 +175,14 @@ function atualizar() {
         mensagem: conf.mensagem || '',
         avisoNovo: conf.avisoNovo,
         lembreteVespera: conf.lembreteVespera || '18:00',
-        lembreteDia: conf.lembreteDia || '07:00'
+        lembreteDia: conf.lembreteDia || '07:00',
+        duvidas: conf.duvidas
       },
       anos: anos,
       mensagens: lerMensagens_(),
       agenda: agenda
     };
+    try { dados.duvidas = lerDuvidasRespondidas_(dados); } catch (err) { Logger.log('Dúvidas: ' + err); dados.duvidas = (anterior && anterior.duvidas) || []; }
     dados.avisos = calcularAvisos_(dados, anterior, conf);
     let novas = [];
     try {
@@ -211,7 +220,7 @@ function anoDe_(v) { const m = String(v || '').match(/(\d)/); return m ? m[1] : 
 
 function lerConfig_() {
   const linhas = SpreadsheetApp.openById(GEO.PLANILHA_CONFIG).getSheets()[0].getDataRange().getDisplayValues();
-  const c = { turmas: {}, anosAtivos: [], avisoNovo: true };
+  const c = { turmas: {}, anosAtivos: [], avisoNovo: true, duvidas: true };
   linhas.forEach(l => {
     const k = semAcento_(l[0]), v = String(l[1] || '').trim();
     let m;
@@ -223,6 +232,7 @@ function lerConfig_() {
     else if (k.indexOf('lembrete no dia') === 0) c.lembreteDia = v;
     else if (k.indexOf('aviso de atividade nova') === 0) c.avisoNovo = sim_(v);
     else if (k.indexOf('mensagem da tela inicial') === 0) c.mensagem = v;
+    else if (k.indexOf('caixa de duvidas') === 0) c.duvidas = sim_(v);
   });
   return c;
 }
@@ -584,6 +594,14 @@ function calcularAvisos_(dados, anterior, conf) {
     }
   })));
 
+  const antDuv = {};
+  (anterior.duvidas || []).forEach(d => antDuv[d.id] = true);
+  (dados.duvidas || []).forEach(d => {
+    const id = 'd-' + d.id;
+    if (antDuv[d.id] || ja[id]) return;
+    d.turmas.forEach(t => avisos.push({ id: id + '-' + t, quando: agora, turma: t, tipo: 'duvida', titulo: 'Dúvida respondida', texto: (d.sobre ? d.sobre + ': ' : '') + d.pergunta.slice(0, 90), cap: null }));
+  });
+
   if (conf.avisoNovo) {
     const antEv = {};
     Object.keys(anterior.agenda || {}).forEach(t => anterior.agenda[t].forEach(e => antEv[t + '|' + e.id] = true));
@@ -682,7 +700,7 @@ function novasNotificacoes_(dados, anterior, conf) {
   ((anterior && anterior.avisos) || []).forEach(a => antes[a.id] = true);
   (dados.avisos || []).filter(a => !antes[a.id]).forEach(a => {
     const ts = a.turma ? [a.turma] : (turmasDoAno[a.ano] || []);
-    ts.forEach(t => add(t, { tipo: 'novidade', titulo: a.titulo, texto: a.texto, cap: a.cap || null, tab: a.tipo === 'resumo' ? 'resumos' : 'calendario' }));
+    ts.forEach(t => add(t, { tipo: 'novidade', titulo: a.titulo, texto: a.texto, cap: a.cap || null, tab: a.tipo === 'resumo' ? 'resumos' : a.tipo === 'duvida' ? 'turma' : 'calendario' }));
   });
 
   // 2) Lembretes: na véspera e no dia de cada entrega, atividade ou avaliação
@@ -934,4 +952,99 @@ function imagemPublica_(img) {
     f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   }
   return 'https://drive.google.com/thumbnail?id=' + f.getId() + '&sz=w1600';
+}
+
+/* ================================================================== */
+/* Caixa de dúvidas                                                    */
+/* As dúvidas vão para uma planilha que só o professor vê. As respostas */
+/* marcadas para publicar aparecem no app, SEM o nome de quem perguntou. */
+/* ================================================================== */
+function planilhaDuvidas_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('planilhaDuvidas');
+  if (id) { try { return SpreadsheetApp.openById(id).getSheets()[0]; } catch (e) { } }
+  const ss = SpreadsheetApp.create('GeoEstudos - dúvidas dos alunos (não apagar)');
+  DriveApp.getFileById(ss.getId()).moveTo(DriveApp.getFolderById(GEO.PASTA_APP));
+  const sh = ss.getSheets()[0];
+  sh.setName('Dúvidas');
+  sh.appendRow(['Recebida em', 'Turma', 'Nome (digitado pelo aluno)', 'Sobre', 'Dúvida', 'Sua resposta (escreva aqui)', 'Publicar no app? (Turma / Ano / Não)', 'Código']);
+  sh.getRange(1, 1, 1, 8).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F').setWrap(true);
+  sh.setFrozenRows(1);
+  [16, 7, 24, 26, 55, 55, 22, 10].forEach((w, i) => sh.setColumnWidth(i + 1, w * 7));
+  sh.getRange('G2:G1000').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Turma', 'Ano', 'Não'], true).build());
+  sh.hideColumns(8);
+  props.setProperty('planilhaDuvidas', ss.getId());
+  return sh;
+}
+function prepararConfigDuvidas_() {
+  planilhaDuvidas_();
+  const sh = SpreadsheetApp.openById(GEO.PLANILHA_CONFIG).getSheets()[0];
+  const tem = sh.getDataRange().getDisplayValues().some(l => semAcento_(l[0]).indexOf('caixa de duvidas') === 0);
+  if (!tem) sh.appendRow(['Caixa de dúvidas', 'Sim', 'Mostrar a caixa de dúvidas no app (Sim/Não)']);
+}
+function textoSeguro_(s, max) {
+  s = String(s || '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
+  return /^[=+\-@]/.test(s) ? "'" + s : s;   // evita fórmulas na planilha
+}
+function receberDuvida_(b) {
+  try {
+    const conf = lerConfig_();
+    if (!conf.duvidas) return { ok: false, erro: 'A caixa de dúvidas está fechada no momento.' };
+    const validas = [].concat.apply([], Object.keys(conf.turmas).map(k => conf.turmas[k]));
+    const turma = String(b.turma || '');
+    const nome = textoSeguro_(b.nome, 60), sobre = textoSeguro_(b.sobre, 90), texto = textoSeguro_(b.texto, 300);
+    if (validas.indexOf(turma) < 0) return { ok: false, erro: 'Escolha a sua turma.' };
+    if (nome.replace(/'/g, '').length < 3) return { ok: false, erro: 'Escreva o seu nome.' };
+    if (texto.replace(/'/g, '').length < 5) return { ok: false, erro: 'Escreva a sua dúvida.' };
+    // Limites contra excesso: por celular e no total do dia
+    const cache = CacheService.getScriptCache();
+    const dia = Utilities.formatDate(new Date(), GEO.FUSO, 'yyyyMMdd');
+    const disp = String(b.aparelho || '').replace(/[^\w-]/g, '').slice(0, 40) || 'sem-id';
+    const kA = 'duv|' + dia + '|' + disp, kT = 'duv|' + dia + '|total';
+    const nA = parseInt(cache.get(kA) || '0', 10), nT = parseInt(cache.get(kT) || '0', 10);
+    if (nA >= 5) return { ok: false, erro: 'Você já enviou 5 dúvidas hoje. Tente amanhã ou pergunte na aula.' };
+    if (nT >= 300) return { ok: false, erro: 'Muitas dúvidas hoje. Tente amanhã.' };
+    const lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      const sh = planilhaDuvidas_();
+      const cod = Utilities.getUuid().slice(0, 8);
+      sh.appendRow([new Date(), turma, nome, sobre, texto, '', 'Não', cod]);
+    } finally { lock.releaseLock(); }
+    cache.put(kA, String(nA + 1), 21600); cache.put(kT, String(nT + 1), 21600);
+    // Aviso por e-mail ao professor (no máximo 40 por dia)
+    try {
+      if (nT < 40) {
+        const url = SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty('planilhaDuvidas')).getUrl();
+        MailApp.sendEmail(Session.getEffectiveUser().getEmail(), 'GeoEstudos · nova dúvida · Turma ' + turma,
+          'Turma ' + turma + ' · ' + nome + (sobre ? '\nSobre: ' + sobre : '') + '\n\n' + texto + '\n\nResponder na planilha: ' + url);
+      }
+    } catch (err) { Logger.log('E-mail de dúvida: ' + err); }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, erro: 'Não foi possível enviar agora.' };
+  }
+}
+/** Respostas publicadas: só a pergunta e a resposta, nunca o nome. */
+function lerDuvidasRespondidas_(dados) {
+  const id = PropertiesService.getScriptProperties().getProperty('planilhaDuvidas');
+  if (!id) return [];
+  const v = SpreadsheetApp.openById(id).getSheets()[0].getDataRange().getValues().slice(1);
+  const turmasDoAno = {};
+  dados.anos.forEach(a => a.turmas.forEach(t => turmasDoAno[t] = a.turmas));
+  const out = [];
+  v.forEach(l => {
+    const pub = semAcento_(l[6]), resp = String(l[5] || '').trim(), turma = String(l[1]);
+    if (!resp || (pub !== 'turma' && pub !== 'ano' && pub !== 'sim')) return;
+    const quando = l[0] instanceof Date ? l[0].toISOString() : '';
+    out.push({
+      id: String(l[7] || (turma + '-' + quando)),
+      turmas: pub === 'ano' ? (turmasDoAno[turma] || [turma]) : [turma],
+      sobre: String(l[3] || '').replace(/^'/, ''),
+      pergunta: String(l[4] || '').replace(/^'/, ''),
+      resposta: resp,
+      data: quando
+    });
+  });
+  return out.reverse().slice(0, 200);
 }
