@@ -272,8 +272,22 @@ h1{font-size:1.6rem;line-height:1.15} h2{font-size:1.2rem} h3{font-size:1.02rem;
 .outra.mini{flex-direction:row;justify-content:space-between;align-items:center;padding:8px 12px;font-size:.84rem;margin-bottom:12px}
 .outra.mini .link{flex:none}
 /* Avisos */
-.pushask{display:flex;gap:12px;align-items:center;text-align:left;width:100%;border:1.5px dashed var(--year);background:var(--surface)}
-.pushask .inst-ic{background:var(--year);font-size:1.1rem}
+.pushhero{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 14px;align-items:center;width:100%;text-align:left;color:#fff;background:linear-gradient(135deg,var(--year),#1D3F8F);border-radius:18px;padding:16px;box-shadow:0 8px 22px rgba(29,63,143,.28);overflow:hidden}
+.pushhero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 20%,rgba(255,226,122,.35),transparent 45%);pointer-events:none}
+.pushhero .sino{position:relative;width:50px;height:50px;border-radius:50%;background:var(--hl);color:#1E2430;display:grid;place-items:center;transform-origin:50% 8%}
+.pushhero .ph-t{display:flex;flex-direction:column;gap:3px;font-size:.88rem;line-height:1.4;position:relative}
+.pushhero .ph-t b{font-family:var(--display);font-size:1.08rem;line-height:1.2}
+.pushhero .ph-btn{grid-column:1/-1;position:relative;justify-self:stretch;text-align:center;background:var(--hl);color:#1E2430;font-weight:700;border-radius:12px;padding:11px 14px;font-size:.98rem}
+.pushhero .ph-acts{grid-column:1/-1;display:flex;gap:10px;align-items:center;position:relative}
+.pushhero .ph-acts .ph-btn{flex:1}
+.pushhero .ph-link{color:#fff;text-decoration:underline;font-weight:700;font-size:.9rem;padding:8px}
+.pushhero.bloq{background:linear-gradient(135deg,#7A2E22,#A33A2C)}
+@media (prefers-reduced-motion:no-preference){
+  .pushhero:not(.bloq) .sino{animation:sino 4.5s ease-in-out infinite}
+  .pushhero:not(.bloq){animation:brilho 4.5s ease-in-out infinite}
+  @keyframes sino{0%,72%,100%{transform:rotate(0)}76%{transform:rotate(14deg)}80%{transform:rotate(-12deg)}84%{transform:rotate(9deg)}88%{transform:rotate(-6deg)}92%{transform:rotate(3deg)}}
+  @keyframes brilho{0%,70%,100%{box-shadow:0 8px 22px rgba(29,63,143,.28)}82%{box-shadow:0 8px 22px rgba(29,63,143,.28),0 0 0 6px rgba(255,226,122,.45)}}
+}
 .pushon{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.84rem;color:var(--muted);padding:0 4px}
 .pushon .link{font-size:.84rem;flex:none}
 /* App real: agenda, avisos, instalação, carregamento */
@@ -709,8 +723,9 @@ async function enviarInscricao(sub,turma,acao){
 }
 async function ativarPush(){
   if(!pushOk()||!(DATA&&DATA.push&&DATA.push.chave))return toast('Este celular não aceita avisos.');
+  store.set('querPush',true);
   const perm=await Notification.requestPermission();
-  if(perm!=='granted'){render();return toast('Os avisos não foram permitidos.')}
+  if(perm!=='granted'){render();return toast(perm==='denied'?'Avisos bloqueados. Toque em "Como liberar" para ativar.':'Os avisos não foram ativados. Toque de novo quando quiser.')}
   try{
     const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
@@ -723,7 +738,7 @@ async function ativarPush(){
 }
 async function desativarPush(){
   try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub){enviarInscricao(sub,MINHA||S.turma,'remover').catch(()=>{});await sub.unsubscribe()}}catch(e){}
-  PUSH=null;store.set('push',null);render();toast('Avisos desativados neste celular.');
+  PUSH=null;store.set('push',null);store.set('querPush',false);render();toast('Avisos desativados. Para ativar de novo, toque em "Ativar avisos".');
 }
 async function conferirPush(){
   if(!PUSH||!pushOk())return;
@@ -732,14 +747,31 @@ async function conferirPush(){
     if(MINHA&&PUSH.turma!==MINHA){await enviarInscricao(sub,MINHA);PUSH.turma=MINHA;store.set('push',PUSH);await avisarSW(MINHA)}
   }catch(e){}
 }
+const SINO='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
 function pushCard(){
   if(!DATA||!DATA.push||!DATA.push.chave)return '';
   if(PUSH)return `<div class="pushon"><span>🔔 Avisos ativados para a sua turma, a ${esc(PUSH.turma)}.</span><button class="link" id="pushOff">Desativar</button></div>`;
-  if(ehIOS()&&!standalone())return `<div class="card pushask"><span class="inst-ic" aria-hidden="true">🔔</span><span><b>Avisos no iPhone</b><br><span class="meta">Primeiro instale o app: no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início". Abra pelo ícone e ative os avisos aqui.</span></span></div>`;
+  const tm=MINHA?' ('+esc(MINHA)+')':'';
+  if(ehIOS()&&!standalone())return `<div class="pushhero"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Receba os avisos da sua turma${tm}</b><span>No iPhone, primeiro instale o app: no Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>. Abra pelo ícone e ative aqui.</span></div><button class="ph-btn" id="installBtn">Como instalar</button></div>`;
   if(!pushOk())return '';
-  if(Notification.permission==='denied')return `<div class="card empty-card"><b>Avisos bloqueados neste celular</b><span class="meta">Para receber os avisos, libere as notificações do GeoEstudos nas configurações do celular ou do navegador.</span></div>`;
-  return `<button class="card pushask" id="pushOn"><span class="inst-ic" aria-hidden="true">🔔</span><span><b>Ative os avisos no celular</b><br><span class="meta">Receba avisos da sua turma${MINHA?' ('+esc(MINHA)+')':''}: resumo novo, véspera das entregas e prazo das atividades.</span></span></button>`;
+  if(Notification.permission==='denied')return `<div class="pushhero bloq"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Os avisos estão bloqueados</b><span>Se você tocou em "Bloquear" sem querer, dá para liberar em poucos passos.</span></div><div class="ph-acts"><button class="ph-btn" id="pushHelp">Como liberar</button><button class="ph-link" id="pushRecheck">Já liberei</button></div></div>`;
+  return `<button class="pushhero" id="pushOn"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Ative os avisos da sua turma${tm}</b><span>Resumo novo, véspera das entregas e prazo das atividades de fixação: tudo no seu celular.</span></div><span class="ph-btn">Ativar avisos</span></button>`;
 }
+function pushHelp(){
+  const ios=ehIOS(),inst=standalone();
+  const passos=ios?`<li>Abra os <b>Ajustes</b> do iPhone.</li><li>Toque em <b>Notificações</b> e procure <b>GeoEstudos</b>.</li><li>Ligue <b>Permitir Notificações</b>.</li>`
+   :inst?`<li>Toque e segure o ícone do <b>GeoEstudos</b> na tela inicial.</li><li>Toque em <b>Informações do app</b> (ou no ícone ⓘ).</li><li>Abra <b>Notificações</b> e ligue a chave.</li>`
+   :`<li>Toque no ícone à esquerda do endereço, no alto da tela (cadeado ou ⚙).</li><li>Abra <b>Permissões</b> ou <b>Configurações do site</b>.</li><li>Em <b>Notificações</b>, escolha <b>Permitir</b>.</li>`;
+  sheet(`<h2>Liberar os avisos</h2><ol class="steps">${passos}</ol><p class="meta" style="margin:0">Depois volte ao GeoEstudos: os avisos são ativados sozinhos. Se não forem, toque em "Já liberei".</p><button class="btn btn-primary" data-close>Entendi</button>`);
+}
+function rechecarPush(manual){
+  if(!pushOk()||PUSH)return;
+  if(Notification.permission==='granted'){ativarPush();return}
+  if(manual)toast(Notification.permission==='denied'?'Ainda está bloqueado. Siga os passos de "Como liberar".':'Toque em "Ativar avisos".');
+  render();
+}
+try{navigator.permissions&&navigator.permissions.query({name:'notifications'}).then(st=>{st.onchange=()=>rechecarPush(false)})}catch(e){}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&pushOk()&&!PUSH&&DATA&&DATA.push&&Notification.permission==='granted'&&store.get('querPush',false))ativarPush()});
 
 /* Telas */
 function capRow(c){
@@ -799,8 +831,8 @@ function vTurma(){
       ${acts.length?`<div class="bar" role="img" aria-label="${sent} de ${acts.length} atividades enviadas" style="margin-top:10px"><i style="width:${pct(sent,acts.length)}%;background:#fff"></i></div>
       <div style="font-size:.86rem">${sent} de ${acts.length} atividades de fixação enviadas</div>`:''}
     </div>
-    ${avisosHtml()}
     ${pushCard()}
+    ${avisosHtml()}
     ${unitChips(y.atual)}
     <div class="row-head"><h2>Resumos da Unidade ${y.atual}</h2></div>
     <div class="capgrid">${capsDe(y,y.atual).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>
@@ -1009,6 +1041,8 @@ document.addEventListener('click',ev=>{
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
   if(t.closest('#pushOn'))return ativarPush();
   if(t.closest('#pushOff'))return desativarPush();
+  if(t.closest('#pushHelp'))return pushHelp();
+  if(t.closest('#pushRecheck'))return rechecarPush(true);
   if(t.closest('#retryBtn')){LOAD='carregando';render();return carregar()}
   if(t.closest('#installBtn')){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(()=>{deferredPrompt=null})}else installHelp();return}
   if(t.closest('#copyBtn')){const k=key(S.cap),c=capOf(S.cap);let gain=false;if(S.copied[k])delete S.copied[k];else{S.copied[k]=true;gain=true}store.set('copied',S.copied);const y=scrollY;render();scrollTo(0,y);
