@@ -264,6 +264,32 @@ h1{font-size:1.6rem;line-height:1.15} h2{font-size:1.2rem} h3{font-size:1.02rem;
 .atv.late .atv-st{background:#F9E1DC;color:#A33A2C}
 .atv-acts{display:flex;flex-wrap:wrap;gap:8px}
 .atv-acts .btn{padding:8px 12px;font-size:.86rem;min-height:0}
+/* Temas Transversais */
+.ev-tema,u.ev-tema{--evc:#0F766E;--evs:#D5F0EC}
+body.m-escuro .ev-tema{--evc:#5EEAD4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ev-tema{--evc:#5EEAD4}}
+.tt-sub{margin:-6px 0 0}
+.ttitem{border-color:#0F766E55}
+.tt-cn{background:#0F766E!important;color:#fff;display:grid;place-items:center}
+.cn.tt-cn svg{width:22px;height:22px}
+.capacts .tt-act-b{background:#D5F0EC;color:#0F5E57}
+.cap.tt .n{color:#0F766E;font-weight:700}
+.tt-head{padding:10px 14px 4px;border-top:1px solid var(--line);background:var(--surface-2)}
+.tt-head .eyebrow{color:#0F766E;font-weight:700}
+.tt-lbl{background:#D5F0EC!important;color:#0F5E57!important}
+.qact.tt-q{background:#0F766E;color:#fff;border-color:#0F766E}
+.tt-act{border-color:#0F766E!important;background:#EAF7F5!important}
+.tt-act .act-ic.tt-ic{background:#0F766E;color:#fff}
+.tt-act .vale{background:#0F766E}
+.tt-act .act-why,.tt-act .act-t{color:#0F5E57}
+body.m-escuro .tt-act .act-why,body.m-escuro .tt-act .act-t{color:#5EEAD4}
+.tt-texto{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;line-height:1.6}
+.tt-texto h3,.tt-texto h4{margin:.4em 0}.tt-texto p{margin:.4em 0}
+.tt-hero{background:#EAF7F5;border:1.5px solid #0F766E;display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.tt-hero .vale{align-self:flex-start;background:#0F766E}
+.atv.tt{border-left-color:#0F766E}
+body.m-escuro .tt-act,body.m-escuro .tt-hero{background:var(--surface)!important}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tt-act,:root:not([data-theme="light"]) .tt-hero{background:var(--surface)!important}}
 /* Outra turma */
 .outra{display:flex;flex-direction:column;gap:8px;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:var(--r);padding:12px;font-size:.92rem}
 .outra-b{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -441,7 +467,9 @@ let ANN=[],pending=null,editing=null,adjusting=null;
 
 const anoT=()=>T2A[S.turma]||(S.turma||'7')[0];
 const capsDe=(y,u)=>((y.units||{})[u]||{caps:[]}).caps;
-function capOf(n,y){y=y||Y();for(const u of (y.list||[])){const c=u.caps.find(x=>x.n==n);if(c)return Object.assign({u:u.n},c)}return null}
+function capOf(n,y){y=y||Y();const tt=String(n)[0]==='t',k=tt?+String(n).slice(1):+n;for(const u of (y.list||[])){const c=(tt?(u.temas||[]):u.caps).find(x=>x.n==k);if(c)return Object.assign({u:u.n,tema:tt,id:tt?'t'+c.n:c.n},c)}return null}
+const capId=v=>/^t\d+$/.test(String(v))?String(v):+v;
+const temasDe=(y,u)=>((y.units||{})[u]||{temas:[]}).temas||[];
 const pubs=y=>capsDe(y,y.atual).filter(c=>c.resumo);
 const agendaT=()=>(((DATA&&DATA.agenda)||{})[S.turma]||[]).slice().sort((x,y)=>(x.data+(x.hora||'')).localeCompare(y.data+(y.hora||''))||(x.cap||0)-(y.cap||0));
 
@@ -670,15 +698,15 @@ function quando(iso){
   if(dias>1&&dias<7)return ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][dt.getDay()];
   if(dias>0)return 'Em '+dias+' dias';return 'Há '+(-dias)+' dias';
 }
-const TIPO={caderno:['Entrega do caderno','ev-caderno'],atividade:['Atividade de fixação','ev-atv'],avaliacao:['Avaliação','ev-aval'],aviso:['Aviso','ev-aviso']};
+const TIPO={caderno:['Entrega do caderno','ev-caderno'],atividade:['Atividade de fixação','ev-atv'],avaliacao:['Avaliação','ev-aval'],aviso:['Aviso','ev-aviso'],tema:['Tema Transversal','ev-tema']};
 function evCard(e){
   const {d,m}=dataBR(e.data),c=e.cap?capOf(e.cap):null,past=e.data<HOJE;
   const tit=e.titulo.replace(/^(Entrega do caderno|Atividade de fixação)\s*·\s*/i,'');
   const acts=[];
   if(e.link)acts.push(`<a class="btn ev-go" href="${esc(e.link)}" target="_blank" rel="noopener">${e.tipo==='atividade'?'Fazer a atividade':'Abrir link'}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`);
-  else if(e.tipo==='atividade'&&c&&c.atividade)acts.push(`<a class="btn ev-go" href="${esc(c.atividade)}" target="_blank" rel="noopener">Fazer a atividade<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`);
-  if(c&&c.resumo)acts.push(`<button class="btn btn-ghost ev-res" data-cap="${c.n}">Abrir resumo</button>`);
-  const done=e.tipo==='caderno'&&c&&isCopied(c.n)?`<span class="ev-ok">${CHECK} Resumo copiado</span>`:e.tipo==='atividade'&&c&&isSent(c.n)?`<span class="ev-ok">${CHECK} Atividade enviada</span>`:'';
+  else if((e.tipo==='atividade'||e.tipo==='tema')&&c&&c.atividade)acts.push(`<a class="btn ev-go" href="${esc(c.atividade)}" target="_blank" rel="noopener">Fazer a atividade<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`);
+  if(c&&c.resumo)acts.push(`<button class="btn btn-ghost ev-res" data-cap="${c.id}">${c.tema?'Abrir aula':'Abrir resumo'}</button>`);
+  const done=e.tipo==='caderno'&&c&&isCopied(c.id)?`<span class="ev-ok">${CHECK} Resumo copiado</span>`:(e.tipo==='atividade'||e.tipo==='tema')&&c&&isSent(c.id)?`<span class="ev-ok">${CHECK} Atividade enviada</span>`:'';
   return `<div class="ev ${TIPO[e.tipo][1]}${past?' past':''}"><div class="ev-date"><b>${d}</b><span>${MESES[m].slice(0,3)}</span></div>
     <div class="ev-body"><span class="ev-kind">${TIPO[e.tipo][0]} · ${quando(e.data)}${e.hora?' · '+e.hora:''}</span><b class="ev-t">${esc(tit)}</b>${e.descricao?`<span class="meta ev-d">${esc(e.descricao)}</span>`:''}${done}${acts.length?`<div class="ev-acts">${acts.join('')}</div>`:''}</div></div>`;
 }
@@ -836,6 +864,7 @@ function vTurma(){
     ${unitChips(y.atual)}
     <div class="row-head"><h2>Resumos da Unidade ${y.atual}</h2></div>
     <div class="capgrid">${capsDe(y,y.atual).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>
+    ${temasDe(y,y.atual).length?`<div class="row-head"><h2>Temas Transversais</h2></div><p class="meta tt-sub">Aulas extras que valem ponto na recuperação paralela.</p><div class="capgrid">${temasDe(y,y.atual).map(temaBtn).join('')}</div>`:''}
     <div class="row-head"><h2>Próximas datas</h2><button class="meta link" data-go="calendario">Calendário</button></div>
     ${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}
     <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
@@ -851,6 +880,7 @@ function vResumos(){
     <div class="card unit-card">
       <div class="unit-head"><span class="eyebrow">Unidade ${u} · ${est}</span><b class="unit-t">${esc(un.titulo)}</b></div>
       ${un.caps.map(capRow).join('')||'<div class="cap off"><span class="t meta">Nenhum capítulo cadastrado.</span></div>'}
+      ${(un.temas||[]).length?`<div class="tt-head"><span class="eyebrow">Temas Transversais · aulas extras · valem ponto</span></div>${un.temas.map(temaRow).join('')}`:''}
       ${temPub?`<div class="offnote">${CHECK} Os resumos ficam guardados no celular para ler sem internet.</div>`:''}
     </div>
     ${temPub?'':`<p class="meta" style="margin:0">Os resumos desta unidade aparecem aqui quando o professor publicá-los.</p>`}
@@ -859,6 +889,7 @@ function vResumos(){
 
 function vCap(n){
   const y=Y(),c=capOf(n),done=isCopied(n);
+  if(c&&c.tema&&c.resumo)return vTema(n,c);
   if(!c||!c.resumo){S.cap=null;return vResumos()}
   const pAt=prazoDe(n,'atividade'),pCad=prazoDe(n,'caderno');
   return `<article class="section">
@@ -890,9 +921,52 @@ function vCap(n){
   </article>`;
 }
 
+/* Temas Transversais: aulas extras que valem ponto (recuperação paralela) */
+const TTIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/></svg>';
+const temAtv=t=>!!(t.atividade||t.atividadeTexto);
+function temaRow(t){
+  if(!t.resumo)return `<div class="cap off tt"><span class="n">Tema ${t.n}</span><span class="t">${esc(t.titulo)}<br><span class="meta">Aula ainda não publicada no app</span></span></div>`;
+  return `<button class="cap tt" data-cap="t${t.n}"><span class="n">Tema ${t.n}</span><span class="t">${esc(t.titulo)}${isCopied('t'+t.n)?`<br><span class="done">${CHECK} Aula estudada</span>`:''}</span>${CHEVR}</button>`;
+}
+function temaBtn(t){
+  const id='t'+t.n,done=isCopied(id),sent=isSent(id);
+  return `<div class="capitem ttitem"><button class="capbtn" ${t.resumo?`data-cap="${id}"`:'disabled'}><span class="cn tt-cn">${TTIC}</span><span class="ct"><span class="eyebrow">Tema Transversal ${t.n} · vale ponto</span><b>${esc(t.titulo)}</b>${t.resumo?'':'<span class="meta">Aula ainda não publicada</span>'}</span>${t.resumo?CHEVR:''}</button>
+    <div class="capacts${temAtv(t)?'':' one'}">${t.resumo?`<button data-cap="${id}" class="ca-res${done?' ok':''}">${done?CHECK+'Aula estudada':'Abrir aula'}</button>`:''}${temAtv(t)?`<button data-act="${id}" class="ca-act tt-act-b${sent?' ok':''}">${sent?CHECK+'Atividade feita':'Atividade'}</button>`:''}</div></div>`;
+}
+function vTema(n,c){
+  const y=Y(),done=isCopied(n),sent=isSent(n),pr=prazoDe(n,'tema');
+  return `<article class="section">
+    <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>
+      <span class="tools"><button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button></span></div>
+    <div><span class="ypill">${y.label} · Unidade ${c.u} · Tema Transversal ${c.n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo tt-lbl">Aula extra</span> <button class="qact tt-q${sent?' ok':''}" data-jump="1">${sent?CHECK+'Atividade feita':'Vale ponto · recuperação paralela'}</button>
+    ${pr?`<div class="prazo">Prazo da atividade: <b>${dm(pr)}</b> · ${quando(pr).toLowerCase()}</div>`:''}</div>
+    ${S.tip?`<div class="tip"><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra.</span><button id="tipOk">Entendi</button></div>`:''}
+    <div class="paper"><div class="resumo" style="--fs:${S.size}"></div></div>
+    <div class="card copy-card${done?' is-done':''}">
+      <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Aula estudada':'Já estudei esta aula'}</button>
+      <span class="meta">Marque quando terminar de estudar. Fica salvo só no seu celular.</span>
+    </div>
+    ${c.pdf?`<div class="card pdf-card"><div style="display:flex;gap:12px;align-items:center"><span class="pdf-ic" aria-hidden="true">PDF</span><span><b>Aula em PDF</b><br><span class="meta">Para imprimir, guardar ou enviar a um colega.</span></span></div>
+      <div class="pdf-actions"><a class="btn btn-ghost" href="${esc(c.pdf)}" target="_blank" rel="noopener">Abrir PDF</a><button class="btn btn-ghost" id="sharePdf">Compartilhar</button></div></div>`:''}
+    <div class="card act tt-act" id="actBox">
+      <div class="act-head"><span class="act-ic tt-ic">${TTIC}</span><span><b class="act-t">Atividade do Tema Transversal</b><br><span class="act-sub">Tema ${c.n} · ${esc(c.titulo)}</span></span><span class="vale">Vale ponto</span></div>
+      <p class="act-why">Esta atividade vale ponto na recuperação paralela.${pr?` <b>Prazo: ${dm(pr)}.</b>`:''}</p>
+      ${c.atividadeTexto?`<div class="tt-texto">${md(c.atividadeTexto)}</div>`:''}
+      ${c.atividade?`<a class="btn act-go" href="${esc(c.atividade)}" target="_blank" rel="noopener">${c.atividadeTexto?'Responder no formulário':'Fazer a atividade'}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`:''}
+      ${temAtv(c)?`<button class="copy-btn${sent?' on':''}" id="sentBtn" aria-pressed="${sent}">${sent?CHECK+' Atividade feita':'Já fiz esta atividade'}</button><span class="meta">${c.atividade?'Depois de enviar o formulário, volte aqui e marque.':'Siga as orientações do professor para a entrega e marque aqui quando terminar.'}</span>`
+      :`<p class="meta" style="margin:0"><b>Aguarde:</b> a atividade deste tema será publicada em breve. Você recebe um aviso quando ela sair.</p>`}
+    </div>
+  </article>`;
+}
+function ttAtvCard(t){
+  const id='t'+t.n,sent=isSent(id),pr=prazoDe(id,'tema'),late=!sent&&pr&&pr<HOJE;
+  return `<div class="atv tt${sent?' ok':late?' late':''}"><div class="atv-h"><span class="cn tt-cn">${TTIC}</span><span style="min-width:0"><span class="eyebrow">Tema Transversal ${t.n}</span><b>${esc(t.titulo)}</b>${pr?`<span class="meta">Prazo: ${dm(pr)} · ${quando(pr).toLowerCase()}</span>`:''}</span><span class="atv-st">${sent?CHECK+'Feita':late?'Prazo encerrado':temAtv(t)?'Pendente':'Aguarde'}</span></div>
+    <div class="atv-acts">${!temAtv(t)?'<span class="meta">A atividade será publicada em breve.</span>':sent?'':t.atividade&&!t.atividadeTexto?`<a class="btn act-go" href="${esc(t.atividade)}" target="_blank" rel="noopener">Fazer a atividade<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`:`<button class="btn act-go" data-act="${id}">Ver atividade</button>`}${temAtv(t)?`<button class="btn btn-ghost" data-sent="${id}">${sent?'Desmarcar':'Já fiz'}</button>`:''}${t.resumo?`<button class="btn btn-ghost" data-cap="${id}">Ver aula</button>`:''}</div></div>`;
+}
+
 function sharePdf(){
   const y=Y(),c=capOf(S.cap),url=c.pdf;
-  const title=`Resumo de Geografia · ${y.label} · Cap. ${c.n}: ${c.titulo}`;
+  const title=c.tema?`Aula de Geografia · ${y.label} · Tema Transversal ${c.n}: ${c.titulo}`:`Resumo de Geografia · ${y.label} · Cap. ${c.n}: ${c.titulo}`;
   const text=`${title} (PDF)`;
   const fallback=()=>{
     const msg=encodeURIComponent(text+'\n'+url);
@@ -924,6 +998,8 @@ function vAtividades(){
       ${atuais.length?`<div class="bar" role="img" aria-label="${sent} de ${atuais.length} enviadas"><i style="width:${Math.round(sent/atuais.length*100)}%"></i></div><span style="font-size:.9rem">${sent} de ${atuais.length} atividades enviadas</span>`:''}
       <span class="meta" style="color:var(--ink)">Responda com atenção e uma única vez: vale a resposta mais antiga. Depois de enviar, marque aqui.</span></div>
     ${atuais.length?`<div class="atvlist">${atuais.map(atvCard).join('')}</div>`:'<div class="card empty-card"><b>Nenhuma atividade publicada nesta unidade</b><span class="meta">Quando o professor publicar, ela aparece aqui.</span></div>'}
+    ${(()=>{const ts=[...y.list].sort((a,b)=>(b.n===y.atual)-(a.n===y.atual)||b.n-a.n).flatMap(u=>(u.temas||[]).filter(t=>t.resumo||temAtv(t)));
+      return ts.length?`<div class="card tt-hero"><span class="vale">Vale ponto</span><b style="font-size:1.05rem">Temas Transversais · recuperação paralela</b><span class="meta" style="color:var(--ink)">Aulas extras com atividades que ajudam a recuperar pontos no período.</span></div><div class="atvlist">${ts.map(ttAtvCard).join('')}</div>`:''})()}
     ${outras.map(u=>`<div class="row-head"><h2>Unidade ${u.n}</h2></div><div class="atvlist">${u.caps.filter(c=>c.atividade).map(atvCard).join('')}</div>`).join('')}
   </section>`;
 }
@@ -944,7 +1020,7 @@ function vCalendario(){
       <h2 style="text-transform:capitalize">${MESES[m]} ${y}</h2>
       <button class="icon-btn" id="nextM" aria-label="Próximo mês"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></div>
       <div class="grid7">${cells}</div>
-      <div class="legend"><span><u class="ev-caderno"></u>Caderno</span><span><u class="ev-atv"></u>Atividade</span><span><u class="ev-aval"></u>Avaliação</span><span><u class="ev-aviso"></u>Aviso</span></div>
+      <div class="legend"><span><u class="ev-caderno"></u>Caderno</span><span><u class="ev-atv"></u>Atividade</span><span><u class="ev-aval"></u>Avaliação</span><span><u class="ev-tema"></u>Tema</span><span><u class="ev-aviso"></u>Aviso</span></div>
     </div>
     <h3>${(SEM[dsel.getDay()]+', '+S.sel+' de '+MESES[m]).replace(/^./,c=>c.toUpperCase())}</h3>
     ${doDia.length?`<div class="evlist">${doDia.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nada marcado para este dia</b></div>`}
@@ -1027,10 +1103,10 @@ document.addEventListener('click',ev=>{
   const tab=t.closest('.tab');if(tab){if(tab.dataset.tab==='turma')return abrirTurmas(tab);return go(tab.dataset.tab)}
   const g=t.closest('[data-go]');if(g)return go(g.dataset.go);
   const un=t.closest('[data-unit]');if(un){S.unit=+un.dataset.unit;return go('resumos')}
-  const ac=t.closest('[data-act]');if(ac){S.unit=null;go('resumos',+ac.dataset.act);const b=$('#actBox');if(b){b.scrollIntoView({block:'start'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
+  const ac=t.closest('[data-act]');if(ac){const id=capId(ac.dataset.act),cc=capOf(id);S.unit=cc?cc.u:null;go('resumos',id);const b=$('#actBox');if(b){b.scrollIntoView({block:'start'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
   const jp=t.closest('[data-jump]');if(jp){const b=$('#actBox');if(b){b.scrollIntoView({block:'start',behavior:'smooth'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
   const avi=t.closest('[data-aviso]');if(avi)marcarVisto([avi.dataset.aviso]);
-  const cap=t.closest('[data-cap]');if(cap){const c=capOf(+cap.dataset.cap);if(c)S.unit=c.u;return go('resumos',+cap.dataset.cap)}
+  const cap=t.closest('[data-cap]');if(cap){const id=capId(cap.dataset.cap),c=capOf(id);if(c)S.unit=c.u;return go('resumos',id)}
   if(t.closest('[data-back]'))return go('resumos');
   const day=t.closest('[data-day]');if(day){S.sel=+day.dataset.day;return render()}
   if(t.closest('#prevM')||t.closest('#nextM')){const d=t.closest('#prevM')?-1:1;S.calM+=d;if(S.calM<0){S.calM=11;S.calY--}if(S.calM>11){S.calM=0;S.calY++}S.sel=1;return render()}
@@ -1046,9 +1122,10 @@ document.addEventListener('click',ev=>{
   if(t.closest('#retryBtn')){LOAD='carregando';render();return carregar()}
   if(t.closest('#installBtn')){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(()=>{deferredPrompt=null})}else installHelp();return}
   if(t.closest('#copyBtn')){const k=key(S.cap),c=capOf(S.cap);let gain=false;if(S.copied[k])delete S.copied[k];else{S.copied[k]=true;gain=true}store.set('copied',S.copied);const y=scrollY;render();scrollTo(0,y);
+    if(gain&&c.tema){cheer('resumo',`Aula do Tema Transversal ${c.n} registrada como estudada.`);return}
     if(gain){const all=pubs(Y()).every(x=>isCopied(x.n));all&&c.u===Y().atual?cheer('unidade',`Todos os resumos da Unidade ${c.u} copiados no caderno.`):cheer('resumo',`Resumo do Capítulo ${c.n} registrado como copiado.`)}return}
-  const sb=t.closest('#sentBtn')||t.closest('[data-sent]');if(sb){const n=sb.dataset.sent?+sb.dataset.sent:S.cap,k=key(n);let gain=false;if(S.sent[k])delete S.sent[k];else{S.sent[k]=true;gain=true}store.set('sent',S.sent);const y=scrollY;render();scrollTo(0,y);
-    if(gain)cheer('atividade',`Atividade do Capítulo ${n} registrada como enviada.`);return}
+  const sb=t.closest('#sentBtn')||t.closest('[data-sent]');if(sb){const n=sb.dataset.sent?capId(sb.dataset.sent):S.cap,k=key(n);let gain=false;if(S.sent[k])delete S.sent[k];else{S.sent[k]=true;gain=true}store.set('sent',S.sent);const y=scrollY;render();scrollTo(0,y);
+    if(gain)cheer('atividade',String(n)[0]==='t'?`Atividade do Tema Transversal ${String(n).slice(1)} registrada.`:`Atividade do Capítulo ${n} registrada como enviada.`);return}
   const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;store.set('turma',S.turma);
     if(!MINHA){MINHA=S.turma;store.set('minha',MINHA);go('turma');toast('Turma '+MINHA+' definida como a sua turma.');return}
     go('turma');return}
@@ -1063,8 +1140,8 @@ function abrirDeAviso(o){
   if(o.turma&&TURMAS.includes(o.turma)){S.turma=o.turma;store.set('turma',S.turma)}
   if(!S.turma)return;
   const tab=['turma','resumos','atividades','calendario'].includes(o.ir)?o.ir:'turma';
-  const c=o.cap?capOf(+o.cap):null;
-  if(c&&c.resumo&&tab==='resumos'){S.unit=c.u;go('resumos',c.n)}else go(tab);
+  const c=o.cap?capOf(capId(o.cap)):null;
+  if(c&&c.resumo&&tab==='resumos'){S.unit=c.u;go('resumos',c.id)}else go(tab);
 }
 (()=>{const q=new URLSearchParams(location.search);if(q.get('ir')||q.get('turma')){const o={ir:q.get('ir'),turma:q.get('turma'),cap:q.get('cap')};history.replaceState(null,'',location.pathname);applyMode();render();abrirDeAviso(o)}})();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.geoAbrir)abrirDeAviso(e.data.geoAbrir)});

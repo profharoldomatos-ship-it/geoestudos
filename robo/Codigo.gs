@@ -14,6 +14,9 @@
  *  - verificar ........ mostra no registro um resumo do que o app está recebendo.
  *  - testarAviso ...... manda um aviso de teste para os celulares que ativaram os avisos.
  *
+ * Temas Transversais: pasta "Temas Transversais" dentro da unidade, com Docs "1 Título" (a aula)
+ * e, se a atividade for no próprio app, "1 Atividade". O link do formulário vai na aba "Temas Transversais".
+ *
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
@@ -104,6 +107,7 @@ function instalar() {
   });
   chavesAvisos_();
   planilhaInscricoes_();
+  prepararAbaTemas_();
   const d = atualizar();
   Logger.log('Atualização automática ligada: a cada ' + GEO.MINUTOS + ' minutos, e na hora quando você edita as planilhas ou as ' + agendas + ' agendas.');
   Logger.log(resumoTexto_(d));
@@ -230,12 +234,17 @@ function lerConteudo_() {
   const ss = SpreadsheetApp.openById(GEO.PLANILHA_CONTEUDO);
   const aba = nome => ss.getSheets().filter(s => semAcento_(s.getName()).indexOf(nome) === 0)[0];
   const linhas = s => s ? s.getDataRange().getDisplayValues().slice(1) : [];
-  const c = { livro: {}, unidades: {}, caps: {} };
+  const c = { livro: {}, unidades: {}, caps: {}, temas: {} };
   linhas(aba('anos')).forEach(l => { const a = anoDe_(l[0]); if (a) c.livro[a] = link_(l[1]); });
   linhas(aba('unidades')).forEach(l => {
     const a = anoDe_(l[0]), u = parseInt(l[1], 10);
     if (!a || !u) return;
     (c.unidades[a] = c.unidades[a] || {})[u] = { titulo: String(l[2] || '').trim(), atual: sim_(l[3]) };
+  });
+  linhas(aba('temas')).forEach(l => {
+    const a = anoDe_(l[0]), u = parseInt(l[1], 10), n = parseInt(String(l[2]).replace(/\D+/g, ''), 10);
+    if (!a || !u || !n) return;
+    (c.temas[a] = c.temas[a] || {})[u + '-' + n] = { unidade: u, n: n, titulo: String(l[3] || '').trim(), atividade: link_(l[4], 'form'), pdf: link_(l[5]) };
   });
   linhas(aba('capitulos')).forEach(l => {
     const a = anoDe_(l[0]), u = parseInt(l[1], 10), n = parseInt(l[2], 10);
@@ -251,8 +260,9 @@ function lerConteudo_() {
 /* Resumos (Google Docs)                                                */
 /* ------------------------------------------------------------------ */
 function lerDocs_() {
-  // Resultado: { '7': { 13: {id, nome, unidade, atualizado}, ... }, ... }
-  const docs = {};
+  // Resultado: { caps: { '7': { 13: {id, nome, unidade, atualizado} } },
+  //             temas: { '7': { 4: { 1: {aula: {...}, atividade: {...}} } } } }
+  const docs = {}, temas = {};
   const raiz = DriveApp.getFolderById(GEO.PASTA_APP);
   const anos = raiz.getFolders();
   while (anos.hasNext()) {
@@ -277,9 +287,28 @@ function lerDocs_() {
           atualizado: f.getLastUpdated().toISOString()
         };
       }
+      // Pasta "Temas Transversais" dentro da unidade
+      const subs = pu.getFolders();
+      while (subs.hasNext()) {
+        const pt = subs.next();
+        if (!/tema/i.test(pt.getName())) continue;
+        const tds = pt.getFilesByType(MimeType.GOOGLE_DOCS);
+        while (tds.hasNext()) {
+          const f = tds.next();
+          const nome = f.getName();
+          if (/^\s*\[\s*rascunho/i.test(nome)) continue;
+          const mt = nome.match(/^\s*(?:tt\s*)?(\d+)\s*[-–—.:|]?\s*(.*)$/i);
+          if (!mt) continue;
+          const n = parseInt(mt[1], 10), resto = mt[2].trim();
+          const u = parseInt(mu[1], 10);
+          const t = (((temas[ano] = temas[ano] || {})[u] = temas[ano][u] || {})[n] = temas[ano][u][n] || {});
+          const info = { id: f.getId(), nome: resto, atualizado: f.getLastUpdated().toISOString() };
+          if (/^atividade\b/i.test(resto)) t.atividade = info; else t.aula = info;
+        }
+      }
     }
   }
-  return docs;
+  return { caps: docs, temas: temas };
 }
 
 const NIVEIS_ = () => [
@@ -362,17 +391,27 @@ function textoComEstilo_(el) {
 /* Monta anos, unidades e capítulos                                    */
 /* ------------------------------------------------------------------ */
 function montarAnos_(conf, conteudo, docs, anterior) {
-  const antCaps = {};
-  ((anterior && anterior.anos) || []).forEach(a => (a.unidades || []).forEach(u => (u.caps || []).forEach(c => {
-    if (c.doc) antCaps[c.doc] = c;
-  })));
+  const antCaps = {}, antTxt = {};
+  ((anterior && anterior.anos) || []).forEach(a => (a.unidades || []).forEach(u => {
+    (u.caps || []).forEach(c => { if (c.doc) antCaps[c.doc] = c; });
+    (u.temas || []).forEach(t => {
+      if (t.doc) antTxt[t.doc] = { at: t.atualizado, txt: t.resumo };
+      if (t.docAtividade) antTxt[t.docAtividade] = { at: t.atualizadoAtividade, txt: t.atividadeTexto };
+    });
+  }));
+  const textoDoc = (d) => {
+    const ant = antTxt[d.id];
+    if (ant && ant.txt && ant.at === d.atualizado) return ant.txt;
+    try { return docParaTexto_(DocumentApp.openById(d.id)); }
+    catch (err) { Logger.log('Não consegui ler o Doc ' + d.id + ': ' + err); return ant ? ant.txt : ''; }
+  };
   const ativos = conf.anosAtivos.length ? conf.anosAtivos : ['7', '8', '9'];
   return ativos.map(ano => {
     const unidades = {};
     const sheetU = conteudo.unidades[ano] || {};
     const sheetC = conteudo.caps[ano] || {};
-    const dAno = docs[ano] || {};
-    const garanteU = n => unidades[n] = unidades[n] || { n: n, titulo: (sheetU[n] && sheetU[n].titulo) || ('Unidade ' + n), caps: {} };
+    const dAno = docs.caps[ano] || {};
+    const garanteU = n => unidades[n] = unidades[n] || { n: n, titulo: (sheetU[n] && sheetU[n].titulo) || ('Unidade ' + n), caps: {}, temas: {} };
     Object.keys(sheetU).forEach(n => garanteU(+n));
     Object.keys(sheetC).forEach(n => {
       const c = sheetC[n];
@@ -392,9 +431,28 @@ function montarAnos_(conf, conteudo, docs, anterior) {
         catch (err) { Logger.log('Não consegui ler o Doc ' + d.id + ': ' + err); cap.resumo = ant ? ant.resumo : ''; }
       }
     });
+    // Temas Transversais (aulas extras · recuperação paralela)
+    const sheetT = conteudo.temas[ano] || {};
+    Object.keys(sheetT).forEach(k => {
+      const t = sheetT[k];
+      garanteU(t.unidade).temas[t.n] = { n: t.n, titulo: t.titulo, atividade: t.atividade, pdf: t.pdf };
+    });
+    const dT = docs.temas[ano] || {};
+    Object.keys(dT).forEach(un => Object.keys(dT[un]).forEach(n => {
+      const d = dT[un][n], u = garanteU(+un);
+      const t = u.temas[n] = u.temas[n] || { n: +n, titulo: '', atividade: '', pdf: '' };
+      if (d.aula) {
+        if (!t.titulo) t.titulo = d.aula.nome;
+        t.doc = d.aula.id; t.atualizado = d.aula.atualizado; t.resumo = textoDoc(d.aula);
+      }
+      if (d.atividade) {
+        t.docAtividade = d.atividade.id; t.atualizadoAtividade = d.atividade.atualizado; t.atividadeTexto = textoDoc(d.atividade);
+      }
+    }));
     const lista = Object.keys(unidades).map(Number).sort((a, b) => a - b).map(n => {
       const u = unidades[n];
-      return { n: n, titulo: u.titulo, caps: Object.keys(u.caps).map(Number).sort((a, b) => a - b).map(k => u.caps[k]) };
+      const temas = Object.keys(u.temas).map(Number).sort((a, b) => a - b).map(k => u.temas[k]).filter(t => t.resumo || t.atividade || t.atividadeTexto);
+      return { n: n, titulo: u.titulo, caps: Object.keys(u.caps).map(Number).sort((a, b) => a - b).map(k => u.caps[k]), temas: temas };
     });
     let atual = Object.keys(sheetU).map(Number).filter(n => sheetU[n].atual)[0];
     if (!atual) atual = lista.length ? lista[lista.length - 1].n : 1;
@@ -440,9 +498,11 @@ function eventoParaApp_(id, titulo, descricao, data, hora) {
   const t = semAcento_(titulo);
   const tipo = t.indexOf('entrega do caderno') === 0 ? 'caderno'
     : t.indexOf('atividade de fixacao') === 0 ? 'atividade'
+    : t.indexOf('tema transversal') >= 0 ? 'tema'
     : /avaliac|prova|teste|simulado/.test(t) ? 'avaliacao' : 'aviso';
   const mc = String(titulo).match(/cap(?:[ií]tulo|\.)?\s*(\d+)/i);
-  return { id: id + '@' + data, data: data, hora: hora, titulo: String(titulo || '').trim(), tipo: tipo, cap: mc ? +mc[1] : null, descricao: desc, link: link };
+  const mt = tipo === 'tema' ? String(titulo).match(/tema transversal\s*(\d+)/i) : null;
+  return { id: id + '@' + data, data: data, hora: hora, titulo: String(titulo || '').trim(), tipo: tipo, cap: mt ? 't' + mt[1] : (mc ? +mc[1] : null), descricao: desc, link: link };
 }
 
 /* ------------------------------------------------------------------ */
@@ -463,6 +523,15 @@ function calcularAvisos_(dados, anterior, conf) {
     const id = 'r-' + a.ano + '-' + c.n;
     if (c.doc && c.resumo && !antDocs[a.ano + '-' + c.n] && !ja[id]) {
       avisos.push({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Resumo novo no app', texto: 'Capítulo ' + c.n + ': ' + c.titulo + '. Leia e copie no caderno.', cap: c.n });
+    }
+  })));
+
+  const antTemas = {};
+  anterior.anos.forEach(a => a.unidades.forEach(u => (u.temas || []).forEach(t => { if (t.resumo) antTemas[a.ano + '-' + t.n] = true; })));
+  dados.anos.forEach(a => a.unidades.forEach(u => (u.temas || []).forEach(t => {
+    const id = 'tt-' + a.ano + '-' + t.n;
+    if (t.resumo && !antTemas[a.ano + '-' + t.n] && !ja[id]) {
+      avisos.push({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Tema Transversal novo', texto: 'Tema Transversal ' + t.n + ': ' + t.titulo + '. Aula extra que vale ponto na recuperação.', cap: 't' + t.n });
     }
   })));
 
@@ -602,11 +671,12 @@ function novasNotificacoes_(dados, anterior, conf) {
 }
 
 function resumoEventos_(evs, hoje) {
-  const caps = evs.filter(e => e.cap).map(e => e.cap).sort((a, b) => a - b);
+  const caps = evs.filter(e => typeof e.cap === 'number').map(e => e.cap).sort((a, b) => a - b);
   const q = (tipo) => evs.filter(e => e.tipo === tipo).length;
   const partes = [];
   if (q('caderno')) partes.push(q('caderno') === 1 ? 'entrega do caderno' : q('caderno') + ' entregas do caderno');
   if (q('atividade')) partes.push(q('atividade') === 1 ? (hoje ? 'último dia da atividade de fixação' : 'prazo final da atividade de fixação') : (hoje ? 'último dia de ' : 'prazo final de ') + q('atividade') + ' atividades de fixação');
+  if (q('tema')) partes.push(q('tema') === 1 ? 'prazo do Tema Transversal' : 'prazo de ' + q('tema') + ' Temas Transversais');
   if (q('avaliacao')) partes.push(q('avaliacao') === 1 ? 'avaliação' : q('avaliacao') + ' avaliações');
   return partes.join(' e ') + (caps.length === 1 ? ' (Cap. ' + caps[0] + ')' : caps.length > 1 ? ' (Caps. ' + caps[0] + ' a ' + caps[caps.length - 1] + ')' : '');
 }
@@ -766,4 +836,26 @@ function jwtAviso_(aud, ch) {
   const jwt = cab + '.' + corpo + '.' + b64u_(assinar_(cab + '.' + corpo, ch.d));
   cache.put(chave, jwt, 6 * 3600);
   return jwt;
+}
+
+/* ---------- Aba "Temas Transversais" na planilha de Conteúdo ---------- */
+/** Cria a aba (se não existir) e acrescenta uma linha para cada Tema Transversal encontrado nas pastas. */
+function prepararAbaTemas_() {
+  const ss = SpreadsheetApp.openById(GEO.PLANILHA_CONTEUDO);
+  let sh = ss.getSheets().filter(s => semAcento_(s.getName()).indexOf('temas') === 0)[0];
+  if (!sh) {
+    sh = ss.insertSheet('Temas Transversais', 3);
+    sh.appendRow(['Ano', 'Unidade', 'Tema', 'Título do tema', 'Atividade (link do formulário)', 'PDF da aula (link)']);
+    sh.getRange(1, 1, 1, 6).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F').setWrap(true);
+    sh.setFrozenRows(1);
+    [10, 9, 8, 60, 70, 55].forEach((w, i) => sh.setColumnWidth(i + 1, w * 7));
+  }
+  const tem = {};
+  sh.getDataRange().getDisplayValues().slice(1).forEach(l => tem[anoDe_(l[0]) + '-' + parseInt(l[1], 10) + '-' + parseInt(String(l[2]).replace(/\D+/g, ''), 10)] = true);
+  const temas = lerDocs_().temas;
+  Object.keys(temas).sort().forEach(a => Object.keys(temas[a]).forEach(u => Object.keys(temas[a][u]).forEach(n => {
+    const t = temas[a][u][n];
+    if (!t.aula || tem[a + '-' + u + '-' + n]) return;
+    sh.appendRow([a + 'º ano', +u, +n, t.aula.nome, '', '']);
+  })));
 }
