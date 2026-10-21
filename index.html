@@ -57,6 +57,19 @@ h1{font-size:1.6rem;line-height:1.15} h2{font-size:1.2rem} h3{font-size:1.02rem;
 .meta{font-size:.84rem;color:var(--muted)}
 .link{color:var(--pen);font-weight:700}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
+.modebtn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px 6px 8px;font-size:.8rem;font-weight:700;flex:none}
+.modebtn .mb-ic{width:22px;height:22px;border-radius:50%;background:var(--pen-soft);color:var(--pen);display:grid;place-items:center}
+.modebtn .mb-ic svg{width:15px;height:15px}
+.modes{display:flex;flex-direction:column;gap:8px}
+.mode-opt{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface)}
+.mode-opt[aria-pressed="true"]{border-color:var(--pen);background:var(--pen-soft)}
+.mode-opt>svg{color:var(--pen)}
+.mo-prev{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1px solid rgba(0,0,0,.12)}
+.mo-prev svg{width:22px;height:22px}
+.mo-auto .mo-prev{background:linear-gradient(135deg,#FBF8F1 50%,#16191E 50%);color:#1D3F8F}
+.mo-claro .mo-prev{background:#FBF8F1;color:#1D3F8F}
+.mo-sepia .mo-prev{background:#F4ECD8;color:#3B2F22}
+.mo-escuro .mo-prev{background:#16191E;color:#9DB8FF}
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--surface)}
 .chip[aria-pressed="true"]{background:var(--pen-soft);border-color:var(--pen);color:var(--pen)}
 .src{display:none;font-size:.7rem;font-weight:700;letter-spacing:.03em;color:var(--pen);background:var(--pen-soft);border-radius:6px;padding:2px 7px;width:max-content}
@@ -414,6 +427,7 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:#9DB8F
   <circle cx="60" cy="41" r="1.1" fill="#FFE27A"/>
 </svg><span><b>GeoEstudos</b><br><span class="eyebrow">Prof. Haroldo Matos</span></span></span>
     </div>
+    <button class="modebtn" id="modeBtn" aria-label="Modo de cores" aria-haspopup="dialog"><span class="mb-ic" aria-hidden="true"></span><span class="mb-t">Automático</span></button>
   </header>
   <main id="view"></main>
   <footer class="foot">
@@ -693,7 +707,18 @@ function readSheet(){
     o.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;store.set('mode',S.mode);applyMode();o.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
   });
 }
-function applyMode(){document.body.classList.remove('m-claro','m-sepia','m-escuro');if(S.mode!=='auto')document.body.classList.add('m-'+S.mode)}
+const MODOS=[['auto','Automático','Segue o modo do celular'],['claro','Claro','Fundo claro, ótimo de dia'],['sepia','Sépia','Tom de papel, cansa menos a vista'],['escuro','Escuro','Melhor à noite e com pouca luz']];
+const MICO={auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',claro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',sepia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg>',escuro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>'};
+function applyMode(){
+  document.body.classList.remove('m-claro','m-sepia','m-escuro');if(S.mode!=='auto')document.body.classList.add('m-'+S.mode);
+  const r=document.documentElement;if(S.mode==='auto')delete r.dataset.theme;else r.dataset.theme=S.mode==='escuro'?'dark':'light';
+  const b=document.getElementById('modeBtn');if(b){b.querySelector('.mb-ic').innerHTML=MICO[S.mode];b.querySelector('.mb-t').textContent=MODOS.find(m=>m[0]===S.mode)[1]}
+  const meta=document.querySelector('meta[name=theme-color]');if(meta)meta.content=getComputedStyle(document.body).backgroundColor;
+}
+function modeSheet(){
+  sheet(`<h2>Modo de cores</h2><div class="modes">${MODOS.map(m=>`<button class="mode-opt mo-${m[0]}" data-mode="${m[0]}" aria-pressed="${S.mode===m[0]}"><span class="mo-prev" aria-hidden="true">${MICO[m[0]]}</span><span><b>${m[1]}</b><br><span class="meta">${m[2]}</span></span>${S.mode===m[0]?CHECK:''}</button>`).join('')}</div><button class="btn btn-ghost" data-close>Pronto</button>`,
+  (o,close)=>o.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;store.set('mode',S.mode);applyMode();close();toast('Modo '+MODOS.find(m=>m[0]===S.mode)[1].toLowerCase()+' ativado.')}));
+}
 
 /* Datas e agenda */
 const dataBR=iso=>{const [y,m,d]=iso.split('-').map(Number);return {d,m:m-1,y,dt:new Date(y,m-1,d)}};
@@ -1120,6 +1145,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#listBtn'))return listSheet();
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
+  if(t.closest('#modeBtn'))return modeSheet();
   if(t.closest('#pushOn'))return ativarPush();
   if(t.closest('#pushOff'))return desativarPush();
   if(t.closest('#pushHelp'))return pushHelp();
