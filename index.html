@@ -146,6 +146,23 @@ body.m-escuro .year-t{color:color-mix(in srgb,var(--yc) 55%,#fff)}
 .tab svg{width:22px;height:22px}
 .tab .tl{white-space:nowrap}
 .tab[aria-current="page"]{color:var(--pen);background:var(--pen-soft);font-weight:700}
+/* Barra de menus na cor do ano da turma do aluno */
+body.my7{--mc:var(--y7)} body.my8{--mc:var(--y8)} body.my9{--mc:var(--y9)}
+body:is(.my7,.my8,.my9) .tabs{background:color-mix(in srgb,var(--mc) 12%,var(--surface));border-top:3px solid var(--mc)}
+body:is(.my7,.my8,.my9) .tab{color:color-mix(in srgb,var(--mc) 70%,var(--ink))}
+body:is(.my7,.my8,.my9) .tab[aria-current="page"]{background:var(--mc);color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body:is(.my7,.my8,.my9) .tab{color:color-mix(in srgb,var(--mc) 45%,#fff)}:root:not([data-theme="light"]) body:is(.my7,.my8,.my9) .tab[aria-current="page"]{color:#fff}}
+body.m-escuro:is(.my7,.my8,.my9) .tab{color:color-mix(in srgb,var(--mc) 45%,#fff)} body.m-escuro:is(.my7,.my8,.my9) .tab[aria-current="page"]{color:#fff}
+.cel{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:.86rem;color:var(--muted);padding:2px 4px}
+.cel .link{font-size:.86rem}
+.pushon-b{display:flex;gap:14px;flex:none}
+.tchk{display:flex;flex-direction:column;gap:10px}
+.tchk-ano{border-left:4px solid var(--yc);padding-left:10px;display:flex;flex-direction:column;gap:6px}
+.tchk-ano b{color:var(--yc);font-family:var(--display)}
+.tchk-ano div{display:flex;gap:8px}
+.tchk label{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:700;font-family:var(--display);font-size:1.05rem;cursor:pointer}
+.tchk label:has(input:checked){border-color:var(--yc);background:color-mix(in srgb,var(--yc) 14%,var(--surface))}
+.tchk input{width:18px;height:18px;accent-color:var(--yc)}
 .cal-head{display:flex;justify-content:space-between;align-items:center}
 .icon-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface)}
 .grid7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center;font-variant-numeric:tabular-nums}
@@ -493,9 +510,10 @@ function aplicarDados(){
 aplicarDados();
 
 /* "Minha turma": a turma do aluno, fixa. Os avisos ficam presos a ela; ver outra turma não muda nada. */
-let MINHA=store.get('minha',null)||(store.get('push',null)||{}).turma||store.get('turma',null);
+let COMP=store.get('compartilhado',false);
+let MINHA=COMP?null:(store.get('minha',null)||(store.get('push',null)||{}).turma||store.get('turma',null));
 if(MINHA)store.set('minha',MINHA);
-const S={unit:null,tab:'home',turma:MINHA,copied:store.get('copied',{}),sent:store.get('sent',{}),size:store.get('size',1),mode:store.get('mode','auto'),tip:store.get('tip',true),vistos:store.get('vistos',[]),calM:TODAY.getMonth(),calY:TODAY.getFullYear(),sel:TODAY.getDate(),cap:null};
+const S={unit:null,tab:'home',turma:COMP?null:MINHA,copied:store.get('copied',{}),sent:store.get('sent',{}),size:store.get('size',1),mode:store.get('mode','auto'),tip:store.get('tip',true),vistos:store.get('vistos',[]),calM:TODAY.getMonth(),calY:TODAY.getFullYear(),sel:TODAY.getDate(),cap:null};
 if(DATA&&MINHA&&!TURMAS.includes(MINHA)){MINHA=null;store.set('minha',null)}
 if(DATA&&S.turma&&!TURMAS.includes(S.turma))S.turma=null;
 let ANN=[],pending=null,editing=null,adjusting=null;
@@ -789,13 +807,16 @@ function installHelp(){
 const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
 const ehIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
 let PUSH=store.get('push',null);
+if(PUSH&&!PUSH.turmas)PUSH.turmas=PUSH.turma?[PUSH.turma]:[];
+const listaT=ts=>ts.length>1?ts.slice(0,-1).join(', ')+' e '+ts[ts.length-1]:ts[0]||'';
 function b64u8(s){const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))}
-async function avisarSW(turma){try{const c=await caches.open('geo-push');await c.put('turma',new Response(turma||''));await c.put('dataurl',new Response(CFG.DATA_URL||''))}catch(e){}}
-async function enviarInscricao(sub,turma,acao){
-  const r=await fetch(CFG.DATA_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({acao:acao||'inscrever',turma,sub:sub.toJSON?sub.toJSON():sub})});
+async function avisarSW(turmas){try{const c=await caches.open('geo-push');await c.put('turma',new Response([].concat(turmas||[]).join(',')));await c.put('dataurl',new Response(CFG.DATA_URL||''))}catch(e){}}
+async function enviarInscricao(sub,turmas,acao){
+  turmas=[].concat(turmas||[]);
+  const r=await fetch(CFG.DATA_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({acao:acao||'inscrever',turma:turmas[0],turmas,sub:sub.toJSON?sub.toJSON():sub})});
   const j=await r.json();if(!j.ok)throw new Error(j.erro||'falha');
 }
-async function ativarPush(){
+async function ativarPush(lista){
   if(!pushOk()||!(DATA&&DATA.push&&DATA.push.chave))return toast('Este celular não aceita avisos.');
   store.set('querPush',true);
   const perm=await Notification.requestPermission();
@@ -804,32 +825,56 @@ async function ativarPush(){
     const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u8(DATA.push.chave)});
-    const t=MINHA||S.turma;
-    await enviarInscricao(sub,t);await avisarSW(t);
-    PUSH={turma:t,endpoint:sub.endpoint};store.set('push',PUSH);render();
-    toast('Avisos ativados para a sua turma, a '+t+'.');
+    const ts=lista&&lista.length?lista:[MINHA||S.turma];
+    await enviarInscricao(sub,ts);await avisarSW(ts);
+    PUSH={turmas:ts,endpoint:sub.endpoint};store.set('push',PUSH);render();
+    toast(ts.length>1?'Avisos ativados para as turmas '+listaT(ts)+'.':'Avisos ativados para a turma '+ts[0]+'.');
   }catch(e){toast('Não foi possível ativar agora. Tente de novo com internet.')}
 }
 async function desativarPush(){
-  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub){enviarInscricao(sub,MINHA||S.turma,'remover').catch(()=>{});await sub.unsubscribe()}}catch(e){}
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub){enviarInscricao(sub,PUSH?PUSH.turmas:[],'remover').catch(()=>{});await sub.unsubscribe()}}catch(e){}
   PUSH=null;store.set('push',null);store.set('querPush',false);render();toast('Avisos desativados. Para ativar de novo, toque em "Ativar avisos".');
 }
 async function conferirPush(){
   if(!PUSH||!pushOk())return;
   try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
     if(!sub||Notification.permission!=='granted'){PUSH=null;store.set('push',null);render();return}
-    if(MINHA&&PUSH.turma!==MINHA){await enviarInscricao(sub,MINHA);PUSH.turma=MINHA;store.set('push',PUSH);await avisarSW(MINHA)}
+    if(MINHA&&(PUSH.turmas.length!==1||PUSH.turmas[0]!==MINHA)){await enviarInscricao(sub,[MINHA]);PUSH.turmas=[MINHA];store.set('push',PUSH);await avisarSW([MINHA])}
   }catch(e){}
 }
 const SINO='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
 function pushCard(){
   if(!DATA||!DATA.push||!DATA.push.chave)return '';
-  if(PUSH)return `<div class="pushon"><span>🔔 Avisos ativados para a sua turma, a ${esc(PUSH.turma)}.</span><button class="link" id="pushOff">Desativar</button></div>`;
+  if(PUSH)return `<div class="pushon"><span>🔔 Avisos ativados para ${PUSH.turmas.length>1?'as turmas '+esc(listaT(PUSH.turmas)):'a turma '+esc(PUSH.turmas[0])}.</span><span class="pushon-b">${COMP?'<button class="link" id="pushTurmas">Alterar</button>':''}<button class="link" id="pushOff">Desativar</button></span></div>`;
   const tm=MINHA?' ('+esc(MINHA)+')':'';
+  if(COMP&&pushOk()&&Notification.permission!=='denied'&&!(ehIOS()&&!standalone()))return `<button class="pushhero" id="pushTurmas"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Ative os avisos neste celular</b><span>Celular compartilhado: escolha as turmas de quem usa este aparelho.</span></div><span class="ph-btn">Escolher turmas e ativar</span></button>`;
   if(ehIOS()&&!standalone())return `<div class="pushhero"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Receba os avisos da sua turma${tm}</b><span>No iPhone, primeiro instale o app: no Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>. Abra pelo ícone e ative aqui.</span></div><button class="ph-btn" id="installBtn">Como instalar</button></div>`;
   if(!pushOk())return '';
   if(Notification.permission==='denied')return `<div class="pushhero bloq"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Os avisos estão bloqueados</b><span>Se você tocou em "Bloquear" sem querer, dá para liberar em poucos passos.</span></div><div class="ph-acts"><button class="ph-btn" id="pushHelp">Como liberar</button><button class="ph-link" id="pushRecheck">Já liberei</button></div></div>`;
   return `<button class="pushhero" id="pushOn"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Ative os avisos da sua turma${tm}</b><span>Resumo novo, véspera das entregas e prazo das atividades de fixação: tudo no seu celular.</span></div><span class="ph-btn">Ativar avisos</span></button>`;
+}
+function turmasSheet(){
+  const marc=PUSH?PUSH.turmas:(S.turma?[S.turma]:[]);
+  sheet(`<h2>Avisos de quais turmas?</h2><p class="meta" style="margin:0">Marque as turmas de quem usa este celular. Os avisos de todas elas chegam aqui.</p>
+    <div class="tchk">${Object.values(YEARS).map(y=>`<div class="tchk-ano" style="--yc:${y.color}"><b>${y.label}</b><div>${y.turmas.map(t=>`<label><input type="checkbox" value="${t}"${marc.includes(t)?' checked':''}><span>${t}</span></label>`).join('')}</div></div>`).join('')}</div>
+    <p id="tchkErr" class="meta" style="color:var(--rust);margin:0" hidden>Marque pelo menos uma turma.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="tchkOk">${PUSH?'Salvar':'Ativar avisos'}</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,
+  (o,close)=>{o.querySelector('#tchkOk').onclick=()=>{const ts=[...o.querySelectorAll('input:checked')].map(i=>i.value);if(!ts.length){o.querySelector('#tchkErr').hidden=false;return}close();ativarPush(ts)}});
+}
+function perguntarTurma(t){
+  sheet(`<h2>Você é da turma ${esc(t)}?</h2><p style="margin:0">Se for, o app passa a abrir nela, a barra de menus fica na cor do seu ano e os avisos serão os da sua turma.</p>
+    <div class="modes"><button class="mode-opt" id="ptSim"><span class="mo-prev" style="background:${YEARS[T2A[t]].color};color:#fff;font-family:var(--display);font-weight:700">${esc(t)}</span><span><b>Sim, sou da turma ${esc(t)}</b><br><span class="meta">Fixar como minha turma</span></span></button>
+    <button class="mode-opt" id="ptComp"><span class="mo-prev" aria-hidden="true" style="background:var(--surface-2)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18 19a5 5 0 0 0-2.5-4.3"/></svg></span><span><b>Celular compartilhado</b><br><span class="meta">Irmãos, vizinhos ou amigos de turmas diferentes usam este aparelho. Não fixar turma.</span></span></button></div>`,
+  (o,close)=>{
+    o.querySelector('#ptSim').onclick=()=>{close();MINHA=t;COMP=false;store.set('minha',t);store.set('compartilhado',false);render();conferirPush();toast('Turma '+t+' definida como a sua turma.')};
+    o.querySelector('#ptComp').onclick=()=>{close();COMP=true;MINHA=null;store.set('compartilhado',true);store.set('minha',null);render();toast('Modo celular compartilhado ativado.')};
+  });
+}
+function celularCard(){
+  if(!DATA)return '';
+  if(COMP)return `<div class="cel"><span>👥 <b>Celular compartilhado</b> · nenhuma turma fixa.</span><button class="link" id="celFixar">Fixar minha turma</button></div>`;
+  if(MINHA)return `<div class="cel"><span>Sua turma: <b>${esc(MINHA)}</b>.</span><button class="link" id="celComp">Usar como celular compartilhado</button></div>`;
+  return '';
 }
 function pushHelp(){
   const ios=ehIOS(),inst=standalone();
@@ -882,6 +927,7 @@ function vHome(){
     ${msg?`<div class="banner">${esc(msg)}</div>`:''}
     <div><h2>Navegue por ano e turma</h2><p class="meta" style="margin:4px 0 0">Escolha a sua turma para ver os resumos e as atividades.</p></div>
     ${DATA?Object.values(YEARS).map(y=>`<div class="card year" style="--yc:${y.color}"><div class="year-h"><b class="year-t">${y.label}</b><span class="meta">Unidade ${y.atual} · ${esc(y.unit)}</span></div><div class="choice">${y.turmas.map(t=>`<button data-turma="${t}" aria-pressed="${MINHA===t}"><span>Turma</span>${t}${MINHA===t?'<small>Minha turma</small>':''}</button>`).join('')}</div></div>`).join(''):semDados()}
+    ${celularCard()}
     ${installCard()}
   </section>`;
 }
@@ -1091,7 +1137,7 @@ function render(){
   document.querySelector('.tabs').hidden=!S.turma||!DATA||(S.tab==='home'&&!S.cap&&!S.turma);
   const tl=document.querySelector('[data-tab=turma] .tl');if(tl)tl.textContent=S.turma?'Turma '+S.turma:'Turma';
   const dot=document.querySelector('[data-tab=turma]');if(dot)dot.classList.toggle('has-new',!!(S.turma&&DATA&&avisosNovos().length));
-  document.body.classList.remove('y7','y8','y9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());
+  document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
   $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario}[S.tab]();
   if(MINHA&&S.turma&&S.turma!==MINHA&&S.tab!=='home'&&S.tab!=='turma')$('#view').insertAdjacentHTML('afterbegin',`<div class="outra mini"><span>Vendo a <b>Turma ${esc(S.turma)}</b> · sua turma é a ${esc(MINHA)}</span><button class="link" data-turma="${esc(MINHA)}">Voltar</button></div>`);
   if(S.cap){loadAnn();paintResumo()}
@@ -1183,9 +1229,11 @@ document.addEventListener('click',ev=>{
   const sb=t.closest('#sentBtn')||t.closest('[data-sent]');if(sb){const n=sb.dataset.sent?capId(sb.dataset.sent):S.cap,k=key(n);let gain=false;if(S.sent[k])delete S.sent[k];else{S.sent[k]=true;gain=true}store.set('sent',S.sent);const y=scrollY;render();scrollTo(0,y);
     if(gain)cheer('atividade',String(n)[0]==='t'?`Atividade do Tema Transversal ${String(n).slice(1)} registrada.`:`Atividade do Capítulo ${n} registrada como enviada.`);return}
   const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;store.set('turma',S.turma);
-    if(!MINHA){MINHA=S.turma;store.set('minha',MINHA);go('turma');toast('Turma '+MINHA+' definida como a sua turma.');return}
-    go('turma');return}
-  if(t.closest('#mudarMinha')){const nova=S.turma;sheet(`<h2>Mudar a sua turma?</h2><p style="margin:0">Hoje a sua turma é a <b>${esc(MINHA)}</b>. Se mudar para a <b>${esc(nova)}</b>, o app passa a abrir nela${PUSH?' e os avisos no celular passam a ser os da turma '+esc(nova):''}.</p><p class="meta" style="margin:0">Só mude se você realmente estuda na turma ${esc(nova)}.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="mmSim">Sim, minha turma é a ${esc(nova)}</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,(o,close)=>{o.querySelector('#mmSim').onclick=()=>{close();MINHA=nova;store.set('minha',MINHA);render();conferirPush();toast('Agora a sua turma é a '+MINHA+'.')}});return}
+    go('turma');if(!MINHA&&!COMP)perguntarTurma(S.turma);return}
+  if(t.closest('#pushTurmas'))return turmasSheet();
+  if(t.closest('#celComp')){sheet(`<h2>Usar como celular compartilhado?</h2><p style="margin:0">A turma ${esc(MINHA)} deixa de ser fixa. O app passa a abrir na escolha de turmas e a barra volta às cores padrão.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="ccSim">Sim, é compartilhado</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,(o,close)=>{o.querySelector('#ccSim').onclick=()=>{close();COMP=true;MINHA=null;store.set('compartilhado',true);store.set('minha',null);render();toast('Modo celular compartilhado ativado.')}});return}
+  if(t.closest('#celFixar')){COMP=false;store.set('compartilhado',false);render();toast('Toque na sua turma para fixá-la.');return}
+  if(t.closest('#mudarMinha')){const nova=S.turma;sheet(`<h2>Mudar a sua turma?</h2><p style="margin:0">Hoje a sua turma é a <b>${esc(MINHA)}</b>. Se mudar para a <b>${esc(nova)}</b>, o app passa a abrir nela${PUSH?' e os avisos no celular passam a ser os da turma '+esc(nova):''}.</p><p class="meta" style="margin:0">Só mude se você realmente estuda na turma ${esc(nova)}.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="mmSim">Sim, minha turma é a ${esc(nova)}</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,(o,close)=>{o.querySelector('#mmSim').onclick=()=>{close();MINHA=nova;COMP=false;store.set('compartilhado',false);store.set('minha',MINHA);render();conferirPush();toast('Agora a sua turma é a '+MINHA+'.')}});return}
   if(t.closest('#copyMail')){try{navigator.clipboard.writeText(EMAIL).then(()=>toast('E-mail copiado.'),()=>toast(EMAIL))}catch(e){toast(EMAIL)}return}
   if(collapsed&&!adjusting&&(pending||editing))clearSel();
 });

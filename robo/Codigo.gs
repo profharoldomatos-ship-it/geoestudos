@@ -71,11 +71,12 @@ function doPost(e) {
     lock.waitLock(20000);
     try {
       if (b.acao === 'remover') { removerInscricoes_([ep]); return resp({ ok: true }); }
-      const turma = String(b.turma || '');
       const conf = lerConfig_();
       const validas = [].concat.apply([], Object.keys(conf.turmas).map(k => conf.turmas[k]));
-      if (validas.indexOf(turma) < 0) return resp({ ok: false, erro: 'turma inválida' });
-      salvarInscricao_(ep, turma);
+      // Um celular pode receber avisos de várias turmas (celular compartilhado)
+      const turmas = [].concat(b.turmas || b.turma || []).map(String).filter(t => validas.indexOf(t) >= 0);
+      if (!turmas.length) return resp({ ok: false, erro: 'turma inválida' });
+      salvarInscricao_(ep, turmas.join('; '));
       return resp({ ok: true });
     } finally { lock.releaseLock(); }
   } catch (err) {
@@ -695,14 +696,14 @@ function planilhaInscricoes_() {
   const ss = SpreadsheetApp.create('GeoEstudos - celulares com avisos ativados (não apagar)');
   DriveApp.getFileById(ss.getId()).moveTo(DriveApp.getFolderById(GEO.PASTA_APP));
   const sh = ss.getSheets()[0];
-  sh.appendRow(['Endereço de aviso do celular (não identifica o aluno)', 'Turma', 'Ativado em', 'Última confirmação']);
+  sh.appendRow(['Endereço de aviso do celular (não identifica o aluno)', 'Turma(s)', 'Ativado em', 'Última confirmação']);
   sh.setFrozenRows(1);
   props.setProperty('planilhaInscricoes', ss.getId());
   return sh;
 }
 function lerInscricoes_() {
   const v = planilhaInscricoes_().getDataRange().getValues().slice(1);
-  return v.filter(r => r[0]).map(r => ({ endpoint: String(r[0]), turma: String(r[1]) }));
+  return v.filter(r => r[0]).map(r => ({ endpoint: String(r[0]), turmas: String(r[1]).split(/[,;\s]+/).filter(Boolean) }));
 }
 function salvarInscricao_(ep, turma) {
   const sh = planilhaInscricoes_();
@@ -724,7 +725,7 @@ function removerInscricoes_(eps) {
 function enviarAvisos_(notifs) {
   const turmas = {};
   notifs.forEach(n => turmas[n.turma] = true);
-  const alvo = lerInscricoes_().filter(s => turmas[s.turma]);
+  const alvo = lerInscricoes_().filter(s => s.turmas.some(t => turmas[t]));
   if (!alvo.length) return;
   const ch = chavesAvisos_();
   const jwts = {};
@@ -754,7 +755,7 @@ function testarAviso() {
   const f = arquivoDados_();
   const d = JSON.parse(f.getBlob().getDataAsString('UTF-8'));
   const turmas = {};
-  lerInscricoes_().forEach(s => turmas[s.turma] = true);
+  lerInscricoes_().forEach(s => s.turmas.forEach(t => turmas[t] = true));
   const ts = Object.keys(turmas);
   if (!ts.length) { Logger.log('Nenhum celular ativou os avisos ainda.'); return; }
   const agora = new Date().toISOString();
