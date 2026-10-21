@@ -427,12 +427,19 @@ body.m-escuro .tt-act,body.m-escuro .tt-hero{background:var(--surface)!important
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ev{--evs:var(--surface-2)}:root:not([data-theme="light"]) .ev-caderno{--evc:#9DB8FF}:root:not([data-theme="light"]) .ev-atv{--evc:#E3C24A}:root:not([data-theme="light"]) .ev-aval{--evc:#F08B7D}:root:not([data-theme="light"]) .ev-aviso{--evc:#A3A8B2}}
 body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:#9DB8FF} body.m-escuro .ev-atv{--evc:#E3C24A} body.m-escuro .ev-aval{--evc:#F08B7D}
 .day{position:relative}
-.day .dots{position:absolute;bottom:4px;left:0;right:0;display:flex;justify-content:center;gap:2px}
-.day .dots u,.legend u{display:block;width:6px;height:6px;border-radius:50%;background:var(--evc)}
+.day .dots{position:absolute;bottom:4px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:2.5px}
+/* Pontos na cor do ano da turma; o formato indica o tipo */
+.day .dots u,.legend u{display:block;width:6px;height:6px;background:var(--year);border-radius:50%;flex:none}
+:is(.dots,.legend) u.ev-atv{border-radius:1px}
+:is(.dots,.legend) u.ev-aval{border-radius:1px;transform:rotate(45deg);width:5.5px;height:5.5px}
+:is(.dots,.legend) u.ev-tema{background:transparent;border:1.6px solid var(--year);width:7px;height:7px}
+:is(.dots,.legend) u.ev-aviso{width:8px;height:2.4px;border-radius:2px}
 .day.sel .dots u{background:var(--on-pen)}
-.day.has{font-weight:700}
+.day.sel .dots u.ev-tema{background:transparent;border-color:var(--on-pen)}
+.day.has{font-weight:700;background:color-mix(in srgb,var(--year) 13%,transparent);color:color-mix(in srgb,var(--year) 75%,var(--ink))}
+.day.has.sel{background:var(--pen);color:var(--on-pen)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.76rem;color:var(--muted)}
-.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
 .avisos{display:flex;flex-direction:column;gap:8px}
 .aviso{display:flex;gap:10px;align-items:center;background:var(--hl-soft);border-radius:var(--r);padding:10px 12px;font-size:.92rem}
 .av-ic{flex:none;width:32px;height:32px;border-radius:50%;background:var(--hl);color:var(--m-ink);display:grid;place-items:center;font-weight:700}
