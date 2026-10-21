@@ -240,6 +240,15 @@ h1{font-size:1.6rem;line-height:1.15} h2{font-size:1.2rem} h3{font-size:1.02rem;
 @keyframes pop{from{transform:scale(.85);opacity:0}}@keyframes spin{from{transform:rotate(-30deg) scale(.6)}}}
 .brand{display:flex;align-items:center;gap:8px;line-height:1.15}.brand b{font-family:var(--display);font-size:1.02rem;color:var(--pen)}
 .tabs[hidden]{display:none}
+.tmenu{position:fixed;z-index:20;width:236px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.2);padding:12px;display:flex;flex-direction:column;gap:10px}
+.tmenu::after{content:"";position:absolute;bottom:-7px;left:calc(var(--ax) - 7px);width:12px;height:12px;background:var(--surface);border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+.tm-ano{display:flex;flex-direction:column;gap:6px;border-left:4px solid var(--yc);padding-left:9px}
+.tm-ano b{font-family:var(--display);font-size:.92rem;color:var(--yc)}
+.tm-ts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tm-ts button{border:1.5px solid var(--line);border-radius:10px;padding:7px 4px;font-family:var(--display);font-weight:700;font-size:1.05rem;display:flex;flex-direction:column;align-items:center;line-height:1.1;background:var(--bg)}
+.tm-ts button small{font-family:var(--body);font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.tm-ts [aria-current="true"]{background:var(--yc);border-color:var(--yc);color:#fff}
+@media (prefers-reduced-motion:no-preference){.tmenu{animation:tmup .18s ease-out}@keyframes tmup{from{transform:translateY(10px);opacity:0}}}
 .atv-hero{background:var(--hl-soft);border:1.5px solid var(--hl);display:flex;flex-direction:column;gap:6px}
 .atv-hero .vale{align-self:flex-start}
 .atv-hero .bar{background:rgba(0,0,0,.08)}.atv-hero .bar i{background:var(--hl-ink)}
@@ -357,7 +366,7 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:#9DB8F
 </div>
 <nav class="tabs" aria-label="Seções do app">
   <button class="tab" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/></svg>Início</button>
-  <button class="tab" data-tab="turma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18 19a5 5 0 0 0-2.5-4.3"/></svg><span class="tl">Turma</span></button>
+  <button class="tab" data-tab="turma" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18 19a5 5 0 0 0-2.5-4.3"/></svg><span class="tl">Turma</span></button>
   <button class="tab" data-tab="resumos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg>Resumos</button>
   <button class="tab" data-tab="atividades"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11l2 2 4-4M9 17h6"/></svg>Atividades</button>
   <button class="tab" data-tab="calendario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendário</button>
@@ -851,6 +860,7 @@ function vCalendario(){
 }
 
 function render(){
+  fecharTurmas();
   if(adjusting)cancelAdjust();
   hideBar();
   if((S.tab!=='home'||S.cap)&&(!DATA||!S.turma||!YEARS[anoT()])){S.tab='home';S.cap=null}
@@ -862,6 +872,22 @@ function render(){
   if(S.cap){loadAnn();paintResumo()}
   document.querySelectorAll('.tab').forEach(b=>{b.removeAttribute('aria-current');if(b.dataset.tab===S.tab)b.setAttribute('aria-current','page')});
 }
+/* Menu de turmas: abre para cima a partir da aba Turma */
+function fecharTurmas(){const m=document.querySelector('.tmenu');if(m){m.remove();const b=document.querySelector('[data-tab=turma]');if(b)b.setAttribute('aria-expanded','false')}}
+function abrirTurmas(btn){
+  fecharTurmas();
+  const m=document.createElement('div');m.className='tmenu';m.setAttribute('role','menu');m.setAttribute('aria-label','Escolher turma');
+  m.innerHTML=`<span class="eyebrow">Ir para a turma</span>`+Object.values(YEARS).map(y=>`<div class="tm-ano" style="--yc:${y.color}"><b>${y.label}</b><div class="tm-ts">${y.turmas.map(t=>`<button role="menuitem" data-turma="${t}"${t===S.turma?' aria-current="true"':''}>${t}${t===S.turma?'<small>atual</small>':''}</button>`).join('')}</div></div>`).join('');
+  document.body.appendChild(m);
+  const bar=document.querySelector('.tabs').getBoundingClientRect(),r=btn.getBoundingClientRect();
+  m.style.bottom=(innerHeight-bar.top+8)+'px';
+  const w=m.offsetWidth,left=Math.max(bar.left+8,Math.min(r.left+r.width/2-w/2,bar.right-8-w));
+  m.style.left=left+'px';m.style.setProperty('--ax',(r.left+r.width/2-left)+'px');
+  btn.setAttribute('aria-expanded','true');
+  (m.querySelector('[aria-current]')||m.querySelector('button')).focus({preventScroll:true});
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharTurmas()});
+addEventListener('scroll',()=>fecharTurmas(),{passive:true});
 function toast(msg,undo){
   document.querySelector('.toast')?.remove();const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');
   t.innerHTML=`<span>${esc(msg)}</span>`+(undo?'<button class="undo">Desfazer</button>':'');
@@ -899,11 +925,12 @@ document.addEventListener('selectionchange',()=>{
 document.addEventListener('click',ev=>{
   const t=ev.target;
   if(t.closest('.overlay')||t.closest('.markbar'))return;
+  if(document.querySelector('.tmenu')&&!t.closest('.tmenu')){const onTab=t.closest('[data-tab=turma]');fecharTurmas();if(onTab)return;if(!t.closest('.tab'))return}
   const collapsed=getSelection().isCollapsed;
   const pin=t.closest('.pin');if(pin){viewNote(pin.dataset.note);return}
   const sp=t.closest('.ann');if(sp&&getSelection().isCollapsed&&!adjusting){const ids=sp.dataset.ids.split(' ');const k=ids.indexOf(editing);editing=k>0?ids[k-1]:ids[ids.length-1];pending=null;showBar('edit');if(ids.length>1)toast('Há '+ids.length+' marcações aqui. Toque de novo para editar a outra.');return}
   if(pendingRender&&(t.closest('.tab')||t.closest('[data-back]')||t.closest('[data-go]')))pendingRender=false;
-  const tab=t.closest('.tab');if(tab)return go(tab.dataset.tab);
+  const tab=t.closest('.tab');if(tab){if(tab.dataset.tab==='turma')return abrirTurmas(tab);return go(tab.dataset.tab)}
   const g=t.closest('[data-go]');if(g)return go(g.dataset.go);
   const un=t.closest('[data-unit]');if(un){S.unit=+un.dataset.unit;return go('resumos')}
   const ac=t.closest('[data-act]');if(ac){S.unit=null;go('resumos',+ac.dataset.act);const b=$('#actBox');if(b){b.scrollIntoView({block:'start'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
