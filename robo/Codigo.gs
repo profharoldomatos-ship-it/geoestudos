@@ -12,6 +12,7 @@
  *  - instalar ......... liga a atualização automática e faz a primeira leitura (rode de novo sempre que colar um código novo).
  *  - atualizar ........ atualiza o app na hora (ex.: depois de publicar um resumo).
  *  - verificar ........ mostra no registro um resumo do que o app está recebendo.
+ *  - testarAviso ...... manda um aviso de teste para os celulares que ativaram os avisos.
  *
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
@@ -47,7 +48,36 @@ function doGet(e) {
     guardarCache_(txt);
   }
   if (p.ver !== undefined) return paginaStatus_(JSON.parse(txt));
+  if (p.avisos !== undefined) {
+    // Pedido do celular ao receber um aviso: devolve só as notificações recentes (arquivo pequeno)
+    let n = [];
+    try { n = JSON.parse(txt).notificacoes || []; } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify({ notificacoes: n })).setMimeType(ContentService.MimeType.JSON);
+  }
   return ContentService.createTextOutput(txt).setMimeType(ContentService.MimeType.JSON);
+}
+
+/** O app chama aqui para ligar ou desligar os avisos de um celular (sem nome nem dado pessoal do aluno). */
+function doPost(e) {
+  const resp = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+  try {
+    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const ep = String((b.sub && b.sub.endpoint) || b.endpoint || '');
+    if (!enderecoValido_(ep)) return resp({ ok: false, erro: 'endereço inválido' });
+    const lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      if (b.acao === 'remover') { removerInscricoes_([ep]); return resp({ ok: true }); }
+      const turma = String(b.turma || '');
+      const conf = lerConfig_();
+      const validas = [].concat.apply([], Object.keys(conf.turmas).map(k => conf.turmas[k]));
+      if (validas.indexOf(turma) < 0) return resp({ ok: false, erro: 'turma inválida' });
+      salvarInscricao_(ep, turma);
+      return resp({ ok: true });
+    } finally { lock.releaseLock(); }
+  } catch (err) {
+    return resp({ ok: false, erro: String(err) });
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -72,6 +102,8 @@ function instalar() {
       agendas++;
     }
   });
+  chavesAvisos_();
+  planilhaInscricoes_();
   const d = atualizar();
   Logger.log('Atualização automática ligada: a cada ' + GEO.MINUTOS + ' minutos, e na hora quando você edita as planilhas ou as ' + agendas + ' agendas.');
   Logger.log(resumoTexto_(d));
@@ -120,9 +152,19 @@ function atualizar() {
       agenda: agenda
     };
     dados.avisos = calcularAvisos_(dados, anterior, conf);
+    let novas = [];
+    try {
+      dados.push = { chave: chavesAvisos_().pub };
+      novas = novasNotificacoes_(dados, anterior, conf);
+      const limite = new Date(Date.now() - 3 * 864e5).toISOString();
+      dados.notificacoes = ((anterior && anterior.notificacoes) || []).filter(n => n.quando >= limite).concat(novas).slice(-120);
+    } catch (err) { Logger.log('Avisos: ' + err); dados.notificacoes = (anterior && anterior.notificacoes) || []; }
     const txt = JSON.stringify(dados);
     gravarDados_(txt);
     guardarCache_(txt);
+    if (novas.length) {
+      try { enviarAvisos_(novas); } catch (err) { Logger.log('Envio de avisos: ' + err); }
+    }
     return dados;
   } finally {
     lock.releaseLock();
@@ -500,4 +542,228 @@ function paginaStatus_(d) {
     '<h2 style="color:#1D3F8F">Robô do GeoEstudos: funcionando</h2><pre style="white-space:pre-wrap;background:#FBF8F1;padding:12px;border-radius:8px">' +
     esc(resumoTexto_(d)) + '</pre></div>';
   return HtmlService.createHtmlOutput(html).setTitle('GeoEstudos · robô');
+}
+
+/* ================================================================== */
+/* Avisos no celular (Web Push)                                        */
+/* Enviados direto pelo robô, sem serviço de terceiros. O celular só   */
+/* recebe um "toque" e busca o texto do aviso aqui no robô.            */
+/* ================================================================== */
+
+/** Monta as notificações novas desta rodada: novidades (resumo novo, data nova) e lembretes de prazo. */
+function novasNotificacoes_(dados, anterior, conf) {
+  const agora = dados.versao;
+  const props = PropertiesService.getScriptProperties();
+  const porTurma = {};
+  const add = (t, item) => (porTurma[t] = porTurma[t] || []).push(item);
+  const turmasDoAno = {};
+  dados.anos.forEach(a => turmasDoAno[a.ano] = a.turmas);
+
+  // 1) Novidades criadas nesta rodada
+  const antes = {};
+  ((anterior && anterior.avisos) || []).forEach(a => antes[a.id] = true);
+  (dados.avisos || []).filter(a => !antes[a.id]).forEach(a => {
+    const ts = a.turma ? [a.turma] : (turmasDoAno[a.ano] || []);
+    ts.forEach(t => add(t, { tipo: 'novidade', titulo: a.titulo, texto: a.texto, cap: a.cap || null, tab: a.tipo === 'resumo' ? 'resumos' : 'calendario' }));
+  });
+
+  // 2) Lembretes: na véspera e no dia de cada entrega, atividade ou avaliação
+  const fmt = (d, f) => Utilities.formatDate(d, GEO.FUSO, f);
+  const agoraD = new Date();
+  const hoje = fmt(agoraD, 'yyyy-MM-dd'), amanha = fmt(new Date(agoraD.getTime() + 864e5), 'yyyy-MM-dd');
+  const hm = fmt(agoraD, 'HH:mm');
+  const janela = (hora) => {          // entre a hora marcada e 3 horas depois
+    const m = /^(\d{1,2}):(\d{2})/.exec(hora || '');
+    if (!m) return false;
+    const ini = (+m[1]) * 60 + (+m[2]), cur = (+hm.slice(0, 2)) * 60 + (+hm.slice(3, 5));
+    return cur >= ini && cur < ini + 180;
+  };
+  [['vespera', conf.lembreteVespera || '18:00', amanha, 'Amanhã'], ['dia', conf.lembreteDia || '07:00', hoje, 'Hoje']].forEach(r => {
+    const chave = 'lembrete-' + r[0] + '-' + hoje;
+    if (props.getProperty(chave) || !janela(r[1])) return;
+    Object.keys(dados.agenda).forEach(t => {
+      const evs = dados.agenda[t].filter(e => e.data === r[2] && e.tipo !== 'aviso');
+      if (!evs.length) return;
+      add(t, { tipo: 'lembrete', titulo: r[3] + ': ' + resumoEventos_(evs, r[0] === 'dia'), texto: textoEventos_(evs), cap: evs.length === 1 ? evs[0].cap : null, tab: evs.every(e => e.tipo === 'atividade') ? 'atividades' : 'calendario' });
+    });
+    props.setProperty(chave, '1');
+  });
+
+  // Uma notificação por turma (se houver várias coisas, junta numa só)
+  const out = [];
+  Object.keys(porTurma).forEach(t => {
+    const its = porTurma[t];
+    const lemb = its.filter(i => i.tipo === 'lembrete'), nov = its.filter(i => i.tipo === 'novidade');
+    lemb.forEach((i, k) => out.push({ id: 'n-' + t + '-' + agora + '-l' + k, turma: t, quando: agora, titulo: i.titulo, texto: i.texto, cap: i.cap, tab: i.tab }));
+    if (nov.length === 1) out.push({ id: 'n-' + t + '-' + agora, turma: t, quando: agora, titulo: nov[0].titulo, texto: nov[0].texto, cap: nov[0].cap, tab: nov[0].tab });
+    else if (nov.length > 1) out.push({ id: 'n-' + t + '-' + agora, turma: t, quando: agora, titulo: nov.length + ' novidades no GeoEstudos', texto: nov.map(i => i.texto).join(' · ').slice(0, 220), cap: null, tab: 'turma' });
+  });
+  return out;
+}
+
+function resumoEventos_(evs, hoje) {
+  const caps = evs.filter(e => e.cap).map(e => e.cap).sort((a, b) => a - b);
+  const q = (tipo) => evs.filter(e => e.tipo === tipo).length;
+  const partes = [];
+  if (q('caderno')) partes.push(q('caderno') === 1 ? 'entrega do caderno' : q('caderno') + ' entregas do caderno');
+  if (q('atividade')) partes.push(q('atividade') === 1 ? (hoje ? 'último dia da atividade de fixação' : 'prazo final da atividade de fixação') : (hoje ? 'último dia de ' : 'prazo final de ') + q('atividade') + ' atividades de fixação');
+  if (q('avaliacao')) partes.push(q('avaliacao') === 1 ? 'avaliação' : q('avaliacao') + ' avaliações');
+  return partes.join(' e ') + (caps.length === 1 ? ' (Cap. ' + caps[0] + ')' : caps.length > 1 ? ' (Caps. ' + caps[0] + ' a ' + caps[caps.length - 1] + ')' : '');
+}
+function textoEventos_(evs) {
+  return evs.map(e => e.titulo.replace(/^(Entrega do caderno|Atividade de fixação)\s*·\s*/i, '')).join(' · ').slice(0, 220);
+}
+
+/* ---------- Inscrições (cada celular que ativou os avisos) ---------- */
+function enderecoValido_(ep) {
+  return /^https:\/\/(fcm\.googleapis\.com|[\w.-]*push\.apple\.com|updates\.push\.services\.mozilla\.com|[\w.-]*notify\.windows\.com|[\w.-]*push\.services\.mozilla\.com)\//.test(ep) && ep.length < 1000;
+}
+function planilhaInscricoes_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('planilhaInscricoes');
+  if (id) { try { return SpreadsheetApp.openById(id).getSheets()[0]; } catch (e) { } }
+  const ss = SpreadsheetApp.create('GeoEstudos - celulares com avisos ativados (não apagar)');
+  DriveApp.getFileById(ss.getId()).moveTo(DriveApp.getFolderById(GEO.PASTA_APP));
+  const sh = ss.getSheets()[0];
+  sh.appendRow(['Endereço de aviso do celular (não identifica o aluno)', 'Turma', 'Ativado em', 'Última confirmação']);
+  sh.setFrozenRows(1);
+  props.setProperty('planilhaInscricoes', ss.getId());
+  return sh;
+}
+function lerInscricoes_() {
+  const v = planilhaInscricoes_().getDataRange().getValues().slice(1);
+  return v.filter(r => r[0]).map(r => ({ endpoint: String(r[0]), turma: String(r[1]) }));
+}
+function salvarInscricao_(ep, turma) {
+  const sh = planilhaInscricoes_();
+  const v = sh.getDataRange().getValues();
+  const agora = new Date();
+  for (let i = 1; i < v.length; i++) {
+    if (String(v[i][0]) === ep) { sh.getRange(i + 1, 2).setValue(turma); sh.getRange(i + 1, 4).setValue(agora); return; }
+  }
+  sh.appendRow([ep, turma, agora, agora]);
+}
+function removerInscricoes_(eps) {
+  if (!eps.length) return;
+  const sh = planilhaInscricoes_();
+  const v = sh.getDataRange().getValues();
+  for (let i = v.length - 1; i >= 1; i--) if (eps.indexOf(String(v[i][0])) >= 0) sh.deleteRow(i + 1);
+}
+
+/* ---------- Envio ---------- */
+function enviarAvisos_(notifs) {
+  const turmas = {};
+  notifs.forEach(n => turmas[n.turma] = true);
+  const alvo = lerInscricoes_().filter(s => turmas[s.turma]);
+  if (!alvo.length) return;
+  const ch = chavesAvisos_();
+  const jwts = {};
+  const reqs = alvo.map(s => {
+    const aud = s.endpoint.match(/^https:\/\/[^/]+/)[0];
+    const jwt = jwts[aud] || (jwts[aud] = jwtAviso_(aud, ch));
+    return { url: s.endpoint, method: 'post', payload: '', muteHttpExceptions: true,
+      headers: { TTL: '86400', Urgency: 'high', Authorization: 'vapid t=' + jwt + ', k=' + ch.pub } };
+  });
+  const mortos = [];
+  let ok = 0;
+  for (let i = 0; i < reqs.length; i += 40) {
+    const parte = reqs.slice(i, i + 40);
+    UrlFetchApp.fetchAll(parte).forEach((r, k) => {
+      const c = r.getResponseCode();
+      if (c >= 200 && c < 300) ok++;
+      else if (c === 404 || c === 410) mortos.push(parte[k].url);
+      else Logger.log('Aviso não entregue (' + c + '): ' + r.getContentText().slice(0, 200));
+    });
+  }
+  removerInscricoes_(mortos);
+  Logger.log('Avisos enviados para ' + ok + ' celular(es).');
+}
+
+/** Envia um aviso de teste para todos os celulares que ativaram os avisos (todas as turmas). */
+function testarAviso() {
+  const f = arquivoDados_();
+  const d = JSON.parse(f.getBlob().getDataAsString('UTF-8'));
+  const turmas = {};
+  lerInscricoes_().forEach(s => turmas[s.turma] = true);
+  const ts = Object.keys(turmas);
+  if (!ts.length) { Logger.log('Nenhum celular ativou os avisos ainda.'); return; }
+  const agora = new Date().toISOString();
+  const ns = ts.map(t => ({ id: 'teste-' + t + '-' + Date.now(), turma: t, quando: agora, titulo: 'Teste do GeoEstudos', texto: 'Se você está lendo isto, os avisos da turma ' + t + ' estão funcionando.', cap: null, tab: 'turma' }));
+  d.notificacoes = (d.notificacoes || []).concat(ns);
+  const txt = JSON.stringify(d);
+  gravarDados_(txt);
+  guardarCache_(txt);
+  enviarAvisos_(ns);
+}
+
+/* ---------- Chaves e assinatura (VAPID, curva P-256) ---------- */
+const P256_ = {
+  p: BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff'),
+  n: BigInt('0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551'),
+  b: BigInt('0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b'),
+  G: [BigInt('0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296'),
+      BigInt('0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5')]
+};
+function md_(a, m) { const r = a % m; return r < BigInt(0) ? r + m : r; }
+function inv_(a, m) {
+  let r0 = md_(a, m), r1 = m, s0 = BigInt(1), s1 = BigInt(0);
+  while (r1 !== BigInt(0)) { const q = r0 / r1; [r0, r1] = [r1, r0 - q * r1]; [s0, s1] = [s1, s0 - q * s1]; }
+  return md_(s0, m);
+}
+function somaPt_(P, Q) {
+  const p = P256_.p;
+  if (!P) return Q; if (!Q) return P;
+  let l;
+  if (P[0] === Q[0]) {
+    if (md_(P[1] + Q[1], p) === BigInt(0)) return null;
+    l = md_((BigInt(3) * P[0] * P[0] - BigInt(3)) * inv_(BigInt(2) * P[1], p), p);
+  } else {
+    l = md_((Q[1] - P[1]) * inv_(Q[0] - P[0], p), p);
+  }
+  const x = md_(l * l - P[0] - Q[0], p);
+  return [x, md_(l * (P[0] - x) - P[1], p)];
+}
+function multPt_(k, P) {
+  let R = null, A = P;
+  while (k > BigInt(0)) { if (k & BigInt(1)) R = somaPt_(R, A); A = somaPt_(A, A); k >>= BigInt(1); }
+  return R;
+}
+function bytesParaBig_(bs) { let h = ''; bs.forEach(b => h += ((b & 255) + 256).toString(16).slice(1)); return BigInt('0x' + (h || '0')); }
+function bigParaBytes_(x) { const h = x.toString(16).padStart(64, '0'); const o = []; for (let i = 0; i < 64; i += 2) { const v = parseInt(h.substr(i, 2), 16); o.push(v > 127 ? v - 256 : v); } return o; }
+function b64u_(x) { return Utilities.base64EncodeWebSafe(x).replace(/=+$/, ''); }
+function aleatorio_() {
+  const bs = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, Utilities.getUuid() + Utilities.getUuid() + Date.now() + Math.random());
+  return md_(bytesParaBig_(bs), P256_.n - BigInt(1)) + BigInt(1);
+}
+function chavesAvisos_() {
+  const props = PropertiesService.getScriptProperties();
+  let priv = props.getProperty('avisosPriv'), pub = props.getProperty('avisosPub');
+  if (priv && pub) return { d: BigInt('0x' + priv), pub: pub };
+  const d = aleatorio_();
+  const Q = multPt_(d, P256_.G);
+  pub = b64u_([4].concat(bigParaBytes_(Q[0]), bigParaBytes_(Q[1])));
+  props.setProperties({ avisosPriv: d.toString(16), avisosPub: pub });
+  return { d: d, pub: pub };
+}
+function assinar_(texto, d) {
+  const n = P256_.n;
+  const e = bytesParaBig_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, texto, Utilities.Charset.UTF_8));
+  for (;;) {
+    const k = aleatorio_();
+    const r = md_(multPt_(k, P256_.G)[0], n);
+    if (r === BigInt(0)) continue;
+    const s = md_(inv_(k, n) * (e + r * d), n);
+    if (s === BigInt(0)) continue;
+    return bigParaBytes_(r).concat(bigParaBytes_(s));
+  }
+}
+function jwtAviso_(aud, ch) {
+  const cache = CacheService.getScriptCache(), chave = 'jwt|' + aud;
+  const salvo = cache.get(chave);
+  if (salvo) return salvo;
+  const cab = b64u_(Utilities.newBlob(JSON.stringify({ typ: 'JWT', alg: 'ES256' })).getBytes());
+  const corpo = b64u_(Utilities.newBlob(JSON.stringify({ aud: aud, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: 'mailto:prof.haroldomatos@gmail.com' })).getBytes());
+  const jwt = cab + '.' + corpo + '.' + b64u_(assinar_(cab + '.' + corpo, ch.d));
+  cache.put(chave, jwt, 6 * 3600);
+  return jwt;
 }

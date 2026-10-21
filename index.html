@@ -264,6 +264,11 @@ h1{font-size:1.6rem;line-height:1.15} h2{font-size:1.2rem} h3{font-size:1.02rem;
 .atv.late .atv-st{background:#F9E1DC;color:#A33A2C}
 .atv-acts{display:flex;flex-wrap:wrap;gap:8px}
 .atv-acts .btn{padding:8px 12px;font-size:.86rem;min-height:0}
+/* Avisos */
+.pushask{display:flex;gap:12px;align-items:center;text-align:left;width:100%;border:1.5px dashed var(--year);background:var(--surface)}
+.pushask .inst-ic{background:var(--year);font-size:1.1rem}
+.pushon{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.84rem;color:var(--muted);padding:0 4px}
+.pushon .link{font-size:.84rem;flex:none}
 /* App real: agenda, avisos, instalação, carregamento */
 .banner{background:var(--hl-soft);color:var(--ink);border-left:5px solid var(--hl);border-radius:6px var(--r) var(--r) 6px;padding:10px 12px;font-weight:700;font-size:.95rem}
 .install{display:flex;gap:12px;align-items:center;text-align:left;width:100%;border:1.5px dashed var(--pen);background:var(--pen-soft)}
@@ -682,6 +687,49 @@ function installHelp(){
     <button class="btn btn-primary" data-close>Entendi</button>`);
 }
 
+/* Avisos no celular (Web Push enviado pelo robô) */
+const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const ehIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
+let PUSH=store.get('push',null);
+function b64u8(s){const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))}
+async function avisarSW(turma){try{const c=await caches.open('geo-push');await c.put('turma',new Response(turma||''));await c.put('dataurl',new Response(CFG.DATA_URL||''))}catch(e){}}
+async function enviarInscricao(sub,turma,acao){
+  const r=await fetch(CFG.DATA_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({acao:acao||'inscrever',turma,sub:sub.toJSON?sub.toJSON():sub})});
+  const j=await r.json();if(!j.ok)throw new Error(j.erro||'falha');
+}
+async function ativarPush(){
+  if(!pushOk()||!(DATA&&DATA.push&&DATA.push.chave))return toast('Este celular não aceita avisos.');
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){render();return toast('Os avisos não foram permitidos.')}
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u8(DATA.push.chave)});
+    await enviarInscricao(sub,S.turma);await avisarSW(S.turma);
+    PUSH={turma:S.turma,endpoint:sub.endpoint};store.set('push',PUSH);render();
+    toast('Avisos ativados para a turma '+S.turma+'.');
+  }catch(e){toast('Não foi possível ativar agora. Tente de novo com internet.')}
+}
+async function desativarPush(){
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub){enviarInscricao(sub,S.turma,'remover').catch(()=>{});await sub.unsubscribe()}}catch(e){}
+  PUSH=null;store.set('push',null);render();toast('Avisos desativados neste celular.');
+}
+async function conferirPush(){
+  if(!PUSH||!pushOk())return;
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
+    if(!sub||Notification.permission!=='granted'){PUSH=null;store.set('push',null);render();return}
+    if(S.turma&&PUSH.turma!==S.turma){await enviarInscricao(sub,S.turma);PUSH.turma=S.turma;store.set('push',PUSH);await avisarSW(S.turma)}
+  }catch(e){}
+}
+function pushCard(){
+  if(!DATA||!DATA.push||!DATA.push.chave)return '';
+  if(PUSH&&PUSH.turma===S.turma)return `<div class="pushon"><span>🔔 Avisos ativados neste celular para a turma ${esc(S.turma)}.</span><button class="link" id="pushOff">Desativar</button></div>`;
+  if(ehIOS()&&!standalone())return `<div class="card pushask"><span class="inst-ic" aria-hidden="true">🔔</span><span><b>Avisos no iPhone</b><br><span class="meta">Primeiro instale o app: no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início". Abra pelo ícone e ative os avisos aqui.</span></span></div>`;
+  if(!pushOk())return '';
+  if(Notification.permission==='denied')return `<div class="card empty-card"><b>Avisos bloqueados neste celular</b><span class="meta">Para receber os avisos, libere as notificações do GeoEstudos nas configurações do celular ou do navegador.</span></div>`;
+  return `<button class="card pushask" id="pushOn"><span class="inst-ic" aria-hidden="true">🔔</span><span><b>Ative os avisos no celular</b><br><span class="meta">Receba um aviso quando sair resumo novo, na véspera das entregas e no prazo das atividades.</span></span></button>`;
+}
+
 /* Telas */
 function capRow(c){
   if(!c.resumo)return `<div class="cap off"><span class="n">Cap. ${c.n}</span><span class="t">${esc(c.titulo)}<br><span class="meta">Resumo ainda não publicado no app</span></span></div>`;
@@ -740,6 +788,7 @@ function vTurma(){
       <div style="font-size:.86rem">${sent} de ${acts.length} atividades de fixação enviadas</div>`:''}
     </div>
     ${avisosHtml()}
+    ${pushCard()}
     ${unitChips(y.atual)}
     <div class="row-head"><h2>Resumos da Unidade ${y.atual}</h2></div>
     <div class="capgrid">${capsDe(y,y.atual).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>
@@ -945,18 +994,31 @@ document.addEventListener('click',ev=>{
   if(t.closest('#listBtn'))return listSheet();
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
+  if(t.closest('#pushOn'))return ativarPush();
+  if(t.closest('#pushOff'))return desativarPush();
   if(t.closest('#retryBtn')){LOAD='carregando';render();return carregar()}
   if(t.closest('#installBtn')){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(()=>{deferredPrompt=null})}else installHelp();return}
   if(t.closest('#copyBtn')){const k=key(S.cap),c=capOf(S.cap);let gain=false;if(S.copied[k])delete S.copied[k];else{S.copied[k]=true;gain=true}store.set('copied',S.copied);const y=scrollY;render();scrollTo(0,y);
     if(gain){const all=pubs(Y()).every(x=>isCopied(x.n));all&&c.u===Y().atual?cheer('unidade',`Todos os resumos da Unidade ${c.u} copiados no caderno.`):cheer('resumo',`Resumo do Capítulo ${c.n} registrado como copiado.`)}return}
   const sb=t.closest('#sentBtn')||t.closest('[data-sent]');if(sb){const n=sb.dataset.sent?+sb.dataset.sent:S.cap,k=key(n);let gain=false;if(S.sent[k])delete S.sent[k];else{S.sent[k]=true;gain=true}store.set('sent',S.sent);const y=scrollY;render();scrollTo(0,y);
     if(gain)cheer('atividade',`Atividade do Capítulo ${n} registrada como enviada.`);return}
-  const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;store.set('turma',S.turma);return go('turma')}
+  const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;store.set('turma',S.turma);go('turma');conferirPush();return}
   if(t.closest('#copyMail')){try{navigator.clipboard.writeText(EMAIL).then(()=>toast('E-mail copiado.'),()=>toast(EMAIL))}catch(e){toast(EMAIL)}return}
   if(collapsed&&!adjusting&&(pending||editing))clearSel();
 });
 
-applyMode();render();carregar();
+/* Abrir na tela certa ao tocar num aviso */
+function abrirDeAviso(o){
+  if(!o||!DATA)return;
+  if(o.turma&&TURMAS.includes(o.turma)){S.turma=o.turma;store.set('turma',S.turma)}
+  if(!S.turma)return;
+  const tab=['turma','resumos','atividades','calendario'].includes(o.ir)?o.ir:'turma';
+  const c=o.cap?capOf(+o.cap):null;
+  if(c&&c.resumo&&tab==='resumos'){S.unit=c.u;go('resumos',c.n)}else go(tab);
+}
+(()=>{const q=new URLSearchParams(location.search);if(q.get('ir')||q.get('turma')){const o={ir:q.get('ir'),turma:q.get('turma'),cap:q.get('cap')};history.replaceState(null,'',location.pathname);applyMode();render();abrirDeAviso(o)}})();
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.geoAbrir)abrirDeAviso(e.data.geoAbrir)});
+applyMode();if(!document.querySelector('#view').innerHTML)render();carregar().then(conferirPush);
 if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>
