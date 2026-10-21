@@ -392,6 +392,22 @@ body.m-escuro .sec-duv{--sc:#7DD3FC;--sc-on:#0C1A24}
 .fld input,.fld select,.fld textarea{font:inherit;font-weight:400;font-size:1rem;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
 .fld textarea{resize:vertical;min-height:96px}
 .fld .cont{align-self:flex-end;font-weight:400}
+/* Sobre o app */
+.sobre .sb-lead{font-size:1rem;line-height:1.6;margin:0}
+.sb-p{margin:0;line-height:1.6}
+.sb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.sb-list li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;line-height:1.45}
+.sb-ok,.sb-no{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.85rem}
+.sb-ok{background:#DDF1E3;color:#1F5C38}
+.sb-no{background:#F9E1DC;color:#A33A2C}
+.sb-fold{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.sb-fold summary{padding:12px 14px;font-weight:700;font-size:.95rem}
+.sb-fold .fold-body{padding:0 14px 12px;font-size:.92rem;line-height:1.6}
+.sb-fold .fold-body p{margin:0 0 8px}
+.sb-contato{display:flex;flex-direction:column;gap:10px;line-height:1.5}
+.sb-contato .btn{align-self:flex-start;text-decoration:none;word-break:break-all}
+.sobre-lk{margin-top:6px;font-weight:700;color:inherit;text-decoration:underline;text-underline-offset:3px;text-align:left}
+.foot-b{display:flex;gap:8px;flex-wrap:wrap}
 /* Outra turma */
 .outra{display:flex;flex-direction:column;gap:8px;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:var(--r);padding:12px;font-size:.92rem}
 .outra-b{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -517,7 +533,7 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
   <main id="view"></main>
   <footer class="foot">
     <p style="margin:0">Em caso de dúvidas, problemas técnicos, problemas com os conteúdos de aula ou envio de atividades e trabalhos, envie e-mail para <a href="mailto:prof.haroldomatos@gmail.com">prof.haroldomatos@gmail.com</a>.</p>
-    <button class="copy" id="copyMail">Copiar e-mail</button>
+    <div class="foot-b"><button class="copy" id="copyMail">Copiar e-mail</button><button class="copy" data-go="sobre">🔒 Sobre o app e privacidade</button></div>
   </footer>
 </div>
 <nav class="tabs" aria-label="Seções do app">
@@ -1007,6 +1023,80 @@ function semDados(){
   return `<div class="card empty-card"><b>Sem conexão com a internet</b><span class="meta">Conecte-se uma vez para baixar os resumos. Depois eles ficam guardados no celular.</span><button class="btn btn-ghost" id="retryBtn" style="margin-top:8px">Tentar de novo</button></div>`;
 }
 
+/* Sobre o app: finalidade pedagógica, privacidade e base legal (texto para alunos e famílias) */
+function vSobre(){
+  const ok=(t,d)=>`<li><span class="sb-ok" aria-hidden="true">✓</span><span><b>${t}</b>${d?`<br><span class="meta">${d}</span>`:''}</span></li>`;
+  const no=(t,d)=>`<li><span class="sb-no" aria-hidden="true">✕</span><span><b>${t}</b>${d?`<br><span class="meta">${d}</span>`:''}</span></li>`;
+  return `<section class="section sobre">
+    <div class="home-head">${CONTOUR}<span class="eyebrow">GeoEstudos · Prof. Haroldo Matos</span><h1 class="home-t">Sobre o app e privacidade</h1></div>
+    <p class="sb-lead">O GeoEstudos é um <b>recurso pedagógico</b> das aulas de Geografia. Ele existe para <b>disponibilizar conteúdos</b>, <b>facilitar o acesso</b> dos estudantes ao que é trabalhado em sala e <b>apoiar o aprendizado e as avaliações</b>. Ele não foi feito para coletar informações sobre os estudantes.</p>
+
+    ${sec('O que o app NÃO faz','ano','atv')}
+    <ul class="sb-list">
+      ${no('Não usa a câmera','Em nenhum momento o app pede ou ativa a câmera do celular.')}
+      ${no('Não usa o microfone','O app não grava nem escuta nada.')}
+      ${no('Não usa a localização (GPS)','O app não sabe onde o estudante está.')}
+      ${no('Não pede cadastro, login ou senha','Não há conta, e-mail, telefone, CPF nem foto do estudante.')}
+      ${no('Não acessa contatos, fotos ou arquivos do celular','')}
+      ${no('Não tem propaganda nem rastreadores','Não há anúncios nem ferramentas que acompanham o que o estudante faz para fins comerciais.')}
+      ${no('Não mostra notas','As notas oficiais ficam nos canais da escola e da rede.')}
+    </ul>
+
+    ${sec('O que fica só no seu aparelho','ano','livro')}
+    <p class="sb-p">Algumas escolhas ficam guardadas <b>apenas no navegador do próprio celular ou computador</b> e <b>não são enviadas a ninguém</b>, nem ao professor:</p>
+    <ul class="sb-list">
+      ${ok('A turma escolhida e o modo de cores','')}
+      ${ok('As marcações de estudo','"Resumo copiado", "atividade enviada", marca-texto e comentários nos textos.')}
+      ${ok('Os resumos baixados para ler sem internet','')}
+    </ul>
+    <p class="meta sb-p">Para apagar tudo isso, basta limpar os dados do site nas configurações do navegador ou desinstalar o app.</p>
+
+    ${sec('O que só é enviado se você escolher','ano','sino')}
+    <ul class="sb-list">
+      ${ok('Avisos no celular (opcional)','Ao ativar os avisos, o celular gera um <b>endereço técnico de notificação</b>, que é guardado junto com o número da turma para que os avisos cheguem. Esse endereço <b>não contém nome nem identifica a pessoa</b>. Ao desativar os avisos no app, ele é apagado.')}
+      ${ok('Caixa de dúvidas (opcional)','Quem envia uma dúvida escreve o <b>nome, a turma e a pergunta</b>. Essas informações são lidas <b>somente pelo professor</b>, ficam guardadas na conta profissional do professor no Google e servem apenas para responder à dúvida. Quando uma resposta é publicada no app, aparece <b>só a pergunta, sem o nome</b>.')}
+      ${ok('Atividades em formulário','As atividades de fixação abrem no <b>Google Forms</b>, fora do app. Lá vale o que cada formulário pede e as regras do Google.')}
+    </ul>
+
+    ${sec('Onde e como acessar','ano','cal')}
+    <ul class="sb-list">
+      ${ok('Funciona pelo navegador','Pode ser usado no celular, no tablet ou no computador, pelo endereço <b>profharoldomatos-ship-it.github.io/geoestudos</b>. Instalar no celular é opcional.')}
+      ${ok('Feito para usar em casa','O GeoEstudos respeita a Lei nº 15.100/2025, que restringe o uso de celulares pelos estudantes na escola durante as aulas, o recreio e os intervalos. O uso em sala só acontece se for para fins pedagógicos e com orientação do professor, como prevê a própria lei (art. 2º, § 1º).')}
+      ${ok('Serviços usados','O app é hospedado no GitHub Pages. Os conteúdos vêm do Google Drive do professor, por meio do Google Apps Script. Os vídeos são do YouTube, em modo sem cookies, e só carregam quando o estudante abre uma aula com vídeo. Como em qualquer site, esses serviços podem registrar dados técnicos de acesso, como o endereço de internet, conforme as políticas de cada um.')}
+    </ul>
+
+    ${sec('Base legal e pedagógica','tt','globo')}
+    <details class="fold sb-fold"><summary>LGPD · Lei Geral de Proteção de Dados (Lei nº 13.709/2018) ${CHEVD}</summary><div class="fold-body">
+      <p>O app segue os princípios da <b>finalidade</b>, da <b>necessidade</b>, da <b>transparência</b> e da <b>segurança</b> (art. 6º, incisos I, III, VI e VII): usa só o mínimo indispensável, para objetivos pedagógicos claros, e informa tudo isso nesta página.</p>
+      <p>Para crianças e adolescentes, o tratamento de dados deve ser feito no seu <b>melhor interesse</b> (art. 14). As informações devem ser dadas de forma simples, clara e acessível (art. 14, § 6º), e o uso de uma aplicação não pode ser condicionado ao fornecimento de dados além do estritamente necessário (art. 14, § 4º). Por isso, <b>todo o conteúdo do GeoEstudos pode ser usado sem fornecer nenhum dado pessoal</b>.</p>
+      <p>Estudantes e responsáveis podem pedir ao professor, a qualquer momento, <b>informação, correção ou exclusão</b> das mensagens enviadas pela caixa de dúvidas (art. 18).</p>
+    </div></details>
+    <details class="fold sb-fold"><summary>ECA · Estatuto da Criança e do Adolescente (Lei nº 8.069/1990) ${CHEVD}</summary><div class="fold-body">
+      <p>O ECA assegura à criança e ao adolescente o <b>direito à educação</b>, visando ao pleno desenvolvimento da pessoa e ao preparo para a cidadania (art. 53), e coloca esses direitos como prioridade absoluta da família, da comunidade, da sociedade e do poder público (art. 4º).</p>
+      <p>O <b>direito ao respeito</b> inclui a preservação da imagem, da identidade e da autonomia (art. 17). Por isso o app não usa câmera nem fotos e não expõe nomes: as dúvidas publicadas aparecem sem identificação.</p>
+      <p>O processo educacional deve respeitar os valores culturais e históricos do contexto social do estudante e garantir o <b>acesso às fontes de cultura</b> (art. 58).</p>
+    </div></details>
+    <details class="fold sb-fold"><summary>LDB · Lei de Diretrizes e Bases da Educação (Lei nº 9.394/1996) ${CHEVD}</summary><div class="fold-body">
+      <p>Desde a Política Nacional de Educação Digital (Lei nº 14.533/2023), a LDB prevê a <b>educação digital</b> como dever do Estado (art. 4º, XII) e determina que as relações entre ensino e aprendizagem digital prevejam <b>técnicas, ferramentas e recursos digitais</b> (art. 4º, parágrafo único).</p>
+      <p>O ensino fundamental tem entre seus objetivos a compreensão do ambiente natural e social, do sistema político e <b>da tecnologia</b> (art. 32, II), e a lei valoriza a <b>experiência extraescolar</b> (art. 3º, X), que é exatamente o espaço em que o app atua: o estudo em casa.</p>
+    </div></details>
+    <details class="fold sb-fold"><summary>BNCC · Base Nacional Comum Curricular ${CHEVD}</summary><div class="fold-body">
+      <p>A <b>Competência Geral 5 (Cultura digital)</b> propõe que os estudantes aprendam a compreender, utilizar e criar tecnologias digitais de informação e comunicação de forma <b>crítica, significativa, reflexiva e ética</b>, inclusive nas práticas escolares, para acessar informações, produzir conhecimentos e exercer protagonismo.</p>
+      <p>Em Geografia, a BNCC valoriza o <b>pensamento espacial</b> e o uso de diferentes linguagens: textos, mapas, imagens e vídeos. O GeoEstudos reúne essas linguagens num só lugar, organizadas por ano, unidade e capítulo.</p>
+    </div></details>
+    <p class="sb-p">Vivemos numa sociedade cada vez mais conectada, em que celulares, computadores e internet fazem parte do cotidiano dos estudantes. O GeoEstudos usa essa realidade a favor do aprendizado: <b>amplia o acesso aos conteúdos</b>, inclusive sem internet depois do primeiro acesso, <b>organiza os prazos</b> e <b>apoia o estudo autônomo</b>, sem substituir a aula, o caderno e o livro didático.</p>
+
+    ${sec('Fale com o professor','pen','duv')}
+    <div class="card sb-contato">
+      <p style="margin:0">Estudantes, pais e responsáveis podem tirar dúvidas, fazer sugestões ou pedir informações sobre o app e sobre os dados:</p>
+      <p style="margin:0"><b>Prof. Haroldo Matos</b> · Geografia · Anos finais do Ensino Fundamental<br>Rede Municipal de Ensino de São Luís (MA)</p>
+      <a class="btn btn-primary" href="mailto:${esc(EMAIL)}?subject=${encodeURIComponent('GeoEstudos · contato')}">✉ ${esc(EMAIL)}</a>
+      <p class="meta" style="margin:0">Também é possível conversar pessoalmente na escola, com o professor ou com a coordenação pedagógica.</p>
+    </div>
+    <p class="meta" style="text-align:center;margin:0">Última atualização desta página: outubro de 2026.</p>
+    <button class="meta link" data-go="home" style="align-self:center">‹ Voltar ao início</button>
+  </section>`;
+}
 function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
@@ -1017,6 +1107,7 @@ function vHome(){
     </div></details>
     <details class="fold mini"><summary>Sobre este aplicativo ${CHEVD}</summary><div class="fold-body">
       <p>Este aplicativo foi desenvolvido para dar suporte às minhas aulas e, aqui, os estudantes encontrarão materiais de apoio, de pesquisa e atividades.</p>
+      <button class="sobre-lk" data-go="sobre">🔒 Privacidade, segurança e base legal do app ›</button>
     </div></details>
     ${msg?`<div class="banner">${esc(msg)}</div>`:''}
     <div><h2>Navegue por ano e turma</h2><p class="meta" style="margin:4px 0 0">Escolha a sua turma para ver os resumos e as atividades.</p></div>
@@ -1289,13 +1380,13 @@ function render(){
   fecharTurmas();
   if(adjusting)cancelAdjust();
   hideBar();
-  if((S.tab!=='home'||S.cap)&&(!DATA||!S.turma||!YEARS[anoT()])){S.tab='home';S.cap=null}
+  if(S.tab!=='sobre'&&(S.tab!=='home'||S.cap)&&(!DATA||!S.turma||!YEARS[anoT()])){S.tab='home';S.cap=null}
   document.querySelector('.tabs').hidden=!S.turma||!DATA||(S.tab==='home'&&!S.cap&&!S.turma);
   const tl=document.querySelector('[data-tab=turma] .tl');if(tl)tl.textContent=S.turma?'Turma '+S.turma:'Turma';
   const dot=document.querySelector('[data-tab=turma]');if(dot)dot.classList.toggle('has-new',!!(S.turma&&DATA&&avisosNovos().length));
   document.body.classList.toggle('lendo',!!S.cap);
   document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
-  $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario}[S.tab]();
+  $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre}[S.tab]();
   if(MINHA&&S.turma&&S.turma!==MINHA&&S.tab!=='home'&&S.tab!=='turma')$('#view').insertAdjacentHTML('afterbegin',`<div class="outra mini"><span>Vendo a <b>Turma ${esc(S.turma)}</b> · sua turma é a ${esc(MINHA)}</span><button class="link" data-turma="${esc(MINHA)}">Voltar</button></div>`);
   if(S.cap){loadAnn();paintResumo()}
   document.querySelectorAll('.tab').forEach(b=>{b.removeAttribute('aria-current');if(b.dataset.tab===S.tab)b.setAttribute('aria-current','page')});
