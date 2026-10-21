@@ -76,6 +76,20 @@ h1{font-size:1.6rem;line-height:1.15} h2{font-size:1.2rem} h3{font-size:1.02rem;
 .show-src .src{display:inline-block}
 .section{display:flex;flex-direction:column;gap:12px;margin-top:16px}
 .row-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sec{--sc:var(--pen);--sc-on:#fff;display:flex;align-items:center;gap:10px;padding:9px 12px;margin-top:8px;border-radius:12px;border-left:4px solid var(--sc);background:color-mix(in srgb,var(--sc) 11%,var(--surface))}
+.sec-ic{flex:none;width:30px;height:30px;border-radius:9px;background:var(--sc);color:var(--sc-on);display:grid;place-items:center}
+.sec-ic svg{width:17px;height:17px}
+.sec-tx{display:flex;flex-direction:column;min-width:0;flex:1}
+.sec h2{font-size:1.08rem;line-height:1.2;color:var(--ink)}
+.sec-sub{font-size:.78rem;color:var(--muted);line-height:1.3;margin-top:1px}
+.sec .link{flex:none;font-size:.84rem}
+.sec-ano{--sc:var(--year)}
+.sec-tt{--sc:#0F766E}
+.sec-pen{--sc:#1D3F8F}
+.sec-nov{--sc:#C99A1E;--sc-on:#1E2430;background:var(--hl-soft)}
+.sec-nov .sec-ic{background:var(--hl)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sec-pen{--sc:var(--pen);--sc-on:var(--on-pen)}:root:not([data-theme="light"]) .sec-tt{--sc:#2BA89A}}
+body.m-escuro .sec-pen{--sc:var(--pen);--sc-on:var(--on-pen)} body.m-escuro .sec-tt{--sc:#2BA89A}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 16px;font-weight:700;text-decoration:none}
 .btn-primary{background:var(--pen);color:var(--on-pen)}
@@ -831,6 +845,15 @@ function rechecarPush(manual){
 try{navigator.permissions&&navigator.permissions.query({name:'notifications'}).then(st=>{st.onchange=()=>rechecarPush(false)})}catch(e){}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&pushOk()&&!PUSH&&DATA&&DATA.push&&Notification.permission==='granted'&&store.get('querPush',false))ativarPush()});
 
+/* Faixas de seção: dão ritmo à página. Cor = tipo de conteúdo (ano, tema, agenda, novidades). */
+const SECIC={
+ livro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg>',
+ globo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+ sino:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+ atv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11l2 2 4-4M9 17h6"/></svg>'};
+const sec=(titulo,tipo,ic,extra,sub)=>`<div class="sec sec-${tipo}"><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span><span class="sec-tx"><h2>${titulo}</h2>${sub?`<span class="sec-sub">${sub}</span>`:''}</span>${extra||''}</div>`;
+
 /* Telas */
 function capRow(c){
   if(!c.resumo)return `<div class="cap off"><span class="n">Cap. ${c.n}</span><span class="t">${esc(c.titulo)}<br><span class="meta">Resumo ainda não publicado no app</span></span></div>`;
@@ -873,7 +896,7 @@ function capBtn(c){
 }
 function avisosHtml(){
   const av=avisosNovos();if(!av.length)return '';
-  return `<div class="avisos"><div class="row-head"><h2>Novidades</h2><button class="meta link" id="avisosOk">Marcar como vistas</button></div>${av.slice(0,5).map(a=>`<div class="aviso"><span class="av-ic" aria-hidden="true">${a.tipo==='resumo'?'✎':'◷'}</span><span style="min-width:0"><b>${esc(a.titulo)}</b><br><span>${esc(a.texto)}</span></span>${a.cap&&capOf(a.cap)&&capOf(a.cap).resumo?`<button class="av-go" data-cap="${a.cap}" data-aviso="${a.id}" aria-label="Abrir">${CHEVR}</button>`:''}</div>`).join('')}</div>`;
+  return `<div class="avisos">${sec('Novidades','nov','sino','<button class="meta link" id="avisosOk">Marcar como vistas</button>')}${av.slice(0,5).map(a=>`<div class="aviso"><span class="av-ic" aria-hidden="true">${a.tipo==='resumo'?'✎':'◷'}</span><span style="min-width:0"><b>${esc(a.titulo)}</b><br><span>${esc(a.texto)}</span></span>${a.cap&&capOf(a.cap)&&capOf(a.cap).resumo?`<button class="av-go" data-cap="${a.cap}" data-aviso="${a.id}" aria-label="Abrir">${CHEVR}</button>`:''}</div>`).join('')}</div>`;
 }
 function vTurma(){
   const y=Y(),pub=pubs(y),total=pub.length,done=pub.filter(c=>isCopied(c.n)).length,acts=capsDe(y,y.atual).filter(c=>c.atividade),sent=acts.filter(c=>isSent(c.n)).length;
@@ -892,10 +915,10 @@ function vTurma(){
     ${pushCard()}
     ${avisosHtml()}
     ${unitChips(y.atual)}
-    <div class="row-head"><h2>Resumos da Unidade ${y.atual}</h2></div>
+    ${sec('Resumos da Unidade '+y.atual,'ano','livro')}
     <div class="capgrid">${capsDe(y,y.atual).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>
-    ${temasDe(y,y.atual).length?`<div class="row-head"><h2>Temas Transversais</h2></div><p class="meta tt-sub">Aulas extras que valem ponto na recuperação paralela.</p><div class="capgrid">${temasDe(y,y.atual).map(temaBtn).join('')}</div>`:''}
-    <div class="row-head"><h2>Próximas datas</h2><button class="meta link" data-go="calendario">Calendário</button></div>
+    ${temasDe(y,y.atual).length?`${sec('Temas Transversais','tt','globo','','Aulas extras · valem ponto na recuperação paralela')}<div class="capgrid">${temasDe(y,y.atual).map(temaBtn).join('')}</div>`:''}
+    ${sec('Próximas datas','pen','cal','<button class="meta link" data-go="calendario">Calendário</button>')}
     ${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}
     <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
   </section>`;
@@ -1030,7 +1053,7 @@ function vAtividades(){
     ${atuais.length?`<div class="atvlist">${atuais.map(atvCard).join('')}</div>`:'<div class="card empty-card"><b>Nenhuma atividade publicada nesta unidade</b><span class="meta">Quando o professor publicar, ela aparece aqui.</span></div>'}
     ${(()=>{const ts=[...y.list].sort((a,b)=>(b.n===y.atual)-(a.n===y.atual)||b.n-a.n).flatMap(u=>(u.temas||[]).filter(t=>t.resumo||temAtv(t)));
       return ts.length?`<div class="card tt-hero"><span class="vale">Vale ponto</span><b style="font-size:1.05rem">Temas Transversais · recuperação paralela</b><span class="meta" style="color:var(--ink)">Aulas extras com atividades que ajudam a recuperar pontos no período.</span></div><div class="atvlist">${ts.map(ttAtvCard).join('')}</div>`:''})()}
-    ${outras.map(u=>`<div class="row-head"><h2>Unidade ${u.n}</h2></div><div class="atvlist">${u.caps.filter(c=>c.atividade).map(atvCard).join('')}</div>`).join('')}
+    ${outras.map(u=>`${sec('Atividades · Unidade '+u.n,'ano','atv')}<div class="atvlist">${u.caps.filter(c=>c.atividade).map(atvCard).join('')}</div>`).join('')}
   </section>`;
 }
 function vCalendario(){
@@ -1054,7 +1077,7 @@ function vCalendario(){
     </div>
     <h3>${(SEM[dsel.getDay()]+', '+S.sel+' de '+MESES[m]).replace(/^./,c=>c.toUpperCase())}</h3>
     ${doDia.length?`<div class="evlist">${doDia.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nada marcado para este dia</b></div>`}
-    ${prox.length?`<h3>Próximas datas</h3><div class="evlist">${prox.map(evCard).join('')}</div>`:''}
+    ${prox.length?`${sec('Próximas datas','pen','cal')}<div class="evlist">${prox.map(evCard).join('')}</div>`:''}
   </section>`;
 }
 
