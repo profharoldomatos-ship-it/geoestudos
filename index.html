@@ -404,6 +404,17 @@ body.m-escuro .sec-duv{--sc:#7DD3FC;--sc-on:#0C1A24}
 .sb-fold summary{padding:12px 14px;font-weight:700;font-size:.95rem}
 .sb-fold .fold-body{padding:0 14px 12px;font-size:.92rem;line-height:1.6}
 .sb-fold .fold-body p{margin:0 0 8px}
+.sbsecs{display:flex;flex-direction:column;gap:8px}
+.sbsec{--sc:var(--pen);--sc-on:#fff;border-radius:12px;border-left:4px solid var(--sc);background:color-mix(in srgb,var(--sc) 9%,var(--surface));overflow:hidden}
+.sbsec>summary{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;list-style:none}
+.sbsec>summary::-webkit-details-marker{display:none}
+.sbsec>summary .sec-tx b{font-family:var(--display);font-size:1.02rem;line-height:1.2;color:var(--ink)}
+.sbsec>summary .chev{margin-left:auto;flex:none;transition:transform .2s;color:var(--muted)}
+.sbsec[open]>summary .chev{transform:rotate(180deg)}
+.sbsec-body{padding:2px 14px 14px;line-height:1.6;font-size:.94rem;display:flex;flex-direction:column;gap:8px;background:var(--surface);border-top:1px solid var(--line)}
+.sbsec-body>p{margin:8px 0 0}
+.sbsec-body .sb-list{margin-top:10px}
+.sbsec-body .sb-fold{margin-top:8px}
 .sb-contato{display:flex;flex-direction:column;gap:10px;line-height:1.5}
 .sb-contato .btn{align-self:flex-start;text-decoration:none;word-break:break-all}
 .sobre-lk{margin-top:6px;font-weight:700;color:inherit;text-decoration:underline;text-underline-offset:3px;text-align:left}
@@ -1041,17 +1052,31 @@ function semDados(){
   return `<div class="card empty-card"><b>Sem conexão com a internet</b><span class="meta">Conecte-se uma vez para baixar os resumos. Depois eles ficam guardados no celular.</span><button class="btn btn-ghost" id="retryBtn" style="margin-top:8px">Tentar de novo</button></div>`;
 }
 
-/* Sobre o app: finalidade pedagógica, privacidade e base legal (texto para alunos e famílias) */
+/* Sobre o app: finalidade pedagógica, privacidade e base legal (texto para alunos e famílias),
+   organizado em seções que abrem ao toque, para não entregar um bloco de texto longo. */
 function vSobre(){
   const ok=(t,d)=>`<li><span class="sb-ok" aria-hidden="true">✓</span><span><b>${t}</b>${d?`<br><span class="meta">${d}</span>`:''}</span></li>`;
   const no=(t,d)=>`<li><span class="sb-no" aria-hidden="true">✕</span><span><b>${t}</b>${d?`<br><span class="meta">${d}</span>`:''}</span></li>`;
+  const bloco=(tipo,ic,titulo,sub,corpo)=>`<details class="sbsec sec-${tipo}"><summary><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span><span class="sec-tx"><b>${titulo}</b><span class="sec-sub">${sub}</span></span>${CHEVD}</summary><div class="sbsec-body">${corpo}</div></details>`;
+  const lei=(titulo,corpo)=>`<details class="fold sb-fold"><summary>${titulo} ${CHEVD}</summary><div class="fold-body">${corpo}</div></details>`;
   return `<section class="section sobre">
     <div class="home-head">${CONTOUR}<span class="eyebrow">GeoEstudos · Prof. Haroldo Matos</span><h1 class="home-t">Sobre o app e privacidade</h1></div>
-    <p class="sb-lead">O GeoEstudos foi desenvolvido pelo <b>Prof. Haroldo Matos</b>, professor de Geografia dos anos finais do Ensino Fundamental da Rede Municipal de São Luís (MA), com o auxílio do <b>Claude</b>, assistente de inteligência artificial criado pela empresa Anthropic, que apoiou a programação e o design do aplicativo. O desenvolvimento começou em <b>outubro de 2026</b>. Os conteúdos e as atividades são de responsabilidade do professor, <b>obedecem ao currículo previsto pela Rede Municipal de Ensino de São Luís</b> para os anos finais do Ensino Fundamental, em consonância com o <b>Documento Curricular do Território Maranhense (DCTMA)</b>, e <b>seguem as diretrizes da Base Nacional Comum Curricular (BNCC)</b>. A avaliação segue o que determina a LDB: é <b>contínua e cumulativa</b>, com prevalência dos aspectos qualitativos sobre os quantitativos, e garante <b>estudos de recuperação paralelos</b> ao período letivo (Lei nº 9.394/1996, art. 24, V, alíneas "a" e "e"). O aplicativo <b>não envia dados dos estudantes</b> ao Claude nem a qualquer outra inteligência artificial.</p>
-    <p class="sb-lead">O GeoEstudos é um <b>recurso pedagógico</b> das aulas de Geografia. Ele existe para <b>disponibilizar conteúdos</b>, <b>facilitar o acesso</b> dos estudantes ao que é trabalhado em sala e <b>apoiar o aprendizado e as avaliações</b>. Ele não foi feito para coletar informações sobre os estudantes.</p>
-
-    ${sec('O que o app NÃO faz','ano','atv')}
-    <ul class="sb-list">
+    <p class="sb-lead">O GeoEstudos é um <b>recurso pedagógico</b> das aulas de Geografia. Ele <b>não usa câmera, microfone nem localização</b> e <b>todo o conteúdo pode ser usado sem fornecer dados pessoais</b>. Toque em cada tema abaixo para ler mais.</p>
+    <div class="sbsecs">
+    ${bloco('pen','livro','Quem fez o GeoEstudos','Autoria e início do projeto',`
+      <p>O GeoEstudos foi desenvolvido pelo <b>Prof. Haroldo Matos</b>, professor de Geografia dos anos finais do Ensino Fundamental da Rede Municipal de São Luís (MA), com o auxílio do <b>Claude</b>, assistente de inteligência artificial criado pela empresa Anthropic, que apoiou a programação e o design do aplicativo.</p>
+      <p>O desenvolvimento começou em <b>outubro de 2026</b>.</p>
+      <p>Os conteúdos e as atividades são de responsabilidade do professor. O aplicativo <b>não envia dados dos estudantes</b> ao Claude nem a qualquer outra inteligência artificial.</p>`)}
+    ${bloco('ano','globo','Para que serve','Finalidade pedagógica',`
+      <p>O GeoEstudos existe para <b>disponibilizar os conteúdos</b> trabalhados em sala, <b>facilitar o acesso</b> dos estudantes a eles e <b>apoiar o aprendizado e as avaliações</b>. Ele não foi feito para coletar informações sobre os estudantes.</p>
+      <p>Vivemos numa sociedade cada vez mais conectada, em que celulares, computadores e internet fazem parte do cotidiano dos estudantes. O app usa essa realidade a favor do aprendizado: <b>amplia o acesso aos conteúdos</b>, inclusive sem internet depois do primeiro acesso, <b>organiza os prazos</b> e <b>apoia o estudo autônomo</b>, sem substituir a aula, o caderno e o livro didático.</p>`)}
+    ${bloco('ano','atv','Currículo e avaliação','Rede Municipal de São Luís, DCTMA, BNCC e LDB',`
+      <p><b>Currículo.</b> Os conteúdos e as atividades <b>obedecem ao currículo previsto pela Rede Municipal de Ensino de São Luís</b> para os anos finais do Ensino Fundamental, em consonância com o <b>Documento Curricular do Território Maranhense (DCTMA)</b>, e <b>seguem as diretrizes da BNCC</b>. Os resumos acompanham os capítulos do livro didático adotado e a sequência de unidades de cada ano.</p>
+      <p><b>Avaliação contínua.</b> A LDB determina que a avaliação seja <b>contínua e cumulativa</b>, com prevalência dos aspectos qualitativos sobre os quantitativos e dos resultados ao longo do período sobre os de eventuais provas finais (Lei nº 9.394/1996, art. 24, V, "a"). No app, isso aparece no <b>caderno com os resumos copiados</b>, entregue em datas marcadas, e nas <b>atividades de fixação</b> de cada capítulo.</p>
+      <p><b>Recuperação paralela.</b> A LDB torna obrigatórios os <b>estudos de recuperação, de preferência paralelos ao período letivo</b> (art. 24, V, "e"). Cabe à escola prover meios para isso (art. 12, V) e ao professor estabelecer estratégias de recuperação (art. 13, IV). No GeoEstudos, essa é a função dos <b>Temas Transversais</b>: aulas extras com atividades que valem ponto na recuperação.</p>
+      <p><b>Temas contemporâneos.</b> A BNCC orienta que temas contemporâneos que afetam a vida humana em escala local, regional e global sejam tratados preferencialmente de forma <b>transversal e integradora</b>. Os Temas Transversais do app seguem esse caminho.</p>`)}
+    ${bloco('nov','sino','O que o app NÃO faz','Câmera, microfone, localização e cadastro',`
+      <ul class="sb-list">
       ${no('Não usa a câmera','Em nenhum momento o app pede ou ativa a câmera do celular.')}
       ${no('Não usa o microfone','O app não grava nem escuta nada.')}
       ${no('Não usa a localização (GPS)','O app não sabe onde o estudante está.')}
@@ -1059,57 +1084,43 @@ function vSobre(){
       ${no('Não acessa contatos, fotos ou arquivos do celular','')}
       ${no('Não tem propaganda nem rastreadores','Não há anúncios nem ferramentas que acompanham o que o estudante faz para fins comerciais.')}
       ${no('Não mostra notas','As notas oficiais ficam nos canais da escola e da rede.')}
-    </ul>
-
-    ${sec('O que fica só no seu aparelho','ano','livro')}
-    <p class="sb-p">Algumas escolhas ficam guardadas <b>apenas no navegador do próprio celular ou computador</b> e <b>não são enviadas a ninguém</b>, nem ao professor:</p>
-    <ul class="sb-list">
+      </ul>`)}
+    ${bloco('ano','livro','O que fica só no seu aparelho','Nada disso é enviado a ninguém',`
+      <p>Algumas escolhas ficam guardadas <b>apenas no navegador do próprio celular ou computador</b> e <b>não são enviadas a ninguém</b>, nem ao professor:</p>
+      <ul class="sb-list">
       ${ok('A turma escolhida e o modo de cores','')}
       ${ok('As marcações de estudo','"Resumo copiado", "atividade enviada", marca-texto e comentários nos textos.')}
       ${ok('Os resumos baixados para ler sem internet','')}
-    </ul>
-    <p class="meta sb-p">Para apagar tudo isso, basta limpar os dados do site nas configurações do navegador ou desinstalar o app.</p>
-
-    ${sec('O que só é enviado se você escolher','ano','sino')}
-    <ul class="sb-list">
-      ${ok('Avisos no celular (opcional)','Ao ativar os avisos, o celular gera um <b>endereço técnico de notificação</b>, que é guardado junto com o número da turma para que os avisos cheguem. Esse endereço <b>não contém nome nem identifica a pessoa</b>. Ao desativar os avisos no app, ele é apagado.')}
+      </ul>
+      <p class="meta">Para apagar tudo isso, basta limpar os dados do site nas configurações do navegador ou desinstalar o app.</p>`)}
+    ${bloco('duv','duv','O que só é enviado se você escolher','Avisos, caixa de dúvidas e formulários',`
+      <ul class="sb-list">
+      ${ok('Avisos no celular (opcional)','Ao ativar os avisos, o celular gera um <b>endereço técnico de notificação</b>, guardado junto com o número da turma para que os avisos cheguem. Esse endereço <b>não contém nome nem identifica a pessoa</b>. Ao desativar os avisos no app, ele é apagado.')}
       ${ok('Caixa de dúvidas (opcional)','Quem envia uma dúvida escreve o <b>nome, a turma e a pergunta</b>. Essas informações são lidas <b>somente pelo professor</b>, ficam guardadas na conta profissional do professor no Google e servem apenas para responder à dúvida. Quando uma resposta é publicada no app, aparece <b>só a pergunta, sem o nome</b>.')}
       ${ok('Atividades em formulário','As atividades de fixação abrem no <b>Google Forms</b>, fora do app. Lá vale o que cada formulário pede e as regras do Google.')}
-    </ul>
-
-    ${sec('Onde e como acessar','ano','cal')}
-    <ul class="sb-list">
+      </ul>`)}
+    ${bloco('pen','cal','Onde e como usar','Navegador, uso em casa e serviços usados',`
+      <ul class="sb-list">
       ${ok('Funciona pelo navegador','Pode ser usado no celular, no tablet ou no computador, pelo endereço <b>profharoldomatos-ship-it.github.io/geoestudos</b>. Instalar no celular é opcional.')}
       ${ok('Feito para usar em casa','O GeoEstudos respeita a Lei nº 15.100/2025, que restringe o uso de celulares pelos estudantes na escola durante as aulas, o recreio e os intervalos. O uso em sala só acontece se for para fins pedagógicos e com orientação do professor, como prevê a própria lei (art. 2º, § 1º).')}
       ${ok('Serviços usados','O app é hospedado no GitHub Pages. Os conteúdos vêm do Google Drive do professor, por meio do Google Apps Script. Os vídeos são do YouTube, em modo sem cookies, e só carregam quando o estudante abre uma aula com vídeo. Como em qualquer site, esses serviços podem registrar dados técnicos de acesso, como o endereço de internet, conforme as políticas de cada um.')}
-    </ul>
-
-    ${sec('Base legal e pedagógica','tt','globo')}
-    <details class="fold sb-fold"><summary>LGPD · Lei Geral de Proteção de Dados (Lei nº 13.709/2018) ${CHEVD}</summary><div class="fold-body">
-      <p>O app segue os princípios da <b>finalidade</b>, da <b>necessidade</b>, da <b>transparência</b> e da <b>segurança</b> (art. 6º, incisos I, III, VI e VII): usa só o mínimo indispensável, para objetivos pedagógicos claros, e informa tudo isso nesta página.</p>
-      <p>Para crianças e adolescentes, o tratamento de dados deve ser feito no seu <b>melhor interesse</b> (art. 14). As informações devem ser dadas de forma simples, clara e acessível (art. 14, § 6º), e o uso de uma aplicação não pode ser condicionado ao fornecimento de dados além do estritamente necessário (art. 14, § 4º). Por isso, <b>todo o conteúdo do GeoEstudos pode ser usado sem fornecer nenhum dado pessoal</b>.</p>
-      <p>Estudantes e responsáveis podem pedir ao professor, a qualquer momento, <b>informação, correção ou exclusão</b> das mensagens enviadas pela caixa de dúvidas (art. 18).</p>
-    </div></details>
-    <details class="fold sb-fold"><summary>ECA · Estatuto da Criança e do Adolescente (Lei nº 8.069/1990) ${CHEVD}</summary><div class="fold-body">
-      <p>O ECA assegura à criança e ao adolescente o <b>direito à educação</b>, visando ao pleno desenvolvimento da pessoa e ao preparo para a cidadania (art. 53), e coloca esses direitos como prioridade absoluta da família, da comunidade, da sociedade e do poder público (art. 4º).</p>
-      <p>O <b>direito ao respeito</b> inclui a preservação da imagem, da identidade e da autonomia (art. 17). Por isso o app não usa câmera nem fotos e não expõe nomes: as dúvidas publicadas aparecem sem identificação.</p>
-      <p>O processo educacional deve respeitar os valores culturais e históricos do contexto social do estudante e garantir o <b>acesso às fontes de cultura</b> (art. 58).</p>
-    </div></details>
-    <details class="fold sb-fold"><summary>LDB · Lei de Diretrizes e Bases da Educação (Lei nº 9.394/1996) ${CHEVD}</summary><div class="fold-body">
-      <p>Desde a Política Nacional de Educação Digital (Lei nº 14.533/2023), a LDB prevê a <b>educação digital</b> como dever do Estado (art. 4º, XII) e determina que as relações entre ensino e aprendizagem digital prevejam <b>técnicas, ferramentas e recursos digitais</b> (art. 4º, parágrafo único).</p>
-      <p>O ensino fundamental tem entre seus objetivos a compreensão do ambiente natural e social, do sistema político e <b>da tecnologia</b> (art. 32, II), e a lei valoriza a <b>experiência extraescolar</b> (art. 3º, X), que é exatamente o espaço em que o app atua: o estudo em casa.</p>
-    </div></details>
-    <details class="fold sb-fold"><summary>Currículo e avaliação no GeoEstudos ${CHEVD}</summary><div class="fold-body">
-      <p><b>Currículo.</b> Os resumos acompanham os capítulos do livro didático adotado e a sequência de unidades prevista para cada ano, conforme o currículo da Rede Municipal de São Luís, o DCTMA e a BNCC, que define as aprendizagens essenciais de Geografia para o 7º, o 8º e o 9º ano.</p>
-      <p><b>Avaliação contínua.</b> A LDB determina que a avaliação seja <b>contínua e cumulativa</b>, com prevalência dos aspectos qualitativos sobre os quantitativos e dos resultados ao longo do período sobre os de eventuais provas finais (art. 24, V, "a"). No app, isso aparece no <b>caderno com os resumos copiados</b>, entregue em datas marcadas, e nas <b>atividades de fixação</b> de cada capítulo, que acompanham a aprendizagem ao longo do período.</p>
-      <p><b>Recuperação paralela.</b> A LDB torna obrigatórios os <b>estudos de recuperação, de preferência paralelos ao período letivo</b> (art. 24, V, "e"), cabendo à escola prover meios para isso (art. 12, V) e ao professor estabelecer estratégias de recuperação (art. 13, IV). No GeoEstudos, essa é a função dos <b>Temas Transversais</b>: aulas extras com atividades que valem ponto na recuperação.</p>
-      <p><b>Temas contemporâneos.</b> A BNCC orienta que temas contemporâneos que afetam a vida humana em escala local, regional e global sejam tratados preferencialmente de forma <b>transversal e integradora</b>. Os Temas Transversais do app seguem esse caminho, ligando o conteúdo de cada unidade a questões atuais da realidade dos estudantes.</p>
-    </div></details>
-    <details class="fold sb-fold"><summary>BNCC · Base Nacional Comum Curricular ${CHEVD}</summary><div class="fold-body">
-      <p>A <b>Competência Geral 5 (Cultura digital)</b> propõe que os estudantes aprendam a compreender, utilizar e criar tecnologias digitais de informação e comunicação de forma <b>crítica, significativa, reflexiva e ética</b>, inclusive nas práticas escolares, para acessar informações, produzir conhecimentos e exercer protagonismo.</p>
-      <p>Em Geografia, a BNCC valoriza o <b>pensamento espacial</b> e o uso de diferentes linguagens: textos, mapas, imagens e vídeos. O GeoEstudos reúne essas linguagens num só lugar, organizadas por ano, unidade e capítulo.</p>
-    </div></details>
-    <p class="sb-p">Vivemos numa sociedade cada vez mais conectada, em que celulares, computadores e internet fazem parte do cotidiano dos estudantes. O GeoEstudos usa essa realidade a favor do aprendizado: <b>amplia o acesso aos conteúdos</b>, inclusive sem internet depois do primeiro acesso, <b>organiza os prazos</b> e <b>apoia o estudo autônomo</b>, sem substituir a aula, o caderno e o livro didático.</p>
+      </ul>`)}
+    ${bloco('tt','globo','Base legal','LGPD, ECA, LDB e BNCC',`
+      ${lei('LGPD · Lei nº 13.709/2018',`
+        <p>O app segue os princípios da <b>finalidade</b>, da <b>necessidade</b>, da <b>transparência</b> e da <b>segurança</b> (art. 6º, incisos I, III, VI e VII): usa só o mínimo indispensável, para objetivos pedagógicos claros, e informa tudo isso nesta página.</p>
+        <p>Para crianças e adolescentes, o tratamento de dados deve ser feito no seu <b>melhor interesse</b> (art. 14). As informações devem ser dadas de forma simples, clara e acessível (art. 14, § 6º), e o uso de uma aplicação não pode ser condicionado ao fornecimento de dados além do estritamente necessário (art. 14, § 4º).</p>
+        <p>Estudantes e responsáveis podem pedir ao professor, a qualquer momento, <b>informação, correção ou exclusão</b> das mensagens enviadas pela caixa de dúvidas (art. 18).</p>`)}
+      ${lei('ECA · Lei nº 8.069/1990',`
+        <p>O ECA assegura à criança e ao adolescente o <b>direito à educação</b>, visando ao pleno desenvolvimento da pessoa e ao preparo para a cidadania (art. 53), e coloca esses direitos como prioridade absoluta da família, da comunidade, da sociedade e do poder público (art. 4º).</p>
+        <p>O <b>direito ao respeito</b> inclui a preservação da imagem, da identidade e da autonomia (art. 17). Por isso o app não usa câmera nem fotos e não expõe nomes.</p>
+        <p>O processo educacional deve respeitar os valores culturais e históricos do contexto social do estudante e garantir o <b>acesso às fontes de cultura</b> (art. 58).</p>`)}
+      ${lei('LDB · Lei nº 9.394/1996',`
+        <p>Desde a Política Nacional de Educação Digital (Lei nº 14.533/2023), a LDB prevê a <b>educação digital</b> como dever do Estado (art. 4º, XII) e determina que as relações entre ensino e aprendizagem digital prevejam <b>técnicas, ferramentas e recursos digitais</b> (art. 4º, parágrafo único).</p>
+        <p>O ensino fundamental tem entre seus objetivos a compreensão do ambiente natural e social, do sistema político e <b>da tecnologia</b> (art. 32, II), e a lei valoriza a <b>experiência extraescolar</b> (art. 3º, X), que é o espaço em que o app atua: o estudo em casa.</p>`)}
+      ${lei('BNCC · Base Nacional Comum Curricular',`
+        <p>A <b>Competência Geral 5 (Cultura digital)</b> propõe que os estudantes aprendam a compreender, utilizar e criar tecnologias digitais de informação e comunicação de forma <b>crítica, significativa, reflexiva e ética</b>, inclusive nas práticas escolares, para acessar informações, produzir conhecimentos e exercer protagonismo.</p>
+        <p>Em Geografia, a BNCC valoriza o <b>pensamento espacial</b> e o uso de diferentes linguagens: textos, mapas, imagens e vídeos. O GeoEstudos reúne essas linguagens num só lugar, organizadas por ano, unidade e capítulo.</p>`)}`)}
+    </div>
 
     ${sec('Fale com o professor','pen','duv')}
     <div class="card sb-contato">
