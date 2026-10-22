@@ -186,7 +186,8 @@ body.m-escuro:is(.my7,.my8,.my9) .tab{color:color-mix(in srgb,var(--mc) 45%,#fff
 @media (orientation:landscape) and (max-height:560px){
   body.lendo .tabs,body.lendo .top,body.lendo .foot,body.lendo .tip{display:none}
   body.lendo .app{max-width:min(94vw,860px);padding-top:0;padding-bottom:28px}
-  body.lendo .reader-bar{position:sticky;top:0;z-index:6;background:var(--bg);padding:6px 0;margin:0 -4px;box-shadow:0 6px 8px -8px rgba(0,0,0,.25)}
+  body.lendo .rt-back{display:inline-flex!important;margin-right:auto}
+  body.lendo .read-tools{position:sticky;top:0;z-index:6;background:var(--bg);padding:6px 0;margin:0 -4px;box-shadow:0 6px 8px -8px rgba(0,0,0,.25)}
   body.lendo .paper{padding-left:clamp(18px,4vw,44px);padding-right:clamp(18px,4vw,44px)}
   body.lendo .resumo,body.lendo .tt-texto{line-height:1.7}
   body.lendo article.section{gap:12px}
@@ -201,6 +202,9 @@ body.m-escuro:is(.my7,.my8,.my9) .tab{color:color-mix(in srgb,var(--mc) 45%,#fff
 .girar svg{flex:none}
 .back{display:inline-flex;align-items:center;gap:6px;color:var(--pen);font-weight:700;padding:4px 0}
 .tools{display:flex;gap:6px}
+.read-tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:-6px}
+.read-tools .tool{padding:8px 12px}
+.rt-back{display:none!important;color:var(--pen)}
 .tool{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--surface);font-weight:700;font-size:.86rem}
 .count{min-width:20px;height:20px;border-radius:10px;background:var(--hl);color:var(--m-ink);font-size:.74rem;display:grid;place-items:center;padding:0 5px}
 .ypill{display:inline-block;background:var(--year);color:#fff;border-radius:6px;padding:2px 8px;font-size:.72rem;font-weight:700;letter-spacing:.04em}
@@ -1851,12 +1855,12 @@ function vCap(n){
   if(!c||!c.resumo){S.cap=null;return vResumos()}
   const pAt=prazoDe(n,'atividade'),pCad=prazoDe(n,'caderno');
   return `<article class="section">
-    <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>
-      <span class="tools">${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button></span></div>
+    <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button></div>
     ${girarDica()}
     <div><span class="ypill">${y.label} · Unidade ${c.u} · Capítulo ${n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo">Resumo</span> ${c.atividade?(isSent(n)?`<button class="qact ok" data-jump="1">${CHECK}Atividade enviada</button>`:`<button class="qact" data-jump="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg>Atividade de fixação · vale nota</button>`):''}
     ${pCad?`<div class="prazo">Entrega do caderno: <b>${dm(pCad)}</b> · ${quando(pCad).toLowerCase()}</div>`:''}</div>
     ${S.tip?`<div class="tip"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none;color:var(--pen)"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra. Para corrigir uma marcação, toque nela: dá para trocar a cor, ajustar o trecho ou apagar. O texto do resumo não muda.</span><button id="tipOk">Entendi</button></div>`:''}
+    <div class="read-tools"><button class="tool rt-back" data-back aria-label="Voltar aos resumos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button></div>
     <div class="paper"><div class="resumo" style="--fs:${S.size}"></div></div>
     <div class="card copy-card${done?' is-done':''}">
       <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Copiado no caderno':'Já copiei este resumo no caderno'}</button>
@@ -1896,12 +1900,12 @@ addEventListener('orientationchange',()=>{if(S.cap)store.set('girouDica',(store.
 function vTema(n,c){
   const y=Y(),done=isCopied(n),sent=isSent(n),pr=prazoDe(n,'tema');
   return `<article class="section">
-    <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>
-      <span class="tools">${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button></span></div>
+    <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button></div>
     ${girarDica()}
     <div><span class="ypill">${y.label} · Unidade ${c.u} · Tema Transversal ${c.n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo tt-lbl">Aula extra</span> <button class="qact tt-q${sent?' ok':''}" data-jump="1">${sent?CHECK+'Atividade feita':'Vale ponto · recuperação paralela'}</button>
     ${pr?`<div class="prazo">Prazo da atividade: <b>${dm(pr)}</b> · ${quando(pr).toLowerCase()}</div>`:''}</div>
     ${S.tip?`<div class="tip"><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra.</span><button id="tipOk">Entendi</button></div>`:''}
+    <div class="read-tools"><button class="tool rt-back" data-back aria-label="Voltar aos resumos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button></div>
     <div class="paper"><div class="resumo" style="--fs:${S.size}"></div></div>
     <div class="card copy-card${done?' is-done':''}">
       <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Aula estudada':'Já estudei esta aula'}</button>
