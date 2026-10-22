@@ -495,6 +495,10 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 @media (prefers-reduced-motion:reduce){.sfold .sf-ch{transition:none}}
 .duv-sub{font-size:.92rem;font-weight:700;color:var(--muted);margin:6px 0 0;text-transform:uppercase;letter-spacing:.06em;font-family:var(--body)}
 .duv-regra{display:flex;flex-direction:column;gap:2px;border-left:4px solid var(--hl);background:var(--hl-soft);color:var(--ink);border-radius:10px;padding:8px 12px;font-size:.86rem;line-height:1.45}
+.cx-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.cx-list li{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;line-height:1.45}
+.cx-ic{flex:none;width:30px;height:30px;border-radius:9px;background:var(--surface-2);display:grid;place-items:center;font-size:1rem}
+.cc-como{align-self:flex-start;font-size:.84rem;margin-top:2px}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
 .mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--year);border-radius:12px;padding:10px 12px}
@@ -1443,8 +1447,28 @@ function perguntarTurma(t){
     <button class="mode-opt" id="ptComp"><span class="mo-prev" aria-hidden="true" style="background:var(--surface-2)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18 19a5 5 0 0 0-2.5-4.3"/></svg></span><span><b>Celular compartilhado</b><br><span class="meta">Irmãos, vizinhos ou amigos de turmas diferentes usam este aparelho. Não fixar turma.</span></span></button></div>`,
   (o,close)=>{
     o.querySelector('#ptSim').onclick=()=>{close();MINHA=t;COMP=false;store.set('minha',t);store.set('compartilhado',false);render();conferirPush();toast('Turma '+t+' definida como a sua turma.')};
-    o.querySelector('#ptComp').onclick=()=>{close();COMP=true;MINHA=null;store.set('compartilhado',true);store.set('minha',null);render();toast('Modo celular compartilhado ativado.')};
+    o.querySelector('#ptComp').onclick=()=>{close();COMP=true;MINHA=null;store.set('compartilhado',true);store.set('minha',null);render();explicarCompartilhado(true)};
   });
+}
+
+/* Explica como o app se comporta no modo celular compartilhado */
+function explicarCompartilhado(acabou){
+  const pushTxt=PUSH
+    ?`Os avisos já ativados para ${PUSH.turmas.length>1?'as turmas <b>'+esc(listaT(PUSH.turmas))+'</b>':'a turma <b>'+esc(PUSH.turmas[0])+'</b>'} continuam chegando. Para incluir ou tirar turmas, abra uma turma e toque em <b>Alterar</b>, no cartão dos avisos.`
+    :`Nenhuma turma é escolhida sozinha. Para receber notificações, abra uma turma e toque em <b>Escolher turmas e ativar</b>: marque as turmas de todos que usam este celular.`;
+  const it=(ic,t,d)=>`<li><span class="cx-ic" aria-hidden="true">${ic}</span><span><b>${t}</b><br>${d}</span></li>`;
+  sheet(`<h2>${acabou?'Pronto: celular compartilhado':'Como funciona o celular compartilhado'}</h2>
+    <p style="margin:0">Este modo é para quando <b>mais de um estudante usa o mesmo celular</b>, como irmãos ou colegas de turmas diferentes. Veja o que muda:</p>
+    <ul class="cx-list">
+      ${it('🏠','O app abre sempre na tela inicial','Nenhuma turma fica fixa. Cada pessoa toca na sua turma para ver os resumos, as atividades e o calendário.')}
+      ${it('🔔','Notificações: de todas as turmas marcadas',pushTxt+' Cada notificação mostra o número da turma no título, por exemplo: <i>“Turma 72 · Amanhã: entrega do caderno”</i>.')}
+      ${it('📢','Avisos do professor','Avisos para todas as turmas aparecem já na tela inicial. Os avisos de uma turma específica aparecem quando ela é aberta.')}
+      ${it('🎨','Cores padrão','A barra de menus deixa de ter a cor de um ano.')}
+      ${it('✍️','Caixa de dúvidas','O nome não fica salvo: cada pessoa digita o seu ao enviar uma dúvida.')}
+      ${it('📌','Marcações de estudo','“Resumo copiado”, “atividade enviada”, marca-texto e comentários ficam salvos neste celular. Quem estuda o mesmo ano vê as mesmas marcações.')}
+    </ul>
+    <p class="meta" style="margin:0">Se o celular passar a ser de uma pessoa só, toque em <b>Definir minha turma</b>, na tela inicial.</p>
+    <button class="btn btn-primary" data-close>Entendi</button>`);
 }
 function fixarTurma(t){
   MINHA=t;COMP=false;S.turma=t;store.set('minha',t);store.set('turma',t);store.set('compartilhado',false);
@@ -1458,7 +1482,7 @@ function fixarSheet(){
 }
 function celularCard(){
   if(!DATA)return '';
-  if(COMP)return `<div class="card celcomp"><span class="cc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18 19a5 5 0 0 0-2.5-4.3"/></svg></span><div class="cc-tx"><b>Modo celular compartilhado</b><span class="meta">Nenhuma turma fixa neste celular. Se ele é só seu, defina a sua turma.</span></div><button class="btn btn-primary cc-go" id="celFixar">Definir minha turma</button></div>`;
+  if(COMP)return `<div class="card celcomp"><span class="cc-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18 19a5 5 0 0 0-2.5-4.3"/></svg></span><div class="cc-tx"><b>Modo celular compartilhado</b><span class="meta">Nenhuma turma fixa neste celular. Se ele é só seu, defina a sua turma.</span><button class="link cc-como" id="ccComo">Como funciona este modo?</button></div><button class="btn btn-primary cc-go" id="celFixar">Definir minha turma</button></div>`;
   if(MINHA)return `<div class="cel"><span>Sua turma: <b>${esc(MINHA)}</b>.</span><button class="link" id="celComp">Usar como celular compartilhado</button></div>`;
   return '';
 }
@@ -1677,7 +1701,7 @@ function vTurma(){
   const y=Y(),pub=pubs(y),total=pub.length,done=pub.filter(c=>isCopied(c.n)).length,acts=capsDe(y,y.atual).filter(c=>c.atividade),sent=acts.filter(c=>isSent(c.n)).length;
   const pct=(a,b)=>b?Math.round(a/b*100):0,prox=proximos(3);
   return `<section class="section">
-    ${COMP?`<div class="cel"><span>👥 Celular compartilhado</span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}
+    ${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}
     ${MINHA&&S.turma!==MINHA?`<div class="outra"><span>Você está vendo a <b>Turma ${esc(S.turma)}</b>. Sua turma é a <b>${esc(MINHA)}</b>.</span><div class="outra-b"><button class="btn btn-primary" data-turma="${esc(MINHA)}">Voltar para a ${esc(MINHA)}</button><button class="link" id="mudarMinha">Esta é a minha turma</button></div></div>`:''}
     ${fixosHtml(S.turma)}
     <div class="card hello">${CONTOUR}
@@ -1993,8 +2017,9 @@ document.addEventListener('click',ev=>{
   const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;store.set('turma',S.turma);
     go('turma');if(!MINHA&&!COMP)perguntarTurma(S.turma);return}
   if(t.closest('#pushTurmas'))return turmasSheet();
-  if(t.closest('#celComp')){sheet(`<h2>Usar como celular compartilhado?</h2><p style="margin:0">A turma ${esc(MINHA)} deixa de ser fixa. O app passa a abrir na escolha de turmas e a barra volta às cores padrão.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="ccSim">Sim, é compartilhado</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,(o,close)=>{o.querySelector('#ccSim').onclick=()=>{close();COMP=true;MINHA=null;store.set('compartilhado',true);store.set('minha',null);render();toast('Modo celular compartilhado ativado.')}});return}
+  if(t.closest('#celComp')){sheet(`<h2>Usar como celular compartilhado?</h2><p style="margin:0">A turma ${esc(MINHA)} deixa de ser fixa. O app passa a abrir na escolha de turmas e a barra volta às cores padrão.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="ccSim">Sim, é compartilhado</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,(o,close)=>{o.querySelector('#ccSim').onclick=()=>{close();COMP=true;MINHA=null;store.set('compartilhado',true);store.set('minha',null);render();explicarCompartilhado(true)}});return}
   if(t.closest('#celFixar')){fixarSheet();return}
+  if(t.closest('#ccComo')){explicarCompartilhado(false);return}
   const fx=t.closest('[data-fixar]');if(fx){fixarTurma(fx.dataset.fixar);return}
   if(t.closest('#mudarMinha')){const nova=S.turma;sheet(`<h2>Mudar a sua turma?</h2><p style="margin:0">Hoje a sua turma é a <b>${esc(MINHA)}</b>. Se mudar para a <b>${esc(nova)}</b>, o app passa a abrir nela${PUSH?' e os avisos no celular passam a ser os da turma '+esc(nova):''}.</p><p class="meta" style="margin:0">Só mude se você realmente estuda na turma ${esc(nova)}.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="mmSim">Sim, minha turma é a ${esc(nova)}</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,(o,close)=>{o.querySelector('#mmSim').onclick=()=>{close();MINHA=nova;COMP=false;store.set('compartilhado',false);store.set('minha',MINHA);render();conferirPush();toast('Agora a sua turma é a '+MINHA+'.')}});return}
   if(t.closest('#copyMail')){try{navigator.clipboard.writeText(EMAIL).then(()=>toast('E-mail copiado.'),()=>toast(EMAIL))}catch(e){toast(EMAIL)}return}
