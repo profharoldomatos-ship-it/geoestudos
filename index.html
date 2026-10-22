@@ -548,6 +548,24 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .atv-acts .act-go{grid-column:1/-1;background:var(--year);color:#fff}
 .atv-acts .meta{grid-column:1/-1}
 .atv .tt-cn{background:var(--year);color:#fff}
+/* Quadro da atividade dentro do resumo e da aula: faixa no tom forte do ano, corpo branco */
+.card.act,.card.act.tt-act{background:var(--surface)!important;border:1.5px solid color-mix(in srgb,var(--year) 30%,var(--line));padding:0 0 14px;overflow:hidden;gap:12px}
+.card.act>:not(.act-head){margin-inline:14px}
+.act .act-head{background:var(--year);color:#fff;padding:12px 14px;display:grid;grid-template-columns:auto 1fr;column-gap:12px;row-gap:4px;align-items:center}
+.act .act-head .act-ic{grid-row:1/3}
+.act .act-head .vale{grid-column:2;grid-row:1;justify-self:start;margin:0}
+.act .act-head>span:not(.act-ic):not(.vale){grid-column:2;grid-row:2;line-height:1.2}
+.act .act-sub{display:inline-block;line-height:1.35;margin-top:2px}
+.act .act-ic,.tt-act .act-ic.tt-ic{background:rgba(255,255,255,.2);color:#fff}
+.act .act-t,.tt-act .act-t,body.m-escuro .tt-act .act-t{color:#fff}
+.act .act-sub{color:#fff;opacity:.92}
+.act .act-head .vale{background:#fff;color:var(--year)}
+.act .act-why,.tt-act .act-why,body.m-escuro .tt-act .act-why{color:var(--ink)}
+.act .act-go{background:var(--year);color:#fff;justify-content:center}
+.act .copy-btn{border-color:color-mix(in srgb,var(--year) 55%,var(--line));color:var(--ink)}
+.act .copy-btn.on{background:var(--year);border-color:var(--year);color:#fff}
+.qact,.qact.tt-q{background:color-mix(in srgb,var(--year) 12%,var(--surface));color:color-mix(in srgb,var(--year) 80%,var(--ink));border-color:color-mix(in srgb,var(--year) 40%,transparent)}
+.qact.ok{background:var(--year);color:#fff;border-color:var(--year)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
 .mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--year);border-radius:12px;padding:10px 12px}
