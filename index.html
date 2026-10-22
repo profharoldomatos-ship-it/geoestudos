@@ -1547,7 +1547,7 @@ function vSobre(){
     ${bloco('duv','duv','O que só é enviado se você escolher','Avisos, caixa de dúvidas e formulários',`
       <ul class="sb-list">
       ${ok('Avisos no celular (opcional)','Ao ativar os avisos, o celular gera um <b>endereço técnico de notificação</b>, guardado junto com o número da turma para que os avisos cheguem. Esse endereço <b>não contém nome nem identifica a pessoa</b>. Ao desativar os avisos no app, ele é apagado.')}
-      ${ok('Caixa de dúvidas (opcional)','Quem envia uma dúvida escreve o <b>nome, a turma e a pergunta</b>. Essas informações são lidas <b>somente pelo professor</b>, ficam guardadas na conta profissional do professor no Google e servem apenas para responder à dúvida. Quando uma resposta é publicada no app, aparece <b>só a pergunta, sem o nome</b>.')}
+      ${ok('Caixa de dúvidas (opcional)','Quem envia uma dúvida escreve o <b>nome, a turma e a pergunta</b>. Essas informações são lidas <b>somente pelo professor</b>, ficam guardadas na conta profissional do professor no Google e servem para responder à dúvida. A única exceção são <b>mensagens desrespeitosas</b>: elas serão levadas à coordenação da escola e ao conhecimento dos responsáveis. Quando uma resposta é publicada no app, aparece <b>só a pergunta, sem o nome</b>.')}
       ${ok('Atividades em formulário','As atividades de fixação abrem no <b>Google Forms</b>, fora do app. Lá vale o que cada formulário pede e as regras do Google.')}
       </ul>`)}
     ${bloco('pen','cal','Onde e como usar','Navegador, uso em casa e serviços usados',`
@@ -1640,7 +1640,7 @@ function duvidaSheet(sobre){
   const nomeSalvo=COMP?'':store.get('duvNome','');
   sheet(`<h2>Enviar uma dúvida ao professor</h2>
     <p class="meta" style="margin:0">Esta caixa é para <b>dúvidas sobre o conteúdo</b> das aulas. O professor lê todas as mensagens.</p>
-    <div class="duv-regra"><b>Combinado de respeito</b><span>Escreva como se estivesse falando com o professor na sala de aula: com educação, sem palavrões, ofensas ou brincadeiras. Mensagens desrespeitosas não são respondidas.</span></div>
+    <div class="duv-regra"><b>Combinado de respeito</b><span>Escreva como se estivesse falando com o professor na sala de aula: com educação, sem palavrões, ofensas ou brincadeiras. Mensagens desrespeitosas não são respondidas e <b>serão levadas à coordenação da escola e ao conhecimento dos responsáveis</b>.</span></div>
     <label class="fld"><span>Seu nome completo *</span><input id="dvNome" maxlength="60" autocomplete="name" value="${esc(nomeSalvo)}"></label>
     <label class="fld"><span>Sua turma *</span><select id="dvTurma">${ts.map(t=>`<option${t===tur?' selected':''}>${t}</option>`).join('')}</select></label>
     <label class="fld"><span>Sobre</span><select id="dvSobre">${ops.map(o=>`<option${o===sobre?' selected':''}>${esc(o)}</option>`).join('')}<option${!sobre?' selected':''}>Outro assunto da aula</option></select></label>
