@@ -99,6 +99,7 @@ body.m-escuro .sec-pen{--sc:var(--pen);--sc-on:var(--on-pen)} body.m-escuro .sec
 .btn-primary{background:var(--pen);color:var(--on-pen)}
 .btn-ghost{border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .contour{position:absolute;right:-24px;top:-18px;width:180px;height:180px;opacity:.2;pointer-events:none}
+.globo-hh{right:-22px;top:50%;transform:translateY(-50%);width:150px;height:150px;opacity:.2}
 .home-head{position:relative;overflow:hidden;background:var(--pen);color:var(--on-pen);border-radius:var(--r);padding:22px 16px 20px;display:flex;flex-direction:column;gap:4px}
 .home-head .eyebrow{color:inherit;opacity:.85}
 .home-t{font-size:1.85rem}
@@ -809,6 +810,7 @@ function cheer(kind,sub){
 const CHEVR='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none"><path d="M9 6l6 6-6 6"/></svg>';
 const CHEVD='<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 const CHECK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+const GLOBO_HH='<svg class="contour globo-hh" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76"/><path d="M12 50h76"/><path d="M17.5 31h65M17.5 69h65"/></g><path d="M8 66c14 13 64 13 84-10" opacity=".7"/></svg>';
 const CONTOUR='<svg class="contour" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M20 55c5-18 25-30 42-24s24 22 16 36-30 20-44 14-18-12-14-26z"/><path d="M30 55c4-11 17-18 28-14s15 14 10 23-19 13-28 9-12-8-10-18z"/><path d="M40 55c2-6 9-9 15-7s8 8 5 12-10 7-15 5-6-4-5-10z"/></svg>';
 
 /* Mídias nos textos: um endereço sozinho numa linha vira vídeo, áudio, imagem ou botão */
@@ -1614,7 +1616,7 @@ function vSobre(){
 function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
-    <div class="home-head">${CONTOUR}<h1 class="home-t">GeoEstudos</h1><span class="eyebrow hh-l">Desenvolvido pelo Prof. Me. Haroldo Matos</span><span class="eyebrow hh-l">Geografia · Anos finais do Ensino Fundamental</span></div>
+    <div class="home-head">${GLOBO_HH}<h1 class="home-t">GeoEstudos</h1><span class="eyebrow hh-l">Desenvolvido pelo Prof. Me. Haroldo Matos</span><span class="eyebrow hh-l">Geografia · Anos finais do Ensino Fundamental</span></div>
     ${fixosHtml(null)}
     <details class="fold mini"><summary>Sobre o Prof. Haroldo Matos ${CHEVD}</summary><div class="fold-body">
       <p>Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
