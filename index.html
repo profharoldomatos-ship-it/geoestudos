@@ -544,12 +544,13 @@ body.m-escuro .privmini{background:#2F5BC4;border-color:#9DB8FF}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .privbtn{background:#2F5BC4;box-shadow:0 0 0 1.5px #9DB8FF,0 6px 16px rgba(0,0,0,.4)}}
 body.m-escuro .privbtn{background:#2F5BC4;box-shadow:0 0 0 1.5px #9DB8FF,0 6px 16px rgba(0,0,0,.4)}
 /* Outra turma */
-.outra{display:flex;flex-direction:column;gap:8px;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:var(--r);padding:12px;font-size:.92rem}
+.outra{display:flex;flex-direction:column;gap:8px;color:var(--ink);background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:var(--r);padding:12px;font-size:.92rem}
 .outra-b{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .outra-b .btn{padding:8px 14px;min-height:0;font-size:.88rem}
 .outra-b .link{font-size:.86rem}
 .outra.mini{flex-direction:row;justify-content:space-between;align-items:center;padding:8px 12px;font-size:.84rem;margin-bottom:12px}
-.outra.mini .link{flex:none}
+.outra.mini .link{flex:none;color:var(--pen)}
+.outra b{color:inherit}
 /* Avisos */
 .pushhero{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 14px;align-items:center;width:100%;text-align:left;color:#fff;background:linear-gradient(135deg,var(--year),#1D3F8F);border-radius:18px;padding:16px;box-shadow:0 8px 22px rgba(29,63,143,.28);overflow:hidden}
 .pushhero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 20%,rgba(255,226,122,.35),transparent 45%);pointer-events:none}
