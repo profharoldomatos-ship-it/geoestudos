@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-22 · pdf v9';
+const VERSAO_ROBO = '2026-10-22 · avaliação v10';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -56,6 +56,16 @@ function doGet(e) {
     try { b = JSON.parse(p.duvida); } catch (err) {}
     return ContentService.createTextOutput(JSON.stringify(receberDuvida_(b))).setMimeType(ContentService.MimeType.JSON);
   }
+  if (p.avaliacao !== undefined) {
+    let b = {};
+    try { b = JSON.parse(p.avaliacao); } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify(receberAvaliacao_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.avalcheck !== undefined) {
+    let b = {};
+    try { b = JSON.parse(p.avalcheck); } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify(conferirAvaliacao_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
   if (p.robo !== undefined) {
     return ContentService.createTextOutput(JSON.stringify({ ok: true, versao: VERSAO_ROBO })).setMimeType(ContentService.MimeType.JSON);
   }
@@ -83,7 +93,7 @@ function doGet(e) {
 function doPost(e) {
   let b = {};
   try { b = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) {}
-  const res = b.acao === 'duvida' ? receberDuvida_(b) : processarInscricao_(b);
+  const res = b.acao === 'duvida' ? receberDuvida_(b) : b.acao === 'avaliacao' ? receberAvaliacao_(b) : b.acao === 'avalcheck' ? conferirAvaliacao_(b) : processarInscricao_(b);
   return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -135,6 +145,7 @@ function instalar() {
   prepararAbaTemas_();
   prepararConfigDuvidas_();
   abaMural_();
+  abaAlunos_();
   const d = atualizar();
   Logger.log('Atualização automática ligada: a cada ' + GEO.MINUTOS + ' minutos, e na hora quando você edita as planilhas ou as ' + agendas + ' agendas.');
   Logger.log(resumoTexto_(d));
@@ -297,7 +308,7 @@ function lerConteudo_() {
 function lerDocs_() {
   // Resultado: { caps: { '7': { 13: {id, nome, unidade, atualizado} } },
   //             temas: { '7': { 4: { 1: {aula: {...}, atividade: {...}} } } } }
-  const docs = {}, temas = {}, revs = {};
+  const docs = {}, temas = {}, revs = {}, avals = {};
   const raiz = DriveApp.getFolderById(GEO.PASTA_APP);
   const anos = raiz.getFolders();
   while (anos.hasNext()) {
@@ -320,6 +331,11 @@ function lerDocs_() {
         if (/^revis[ãa]o\b/i.test(mc[2].trim())) {
           // "14 Revisão": perguntas da revisão rápida do capítulo 14
           (revs[ano] = revs[ano] || {})[parseInt(mc[1], 10)] = { id: f.getId(), atualizado: f.getLastUpdated().toISOString() };
+          continue;
+        }
+        if (/^(avalia[çc][ãa]o|atividade\s+avaliativa)\b/i.test(mc[2].trim())) {
+          // "14 Avaliação" ou "14 Atividade avaliativa": atividade que vale nota, do capítulo 14
+          (avals[ano] = avals[ano] || {})[parseInt(mc[1], 10)] = { id: f.getId(), atualizado: f.getLastUpdated().toISOString() };
           continue;
         }
         (docs[ano] = docs[ano] || {})[parseInt(mc[1], 10)] = {
@@ -348,7 +364,7 @@ function lerDocs_() {
       }
     }
   }
-  return { caps: docs, temas: temas, revs: revs };
+  return { caps: docs, temas: temas, revs: revs, avals: avals };
 }
 
 /**
@@ -516,12 +532,13 @@ function textoComEstilo_(el) {
 /* Monta anos, unidades e capítulos                                    */
 /* ------------------------------------------------------------------ */
 function montarAnos_(conf, conteudo, docs, anterior) {
-  const antCaps = {}, antTxt = {}, antRev = {}, antPdf = {};
+  const antCaps = {}, antTxt = {}, antRev = {}, antPdf = {}, antAval = {};
   ((anterior && anterior.anos) || []).forEach(a => (a.unidades || []).forEach(u => {
     (u.caps || []).forEach(c => {
       if (c.doc) antCaps[c.doc] = c;
       if (c.doc && c.pdfDoc) antPdf[c.doc] = { at: c.atualizado, pdf: c.pdfDoc };
       if (c.docRevisao) antRev[c.docRevisao] = { at: c.atualizadoRevisao, r: c.revisao, err: c.revisaoErros };
+      if (c.aval) antAval[c.aval.doc] = { at: c.atualizadoAval, a: c.aval, err: c.avalErros };
     });
     (u.temas || []).forEach(t => {
       if (t.doc) antTxt[t.doc] = { at: t.atualizado, txt: t.resumo };
@@ -587,6 +604,21 @@ function montarAnos_(conf, conteudo, docs, anterior) {
         const lido = lerRevisao_(DocumentApp.openById(d.id).getBody().getText());
         cap.revisao = lido.perguntas; cap.revisaoErros = lido.erros;
       } catch (err) { Logger.log('Não consegui ler a revisão ' + d.id + ': ' + err); if (ant) { cap.revisao = ant.r; cap.revisaoErros = ant.err || []; } }
+    });
+    // Atividade avaliativa: questões do Doc "NN Avaliação" publicadas SEM o gabarito (a correção é feita aqui no robô)
+    const aAno = (docs.avals || {})[ano] || {};
+    Object.keys(aAno).forEach(n => {
+      const d = aAno[n];
+      const u = Object.keys(unidades).map(k => unidades[k]).filter(x => x.caps[n])[0];
+      if (!u) return;
+      const cap = u.caps[n], ant = antAval[d.id];
+      cap.atualizadoAval = d.atualizado;
+      if (ant && ant.a && ant.at === d.atualizado) { cap.aval = ant.a; cap.avalErros = ant.err || []; return; }
+      try {
+        const lido = lerAvaliacao_(DocumentApp.openById(d.id).getBody().getText());
+        cap.avalErros = lido.erros;
+        if (lido.perguntas.length) cap.aval = avaliacaoPublica_(d.id, lido);
+      } catch (err) { Logger.log('Não consegui ler a avaliação ' + d.id + ': ' + err); if (ant) { cap.aval = ant.a; cap.avalErros = ant.err || []; } }
     });
     // Temas Transversais (aulas extras · recuperação paralela)
     const sheetT = conteudo.temas[ano] || {};
@@ -775,6 +807,12 @@ function resumoTexto_(d) {
     if (!c.docRevisao) return;
     l.push('Revisão ' + a.nome + ' · Cap. ' + c.n + ': ' + (c.revisao || []).length + ' pergunta(s) ok' + ((c.revisaoErros || []).length ? ' · PROBLEMAS:' : ''));
     (c.revisaoErros || []).forEach(e => l.push('   ⚠ ' + e));
+  })));
+  d.anos.forEach(a => a.unidades.forEach(u => u.caps.forEach(c => {
+    if (!c.aval && !(c.avalErros || []).length) return;
+    const av = c.aval;
+    l.push('Avaliação ' + a.nome + ' · Cap. ' + c.n + ': ' + (av ? av.qs.length + ' questão(ões) ok · ' + av.qtd + ' por aluno · valor ' + String(av.valor).replace('.', ',') + (av.prazo ? ' · prazo ' + av.prazo.split('-').reverse().join('/') : ' · sem prazo') : 'não publicada') + ((c.avalErros || []).length ? ' · PROBLEMAS:' : ''));
+    (c.avalErros || []).forEach(e => l.push('   ⚠ ' + e));
   })));
   l.push('Avisos de novidade ativos: ' + (d.avisos || []).length);
   l.push('Mural de avisos: ' + (d.mural || []).length + ' aviso(s) publicado(s)');
@@ -1310,4 +1348,216 @@ function lerDuvidasRespondidas_(dados) {
     });
   });
   return out.reverse().slice(0, 200);
+}
+
+/* ================================================================== */
+/* Atividade avaliativa (vale nota)                                    */
+/* Doc "NN Avaliação" (ou "NN Atividade avaliativa") na pasta da      */
+/* unidade. No topo, a linha opcional   Prazo: 30/11/2026              */
+/* Depois, 20 questões no formato da Revisão (A a D + Resposta).       */
+/* Cada aluno recebe 10 sorteadas; cada uma vale 1 ponto (nota 0 a 10). */
+/* Só fazem a atividade os nomes da aba "Alunos" da planilha de notas. */
+/* O app recebe as questões SEM o gabarito; quem corrige é o robô.     */
+/* As notas vão para a planilha "GeoEstudos - Notas das atividades".   */
+/* ================================================================== */
+function hashTexto_(s) {
+  s = String(s || '').replace(/\s+/g, ' ').trim();
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+function lerAvaliacao_(texto) {
+  const linhas = String(texto || '').split(/\r?\n/);
+  let valor = 10, prazo = '', qtd = 10;
+  const erros = [], resto = [];
+  linhas.forEach(l0 => {
+    const l = l0.replace(/ /g, ' ').trim();
+    let m;
+    if ((m = l.match(/^valor[^:]*:\s*([\d.,]+)/i))) { const v = parseFloat(m[1].replace(',', '.')); if (v > 0) valor = v; else erros.push('Valor inválido: "' + l + '"'); return; }
+    if ((m = l.match(/^prazo[^:]*:\s*(\d{1,2})\s*\/\s*(\d{1,2})(?:\s*\/\s*(\d{2,4}))?/i))) {
+      let a = m[3] ? parseInt(m[3], 10) : new Date().getFullYear(); if (a < 100) a += 2000;
+      prazo = a + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); return;
+    }
+    if (/^prazo[^:]*:/i.test(l)) { erros.push('Prazo não entendido: "' + l + '" (use dia/mês/ano, ex.: 30/11/2026)'); return; }
+    if ((m = l.match(/^quest[õo]es\s+por\s+aluno[^:]*:\s*(\d+)/i))) { qtd = Math.max(1, parseInt(m[1], 10)); return; }
+    resto.push(l0);
+  });
+  const r = lerRevisao_(resto.join('\n'));
+  const vistos = {};
+  r.perguntas.forEach((p, i) => { const h = hashTexto_(p.q); if (vistos[h]) erros.push('Questão ' + (i + 1) + ' repete o enunciado de outra.'); vistos[h] = 1; });
+  if (r.perguntas.length && r.perguntas.length < qtd) erros.push('O Doc tem ' + r.perguntas.length + ' questão(ões) completas, menos que as ' + qtd + ' por aluno. Cada aluno vai receber todas.');
+  return { perguntas: r.perguntas, erros: erros.concat(r.erros), valor: valor, prazo: prazo, qtd: qtd };
+}
+function avaliacaoPublica_(docId, lido) {
+  return {
+    doc: docId, valor: lido.valor, prazo: lido.prazo, qtd: Math.min(lido.qtd, lido.perguntas.length),
+    // alternativas em ordem alfabética: nem a ordem do Doc vai para o app
+    qs: lido.perguntas.map(p => ({ h: hashTexto_(p.q), q: p.q, a: p.a.slice().sort((x, y) => x.localeCompare(y, 'pt')) }))
+  };
+}
+function chaveNome_(nome) { return semAcento_(nome).toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim(); }
+/** Procura a avaliação publicada (no arquivo de dados do app) pelo id do Doc. */
+function avaliacaoPublicada_(docId) {
+  let d = null;
+  try { d = JSON.parse(lerCache_() || (arquivoDados_() ? arquivoDados_().getBlob().getDataAsString('UTF-8') : '{}')); } catch (e) { }
+  let achou = null;
+  ((d && d.anos) || []).forEach(a => (a.unidades || []).forEach(u => (u.caps || []).forEach(c => {
+    if (c.aval && c.aval.doc === docId) achou = { ano: String(a.ano), cap: c.n, titulo: c.titulo, aval: c.aval, turmas: a.turmas || [] };
+  })));
+  return achou;
+}
+function encerrada_(prazo) { return !!prazo && Utilities.formatDate(new Date(), GEO.FUSO, 'yyyy-MM-dd') > prazo; }
+function planilhaNotas_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('planilhaNotas');
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (e) { } }
+  const ss = SpreadsheetApp.create('GeoEstudos - Notas das atividades (não apagar)');
+  DriveApp.getFileById(ss.getId()).moveTo(DriveApp.getFolderById(GEO.PASTA_APP));
+  ss.getSheets()[0].setName('Como funciona');
+  ss.getSheets()[0].getRange(1, 1, 4, 1).setValues([
+    ['Cada atividade avaliativa do app ganha uma aba nesta planilha, criada pelo robô quando chega o primeiro envio.'],
+    ['Cada estudante só consegue enviar uma vez por atividade (mesmo nome na mesma turma). Uma segunda tentativa é recusada pelo app.'],
+    ['Cada aluno recebe 10 questões sorteadas entre as do Doc. Cada questão vale 1 ponto: a nota vai de 0 a 10.'],
+    ['Não apague nem renomeie as abas das atividades em andamento: o robô usa essas abas para saber quem já enviou.']]);
+  ss.getSheets()[0].setColumnWidth(1, 900);
+  props.setProperty('planilhaNotas', ss.getId());
+  return ss;
+}
+function abaNotas_(info) {
+  const ss = planilhaNotas_(), props = PropertiesService.getScriptProperties();
+  const k = 'notas-' + info.aval.doc, gid = props.getProperty(k);
+  if (gid) { const sh = ss.getSheets().filter(x => String(x.getSheetId()) === gid)[0]; if (sh) return sh; }
+  let nome = info.ano + 'º ano · Cap. ' + info.cap, i = 2;
+  while (ss.getSheetByName(nome)) nome = info.ano + 'º ano · Cap. ' + info.cap + ' (' + (i++) + ')';
+  const sh = ss.insertSheet(nome);
+  const cab = ['Enviado em', 'Ano', 'Turma', 'Nome (na lista de alunos)', 'Nome digitado pelo aluno', 'Acertos', 'Nota', 'Tempo', 'Respostas (número da questão no Doc)', 'Chave'];
+  sh.getRange(1, 1, 1, cab.length).setValues([cab]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F').setWrap(true);
+  sh.setFrozenRows(1);
+  [17, 7, 7, 32, 26, 9, 7, 9, 60, 10].forEach((w, j) => sh.setColumnWidth(j + 1, w * 7));
+  sh.hideColumns(10);
+  props.setProperty(k, String(sh.getSheetId()));
+  return sh;
+}
+function jaEnviou_(sh, chave) {
+  const ult = sh.getLastRow();
+  if (ult < 2) return false;
+  return sh.getRange(2, 10, ult - 1, 1).getValues().some(l => String(l[0]) === chave);
+}
+function validarIdent_(b, info) {
+  const turma = String(b.turma || ''), nome = textoSeguro_(b.nome, 70);
+  if (info.turmas.indexOf(turma) < 0) return { erro: 'Escolha a sua turma.' };
+  if (chaveNome_(nome).split(' ').filter(x => x.length > 1).length < 2) return { erro: 'Escreva o seu nome completo (nome e sobrenome).' };
+  const lista = alunosDaTurma_(turma);
+  if (!lista.length) return { turma: turma, nome: nome, oficial: '(turma sem lista)', chave: chaveNome_(nome) + '|' + turma };
+  const r = acharAluno_(nome, lista);
+  if (r.erro) return { erro: r.erro.replace('#T', turma) };
+  return { turma: turma, nome: nome, oficial: r.nome, chave: chaveNome_(r.nome) + '|' + turma };
+}
+/* Lista de alunos: aba "Alunos" da planilha de notas (fica só no Drive do professor, nunca vai para o app) */
+const PALAVRAS_LIGA_ = { de: 1, da: 1, do: 1, das: 1, dos: 1, e: 1 };
+const tokensNome_ = s => chaveNome_(s).split(' ').filter(x => x.length > 1 && !PALAVRAS_LIGA_[x]);
+function abaAlunos_() {
+  const ss = planilhaNotas_();
+  let sh = ss.getSheetByName('Alunos');
+  if (sh) return sh;
+  sh = ss.insertSheet('Alunos', 1);
+  sh.getRange(1, 1, 1, 2).setValues([['Turma', 'Nome completo do aluno']]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F');
+  sh.setFrozenRows(1); sh.setColumnWidth(1, 80); sh.setColumnWidth(2, 380);
+  sh.getRange(1, 4).setValue('Cole aqui a lista de cada turma: uma linha por aluno, com a turma (71, 72, 81...) e o nome completo como está na chamada. Só esses nomes conseguem fazer as atividades avaliativas no app. A lista fica só no seu Drive.').setWrap(true);
+  sh.setColumnWidth(4, 420);
+  return sh;
+}
+function alunosDaTurma_(turma) {
+  const cache = CacheService.getScriptCache(), k = 'alunos|' + turma;
+  const c = cache.get(k);
+  if (c) { try { return JSON.parse(c); } catch (e) { } }
+  const sh = abaAlunos_(), ult = sh.getLastRow();
+  const lista = ult < 2 ? [] : sh.getRange(2, 1, ult - 1, 2).getValues()
+    .filter(l => String(l[0]).replace(/\D/g, '') === String(turma) && String(l[1]).trim())
+    .map(l => String(l[1]).replace(/\s+/g, ' ').trim());
+  try { cache.put(k, JSON.stringify(lista), 300); } catch (e) { }
+  return lista;
+}
+/** Acha o aluno na lista: todas as palavras digitadas precisam estar no nome da lista, e o primeiro nome tem de ser igual. */
+function acharAluno_(digitado, lista) {
+  const t = tokensNome_(digitado);
+  const cand = lista.filter(n => {
+    const ln = tokensNome_(n);
+    return ln.length && ln[0] === t[0] && t.every(x => ln.indexOf(x) >= 0);
+  });
+  if (cand.length === 1) return { nome: cand[0] };
+  if (cand.length > 1) {
+    const exato = cand.filter(n => chaveNome_(n) === chaveNome_(digitado));
+    if (exato.length === 1) return { nome: exato[0] };
+    return { erro: 'Há mais de um estudante com esse nome na Turma #T. Escreva o seu nome completo, como está na chamada.' };
+  }
+  return { erro: 'Não encontramos este nome na lista da Turma #T. Escreva o seu nome completo, como está na chamada, e confira a turma.' };
+}
+/** Antes de começar: confere se o nome já enviou e se a atividade está aberta. */
+function conferirAvaliacao_(b) {
+  try {
+    const info = avaliacaoPublicada_(String(b.doc || ''));
+    if (!info) return { ok: false, erro: 'Esta atividade não está mais disponível.' };
+    if (encerrada_(info.aval.prazo)) return { ok: false, encerrada: true, erro: 'O prazo desta atividade terminou.' };
+    const v = validarIdent_(b, info);
+    if (v.erro) return { ok: false, erro: v.erro };
+    const sh = abaNotas_(info);
+    if (jaEnviou_(sh, v.chave)) return { ok: false, ja: true, erro: 'Já existe uma atividade enviada com este nome na Turma ' + v.turma + '. Cada estudante só pode fazer uma vez.' };
+    return { ok: true };
+  } catch (err) { return { ok: false, erro: 'Não foi possível conferir agora.' }; }
+}
+/** Recebe as respostas, corrige com o gabarito do Doc e grava a nota. Devolve só a nota. */
+function receberAvaliacao_(b) {
+  try {
+    const info = avaliacaoPublicada_(String(b.doc || ''));
+    if (!info) return { ok: false, erro: 'Esta atividade não está mais disponível.' };
+    const v = validarIdent_(b, info);
+    if (v.erro) return { ok: false, erro: v.erro };
+    // tolerância: respostas guardadas sem internet até o prazo podem chegar no dia seguinte
+    let enviadoEm = b.em ? new Date(b.em) : new Date();
+    if (isNaN(enviadoEm) || new Date() - enviadoEm > 3 * 864e5) enviadoEm = new Date();   // no máximo 3 dias guardada no celular
+    const diaEnvio = Utilities.formatDate(enviadoEm > new Date() ? new Date() : enviadoEm, GEO.FUSO, 'yyyy-MM-dd');
+    if (info.aval.prazo && diaEnvio > info.aval.prazo) return { ok: false, encerrada: true, erro: 'O prazo desta atividade terminou.' };
+    // limite por celular (contra envios em massa com nomes inventados)
+    const cache = CacheService.getScriptCache();
+    const dia = Utilities.formatDate(new Date(), GEO.FUSO, 'yyyyMMdd');
+    const disp = String(b.aparelho || '').replace(/[^\w-]/g, '').slice(0, 40) || 'sem-id';
+    const kA = 'aval|' + dia + '|' + disp, nA = parseInt(cache.get(kA) || '0', 10);
+    if (nA >= 6) return { ok: false, erro: 'Muitos envios por este celular hoje. Fale com o professor.' };
+    // gabarito: lido do Doc agora (nunca sai do robô)
+    const lido = lerAvaliacao_(DocumentApp.openById(info.aval.doc).getBody().getText());
+    const gab = {};
+    lido.perguntas.forEach((p, i) => { gab[hashTexto_(p.q)] = { n: i + 1, certa: hashTexto_(p.a[p.c]) }; });
+    const resp = (Array.isArray(b.resp) ? b.resp : []).slice(0, 60);
+    const vistas = {};
+    let validas = 0, acertos = 0;
+    const detalhe = [];
+    resp.forEach(r => {
+      const g = gab[String(r.h || '')];
+      if (!g || vistas[r.h]) return;
+      vistas[r.h] = 1; validas++;
+      const ok = String(r.r || '') === g.certa;
+      if (ok) acertos++;
+      detalhe.push({ n: g.n, ok: ok, branco: !r.r });
+    });
+    if (!validas) return { ok: false, erro: 'As questões mudaram. Feche e abra a atividade de novo.' };
+    const qtd = Math.max(validas, info.aval.qtd);
+    const nota = Math.round(acertos * (info.aval.valor / qtd) * 100) / 100;
+    const seg = Math.max(0, Math.min(36000, parseInt(b.tempo, 10) || 0));
+    const tempo = Math.floor(seg / 60) + ' min ' + ('0' + (seg % 60)).slice(-2) + ' s';
+    detalhe.sort((x, y) => x.n - y.n);
+    const lock = LockService.getScriptLock();
+    lock.waitLock(25000);
+    try {
+      const sh = abaNotas_(info);
+      if (jaEnviou_(sh, v.chave)) return { ok: false, ja: true, erro: 'Já existe uma atividade enviada com este nome na Turma ' + v.turma + '. Cada estudante só pode fazer uma vez.' };
+      sh.appendRow([new Date(), info.ano + 'º', v.turma, v.oficial, v.nome, acertos + ' de ' + qtd, nota, tempo,
+        detalhe.map(x => 'Q' + x.n + (x.branco ? ' –' : x.ok ? ' ✓' : ' ✗')).join(' · '), v.chave]);
+    } finally { lock.releaseLock(); }
+    cache.put(kA, String(nA + 1), 21600);
+    return { ok: true, nota: nota, valor: info.aval.valor };
+  } catch (err) {
+    Logger.log('Avaliação: ' + err);
+    return { ok: false, erro: 'Não foi possível enviar agora. Suas respostas continuam guardadas no celular.' };
+  }
 }

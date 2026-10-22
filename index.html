@@ -824,6 +824,40 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
   .qz{max-width:640px}
   .paper{padding:22px 26px 24px 34px}
 }
+
+/* Atividade avaliativa */
+.avcard{padding:0;overflow:hidden;border:1.5px solid var(--year)}
+.avl-head{display:flex;gap:12px;align-items:center;background:var(--year);color:#fff;padding:12px 14px}
+.avl-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.18)}
+.avl-ht{display:flex;flex-direction:column;gap:1px;min-width:0}
+.avl-ht b{font-family:var(--display);font-size:1.12rem}
+.avl-sub{font-size:.84rem;opacity:.92}
+.avl-vale{align-self:flex-start;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:#fff;color:var(--year);border-radius:6px;padding:1px 7px;margin-bottom:3px}
+.avl-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.avl-rules{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+.avl-go{align-self:stretch;background:var(--year);color:#fff;border-radius:12px;padding:12px 16px;font-weight:700;min-height:48px}
+.avl-st{margin:0;display:flex;gap:10px;align-items:flex-start;font-size:.95rem}
+.avl-st>span{display:flex;flex-direction:column}
+.avl-ok{color:var(--ok)} .avl-ok .meta{color:var(--muted)}
+.avl-pend{background:var(--hl-soft);border-radius:10px;padding:8px 10px;display:block}
+.avl-ic2{background:var(--year)!important;color:#fff!important}
+.avl-dots{gap:5px}
+.avl-dots button{flex:1;height:10px;border-radius:5px;background:var(--line);padding:0;min-width:0}
+.avl-dots button.feito{background:color-mix(in srgb,var(--year) 55%,var(--line))}
+.avl-dots button.cur{background:var(--year);outline:2px solid color-mix(in srgb,var(--year) 35%,transparent);outline-offset:2px}
+.avl-op.on{border-color:var(--year);background:color-mix(in srgb,var(--year) 12%,var(--surface))}
+.avl-op.on .qz-l{background:var(--year);color:#fff}
+.avl-nav{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
+.avl-nav .btn{justify-content:center}
+.avl-lista{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.avl-li{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 12px;text-align:left}
+.avl-li span{font-size:.8rem;color:var(--muted)}
+.avl-li.br{border-style:dashed;border-color:var(--rust)} .avl-li.br b{color:var(--rust)}
+.avl-err{margin:0;color:var(--rust);font-weight:700;font-size:.93rem}
+.avl-conf{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--year);border-radius:14px;padding:12px 14px;background:color-mix(in srgb,var(--year) 8%,var(--surface))}
+.avl-nota{display:flex;flex-direction:column;align-items:center;gap:0;padding:18px;border-radius:18px;background:color-mix(in srgb,var(--year) 10%,var(--surface));border:1.5px solid var(--year);color:var(--ink)}
+.avl-nota b{font-family:var(--display);font-size:3.6rem;line-height:1.05;color:color-mix(in srgb,var(--year) 72%,var(--ink))}
+.avl-nota span{font-weight:700;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1667,7 +1701,7 @@ function vSobre(){
       ${no('Não pede cadastro, login ou senha','Não há conta, e-mail, telefone, CPF nem foto do estudante.')}
       ${no('Não acessa contatos, fotos ou arquivos do celular','')}
       ${no('Não tem propaganda nem rastreadores','Não há anúncios nem ferramentas que acompanham o que o estudante faz para fins comerciais.')}
-      ${no('Não mostra notas','As notas oficiais ficam nos canais da escola e da rede.')}
+      ${no('Não mostra a nota de ninguém a outras pessoas','Nas atividades avaliativas, cada estudante vê só a própria nota, ao terminar. As notas oficiais continuam nos canais da escola e da rede.')}
       </ul>`)}
     ${bloco('ano','livro','O que fica só no seu aparelho','Nada disso é enviado a ninguém',`
       <p>Algumas escolhas ficam guardadas <b>apenas no navegador do próprio celular ou computador</b> e <b>não são enviadas a ninguém</b>, nem ao professor:</p>
@@ -1682,6 +1716,7 @@ function vSobre(){
     ${bloco('duv','duv','O que só é enviado se você escolher','Avisos, caixa de dúvidas e formulários',`
       <ul class="sb-list">
       ${ok('Avisos no celular (opcional)','Ao ativar os avisos, o celular gera um <b>endereço técnico de notificação</b>, guardado junto com o número da turma para que os avisos cheguem. Esse endereço <b>não contém nome nem identifica a pessoa</b>. Ao desativar os avisos no app, ele é apagado.')}
+      ${ok('Atividades avaliativas','Para fazer uma atividade que vale nota, o estudante informa a <b>turma e o nome completo</b>. O nome é conferido com a lista da turma, que fica <b>só na conta profissional do professor</b> e nunca vai para o app. As respostas são corrigidas pelo robô do professor, e a nota fica registrada numa planilha que <b>só o professor vê</b>. O gabarito nunca é enviado ao celular.')}
       ${ok('Caixa de dúvidas (opcional)','Quem envia uma dúvida escreve o <b>nome, a turma e a pergunta</b>. Essas informações são lidas <b>somente pelo professor</b>, ficam guardadas na conta profissional do professor no Google e servem para responder à dúvida. A única exceção são <b>mensagens desrespeitosas</b>: elas serão levadas à coordenação da escola e ao conhecimento dos responsáveis. Quando uma resposta é publicada no app, aparece <b>só a pergunta, sem o nome</b>.')}
       ${ok('Atividades em formulário','As atividades de fixação abrem no <b>Google Forms</b>, fora do app. Lá vale o que cada formulário pede e as regras do Google.')}
       </ul>`)}
@@ -1891,6 +1926,7 @@ function vCap(n){
       <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Copiado no caderno':'Já copiei este resumo no caderno'}</button>
       <span class="meta">Marque quando terminar de copiar. Fica salvo só no seu celular.</span>
     </div>
+    ${avCard(c,n)}
     ${revCard(c,n)}
     ${pdfCard(pdfDe(c),'Resumo em PDF','Para imprimir, guardar ou enviar a um colega.','res')}
     ${c.atividade?`<div class="card act" id="actBox">
@@ -1955,6 +1991,156 @@ function ttAtvCard(t){
     <div class="atv-acts">${!temAtv(t)?'<span class="meta">A atividade será publicada em breve.</span>':sent?'':t.atividade&&!t.atividadeTexto?`<a class="btn act-go" href="${esc(t.atividade)}" target="_blank" rel="noopener">Fazer a atividade<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`:`<button class="btn act-go" data-act="${id}">Ver atividade</button>`}${temAtv(t)?`<button class="btn btn-ghost" data-sent="${id}">${sent?'Desmarcar':'Já fiz'}</button>`:''}${t.resumo?`<button class="btn btn-ghost" data-cap="${id}">Ver aula</button>`:''}</div></div>`;
 }
 
+
+
+/* ===== Atividade avaliativa (vale nota) =====
+   O app recebe as questões SEM o gabarito. O aluno se identifica (turma e nome da lista do professor),
+   responde 10 questões sorteadas e envia; quem corrige e grava a nota é o robô. O aluno vê só a nota. */
+const AVIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 12l2 2 4-4"/></svg>';
+const hashAv=s=>{s=String(s||'').replace(/\s+/g,' ').trim();let h=5381;for(let i=0;i<s.length;i++)h=((h*33)^s.charCodeAt(i))>>>0;return h.toString(36)};
+const avFeitas=()=>store.get('avFeitas',{})||{};
+const avPend=()=>store.get('avPend',{})||{};
+const avAnd=()=>store.get('avAnd',{})||{};
+const avFechada=a=>!!a.prazo&&HOJE>a.prazo;
+let AV=null;
+function avCard(c,n){
+  const a=c.aval;if(!a||!a.qs||!a.qs.length)return '';
+  const feita=!COMP&&avFeitas()[a.doc],pend=avPend()[a.doc],and=avAnd()[a.doc],fech=avFechada(a);
+  let est,btn='';
+  if(pend){est=`<p class="avl-st avl-pend"><b>Envio pendente.</b> Suas respostas estão guardadas neste celular e serão enviadas quando houver internet.</p>`;btn=`<button class="avl-go" data-av="reenviar" data-doc="${esc(a.doc)}">Tentar enviar agora</button>`}
+  else if(feita){est=`<p class="avl-st avl-ok">${CHECK}<span><b>Atividade enviada${feita.nota!=null?` · Nota ${String(feita.nota).replace('.',',')}`:''}</b><span class="meta">Cada estudante faz uma única vez.</span></span></p>`}
+  else if(fech){est=`<p class="avl-st"><b>Prazo encerrado</b> em ${dm(a.prazo)}. Esta atividade não recebe mais respostas.</p>`}
+  else{btn=`<button class="avl-go" data-av="abrir" data-avcap="${esc(String(n))}">${and?`Continuar a atividade (${Object.keys(and.resp||{}).length} de ${and.ids.length} respondidas)`:'Começar a atividade'}</button>`;est=''}
+  return `<div class="card avcard"><div class="avl-head"><span class="avl-ic">${AVIC}</span><span class="avl-ht"><span class="avl-vale">Vale nota</span><b>Atividade avaliativa</b><span class="avl-sub">${a.qtd} questões objetivas · cada uma vale 1 ponto${a.prazo?` · prazo ${dm(a.prazo)}`:''}</span></span></div>
+    <div class="avl-body">${est}${!feita&&!fech&&!pend?`<ul class="avl-rules"><li><b>Você só pode fazer uma vez.</b> Responda com calma e atenção.</li><li>Antes de enviar, dá para voltar e trocar respostas.</li><li>Precisa de internet para começar. Ao final, você vê a sua nota.</li></ul>`:''}${btn}</div></div>`;
+}
+function avAbrir(n){
+  const c=capOf(n);if(!c||!c.aval)return;const a=c.aval;
+  if(TTS.on)ttsParar();
+  const and=avAnd()[a.doc];
+  AV={n,c,a,etapa:and?'q':'ident',st:and||null,i:and?(and.i||0):0,erro:'',conf:false};
+  if(and&&!and.ids.every(h=>a.qs.some(q=>q.h===h))){AV.etapa='ident';AV.st=null;const x=avAnd();delete x[a.doc];store.set('avAnd',x)}
+  let o=document.querySelector('.avl-o');
+  if(!o){o=document.createElement('div');o.className='qz-o avl-o overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Atividade avaliativa');document.body.appendChild(o);o.addEventListener('click',avClique)}
+  document.body.style.overflow='hidden';avRender();
+}
+function avFechar(){document.querySelector('.avl-o')?.remove();document.body.style.overflow='';AV=null;render()}
+function avGuardar(){if(!AV||!AV.st)return;AV.st.i=AV.i;const x=avAnd();x[AV.a.doc]=AV.st;store.set('avAnd',x)}
+function avRender(){
+  const o=document.querySelector('.avl-o');if(!o||!AV)return;
+  const {a,c,st}=AV,y=Y();
+  const topo=`<div class="qz-top"><span class="rev-ic avl-ic2">${AVIC}</span><span class="qz-tt"><b>Atividade avaliativa</b><span class="meta">Cap. ${c.n} · ${esc(c.titulo)}</span></span><button class="qz-x" data-av="sair" aria-label="Sair da atividade">${XIC}</button></div>`;
+  let corpo='',dots='';
+  if(AV.etapa==='ident'){
+    const ts=y.turmas||[],tur=ts.includes(S.turma)?S.turma:ts.includes(MINHA)?MINHA:'';
+    const nm=COMP?'':store.get('avNome','')||store.get('duvNome','');
+    corpo=`<p class="qz-n">Identificação</p>
+      <p style="margin:0">Antes de começar, informe a sua turma e o seu <b>nome completo, como está na chamada</b>. Ele precisa estar na lista da turma.</p>
+      <label class="fld"><span>Ano</span><input value="${esc(y.label)}" disabled></label>
+      <label class="fld"><span>Sua turma *</span><select id="avTurma"><option value="">Escolha</option>${ts.map(t=>`<option${t===tur?' selected':''}>${t}</option>`).join('')}</select></label>
+      <label class="fld"><span>Seu nome completo *</span><input id="avNome" maxlength="70" autocomplete="name" value="${esc(nm)}"></label>
+      <div class="duv-regra"><b>Atenção</b><span>Você só pode fazer esta atividade <b>uma vez</b>. Ela tem ${a.qtd} questões, e cada uma vale 1 ponto. Faça a atividade com o seu próprio nome: usar o nome de um colega é uma falta grave.</span></div>
+      ${AV.erro?`<p class="avl-err" role="alert">${esc(AV.erro)}</p>`:''}
+      <div class="qz-btns"><button class="btn btn-primary" data-av="comecar"${AV.busy?' disabled':''}>${AV.busy?'Conferindo…':'Começar'}</button><button class="btn btn-ghost" data-av="sair">Agora não</button></div>`;
+  }else if(AV.etapa==='q'||AV.etapa==='rev'){
+    dots=`<div class="qz-dots avl-dots">${st.ids.map((h,k)=>`<button class="${st.resp[h]?'feito':''}${AV.etapa==='q'&&k===AV.i?' cur':''}" data-av-ir="${k}" aria-label="Questão ${k+1}${st.resp[h]?' respondida':' em branco'}"></button>`).join('')}</div>`;
+    if(AV.etapa==='q'){
+      const h=st.ids[AV.i],q=a.qs.find(x=>x.h===h),ord=st.ord[h],esc_=st.resp[h];
+      const ops=ord.map((k,j)=>{const t=q.a[k],on=esc_===hashAv(t);return `<button class="qz-op avl-op${on?' on':''}" data-avop="${j}" aria-pressed="${on}"><span class="qz-l" aria-hidden="true">${'ABCD'[j]}</span><span>${esc(t)}</span></button>`}).join('');
+      const ult=AV.i===st.ids.length-1;
+      corpo=`<p class="qz-n">Questão ${AV.i+1} de ${st.ids.length}</p><h2 class="qz-q" id="avQ" tabindex="-1">${esc(q.q)}</h2><div class="qz-ops" role="group" aria-labelledby="avQ">${ops}</div>
+        <div class="avl-nav"><button class="btn btn-ghost" data-av="ant"${AV.i===0?' disabled':''}>Anterior</button><button class="btn btn-primary" data-av="${ult?'revisar':'prox'}">${ult?'Revisar e enviar':'Próxima'}</button></div>
+        <p class="meta" style="margin:0;text-align:center">Suas respostas ficam guardadas neste celular até você enviar.</p>`;
+    }else{
+      const br=st.ids.filter(h=>!st.resp[h]).length;
+      corpo=`<p class="qz-n">Revisão antes de enviar</p>
+        <div class="avl-lista">${st.ids.map((h,k)=>{const r=st.resp[h],ord=st.ord[h],q=a.qs.find(x=>x.h===h);const j=r?ord.findIndex(i=>hashAv(q.a[i])===r):-1;return `<button class="avl-li${r?'':' br'}" data-av-q="${k}"><span>Questão ${k+1}</span><b>${j>=0?'Letra '+'ABCD'[j]:'Em branco'}</b></button>`}).join('')}</div>
+        ${br?`<p class="avl-err">${br===1?'1 questão está em branco.':br+' questões estão em branco.'} Questão em branco vale zero.</p>`:''}
+        ${AV.erro?`<p class="avl-err" role="alert">${esc(AV.erro)}</p>`:''}
+        ${AV.conf?`<div class="avl-conf"><b>Enviar agora?</b><span>Depois de enviar, não dá para mudar as respostas nem fazer de novo.</span><div class="qz-btns"><button class="btn btn-primary" data-av="enviar"${AV.busy?' disabled':''}>${AV.busy?'Enviando…':'Sim, enviar'}</button><button class="btn btn-ghost" data-av="naoenv">Voltar e conferir</button></div></div>`
+        :`<div class="qz-btns"><button class="btn btn-primary" data-av="confirmar">Enviar respostas</button><button class="btn btn-ghost" data-av-q="0">Voltar às questões</button></div>`}`;
+    }
+  }else if(AV.etapa==='fim'){
+    const r=AV.res;
+    corpo=r.nota!=null?`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">Atividade enviada</p><div class="avl-nota"><span>Sua nota</span><b>${String(r.nota).replace('.',',')}</b><span>de ${String(r.valor||10).replace('.',',')}</span></div><p style="margin:0">Sua nota foi registrada para o Prof. Haroldo.</p><div class="qz-btns"><button class="btn btn-primary" data-av="sair">Voltar ao resumo</button></div></div>`
+      :`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">${r.pend?'Sem internet agora':'Não foi possível enviar'}</p><p style="margin:0;font-weight:700">${esc(r.msg)}</p><div class="qz-btns"><button class="btn btn-primary" data-av="sair">Voltar ao resumo</button></div></div>`;
+  }
+  o.innerHTML=`<div class="qz">${topo}${dots}${corpo}</div>`;
+  o.scrollTop=0;const f=o.querySelector('#avFoco')||o.querySelector('#avQ');f&&f.focus({preventScroll:true});
+}
+async function avChamar(param,obj){
+  let ap=store.get('aparelho','');if(!ap){ap=Math.random().toString(36).slice(2)+Date.now().toString(36);store.set('aparelho',ap)}
+  obj.aparelho=ap;
+  const r=await fetch(CFG.DATA_URL+(CFG.DATA_URL.includes('?')?'&':'?')+param+'='+encodeURIComponent(JSON.stringify(obj))+'&t='+Date.now(),{cache:'no-store'});
+  return r.json();
+}
+function avSortear(a){
+  const emb=x=>{const v=x.slice();for(let i=v.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[v[i],v[j]]=[v[j],v[i]]}return v};
+  const ids=emb(a.qs.map(q=>q.h)).slice(0,a.qtd),ord={};
+  ids.forEach(h=>ord[h]=emb([0,1,2,3]));
+  return ids.length?{ids,ord}:null;
+}
+async function avClique(e){
+  if(!AV)return;
+  const op=e.target.closest('[data-avop]'),ir=e.target.closest('[data-av-ir]'),iq=e.target.closest('[data-av-q]'),b=e.target.closest('[data-av]');
+  const st=AV.st;
+  if(op&&AV.etapa==='q'){const h=st.ids[AV.i],q=AV.a.qs.find(x=>x.h===h),t=q.a[st.ord[h][+op.dataset.avop]],v=hashAv(t);st.resp[h]=st.resp[h]===v?'':v;if(!st.resp[h])delete st.resp[h];avGuardar();avRender();return}
+  if(ir&&st){AV.i=+ir.dataset.avIr;AV.etapa='q';AV.conf=false;avGuardar();avRender();return}
+  if(iq&&st){AV.i=+iq.dataset.avQ;AV.etapa='q';AV.conf=false;avGuardar();avRender();return}
+  if(!b)return;const a=b.dataset.av;
+  if(a==='sair')return avFechar();
+  if(a==='prox'){AV.i++;avGuardar();return avRender()}
+  if(a==='ant'){AV.i=Math.max(0,AV.i-1);avGuardar();return avRender()}
+  if(a==='revisar'){AV.etapa='rev';AV.conf=false;AV.erro='';return avRender()}
+  if(a==='confirmar'){AV.conf=true;return avRender()}
+  if(a==='naoenv'){AV.conf=false;return avRender()}
+  if(a==='comecar'){
+    const o=document.querySelector('.avl-o'),turma=o.querySelector('#avTurma').value,nome=o.querySelector('#avNome').value.replace(/\s+/g,' ').trim();
+    if(!turma){AV.erro='Escolha a sua turma.';return avRender()}
+    if(nomeChave(nome).split(' ').filter(x=>x.length>1).length<2){AV.erro='Escreva o seu nome completo (nome e sobrenome).';return avRender()}
+    AV.busy=true;AV.erro='';avRender();
+    try{
+      const j=await avChamar('avalcheck',{doc:AV.a.doc,turma,nome});
+      AV.busy=false;
+      if(!j.ok){AV.erro=j.erro||(j.anos?'O robô ainda não foi atualizado para as atividades avaliativas. Avise o professor.':'Não foi possível conferir agora.');
+        if(j.ja&&!COMP){const f=avFeitas();f[AV.a.doc]=f[AV.a.doc]||{nota:null};store.set('avFeitas',f)}
+        return avRender()}
+      const sorteio=avSortear(AV.a);if(!sorteio){AV.erro='Esta atividade ainda não tem questões.';return avRender()}
+      if(!COMP)store.set('avNome',nome);
+      AV.st={turma,nome,ids:sorteio.ids,ord:sorteio.ord,resp:{},ini:Date.now(),i:0};AV.i=0;AV.etapa='q';avGuardar();avRender();
+    }catch(err){AV.busy=false;AV.erro='Sem conexão. Para começar a atividade, o celular precisa estar com internet.';avRender()}
+    return;
+  }
+  if(a==='enviar'){
+    const pl={doc:AV.a.doc,turma:st.turma,nome:st.nome,resp:st.ids.map(h=>({h,r:st.resp[h]||''})),tempo:Math.round((Date.now()-st.ini)/1000),em:new Date().toISOString()};
+    AV.busy=true;avRender();
+    const r=await avEnviar(pl);
+    AV.busy=false;AV.etapa='fim';AV.res=r;avRender();
+    return;
+  }
+}
+/* Envia (ou guarda para enviar depois). Devolve {nota,valor} ou {msg,pend} */
+async function avEnviar(pl){
+  const doc=pl.doc,limpa=()=>{const x=avAnd();delete x[doc];store.set('avAnd',x)};
+  try{
+    const j=await avChamar('avaliacao',pl);
+    const p=avPend();delete p[doc];store.set('avPend',p);
+    if(j.ok){limpa();if(!COMP){const f=avFeitas();f[doc]={nota:j.nota,em:HOJE};store.set('avFeitas',f)}return {nota:j.nota,valor:j.valor}}
+    if(j.ja||j.encerrada){limpa();if(j.ja&&!COMP){const f=avFeitas();f[doc]=f[doc]||{nota:null};store.set('avFeitas',f)}return {msg:j.erro}}
+    return {msg:j.erro||'Não foi possível enviar. Tente de novo.'};
+  }catch(e){
+    const p=avPend();p[doc]=pl;store.set('avPend',p);limpa();
+    return {pend:true,msg:'Suas respostas ficaram guardadas neste celular e serão enviadas automaticamente quando houver internet. Abra o GeoEstudos de novo quando estiver conectado.'};
+  }
+}
+let avTentando=false;
+async function avReenviar(){
+  if(avTentando||!navigator.onLine)return;const p=avPend(),ks=Object.keys(p);if(!ks.length)return;
+  avTentando=true;let mud=false;
+  for(const k of ks){const r=await avEnviar(p[k]);if(!r.pend){mud=true;if(r.nota!=null)toast('Atividade avaliativa enviada. Nota '+String(r.nota).replace('.',','));else if(r.msg)toast(r.msg)}}
+  avTentando=false;if(mud&&!AV)render();
+}
+addEventListener('online',avReenviar);
 
 /* Modo apresentação: o resumo em tela cheia, seção por seção, para TV, projetor ou data show */
 const APRIC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>';
@@ -2238,7 +2424,7 @@ async function carregar(){
     const j=await r.json();
     if(j&&j.anos){
       const mudou=!DATA||DATA.versao!==j.versao;
-      DATA=j;store.set('dados',j);LOAD='ok';aplicarDados();
+      DATA=j;store.set('dados',j);LOAD='ok';aplicarDados();setTimeout(avReenviar,1500);
       if(S.turma&&!TURMAS.includes(S.turma)){S.turma=null;S.tab='home';S.cap=null}
       if(mudou){if(S.cap||adjusting||pending||editing)pendingRender=true;else{const y=scrollY;render();scrollTo(0,y)}}
     }
@@ -2278,6 +2464,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#shareApp'))return shareApp();
   if(t.closest('#readBtn'))return readSheet();
   if(t.closest('#apresBtn'))return abrirApres();
+  {const av=t.closest('[data-av]');if(av&&!t.closest('.avl-o')){if(av.dataset.av==='abrir')return avAbrir(capId(av.dataset.avcap));if(av.dataset.av==='reenviar'){avReenviar().then(()=>render());return}}}
   if(t.closest('#listBtn'))return listSheet();
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
