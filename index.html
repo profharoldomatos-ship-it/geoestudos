@@ -57,7 +57,11 @@ h1{font-size:1.6rem;line-height:1.15} h2{font-size:1.2rem} h3{font-size:1.02rem;
 .meta{font-size:.84rem;color:var(--muted)}
 .link{color:var(--pen);font-weight:700}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px}
-.modebtn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px 6px 8px;font-size:.8rem;font-weight:700;flex:none}
+.modebtn{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:6px 12px 6px 8px;font-size:.78rem;font-weight:700;flex:none;text-align:left}
+.modebtn .mb-t{line-height:1.15}
+.brand-tx .eyebrow{white-space:nowrap}
+@media (max-width:379px){.top{gap:8px}.top .modebtn{padding:6px 10px}.top .modebtn .mb-ic{display:none}.brand{gap:8px}}
+@media (max-width:339px){.top{gap:6px}.brand{gap:6px}.top .modebtn{font-size:.7rem;padding:5px 8px}.brand-tx b{font-size:1rem}.brand-tx .eyebrow{letter-spacing:.03em;font-size:.66rem}.brand-ic{--bic:28px}}
 .modebtn .mb-ic{width:22px;height:22px;border-radius:50%;background:var(--pen-soft);color:var(--pen);display:grid;place-items:center}
 .modebtn .mb-ic svg{width:15px;height:15px}
 .modes{display:flex;flex-direction:column;gap:8px}
@@ -654,7 +658,7 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
   <circle cx="60" cy="41" r="1.1" fill="#FFE27A"/>
 </svg><span class="brand-tx"><b>GeoEstudos</b><span class="eyebrow">Prof. Haroldo Matos</span></span></span>
     </div>
-    <button class="modebtn" id="modeBtn" aria-label="Modo de cores" aria-haspopup="dialog"><span class="mb-ic" aria-hidden="true"></span><span class="mb-t">Automático</span></button>
+    <button class="modebtn" id="modeBtn" aria-label="Escolha o tema do app" aria-haspopup="dialog"><span class="mb-ic" aria-hidden="true"></span><span class="mb-t">Escolha o tema<br>do app</span></button>
   </header>
   <main id="view"></main>
   <footer class="foot">
@@ -1186,7 +1190,7 @@ const MICO={auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 function applyMode(){
   document.body.classList.remove('m-claro','m-sepia','m-escuro');if(S.mode!=='auto')document.body.classList.add('m-'+S.mode);
   const r=document.documentElement;if(S.mode==='auto')delete r.dataset.theme;else r.dataset.theme=S.mode==='escuro'?'dark':'light';
-  const b=document.getElementById('modeBtn');if(b){b.querySelector('.mb-ic').innerHTML=MICO[S.mode];b.querySelector('.mb-t').textContent=MODOS.find(m=>m[0]===S.mode)[1]}
+  const b=document.getElementById('modeBtn');if(b){b.querySelector('.mb-ic').innerHTML=MICO[S.mode];b.setAttribute('aria-label','Escolha o tema do app. Tema atual: '+MODOS.find(m=>m[0]===S.mode)[1])}
   const meta=document.querySelector('meta[name=theme-color]');if(meta)meta.content=getComputedStyle(document.body).backgroundColor;
 }
 function modeSheet(){
