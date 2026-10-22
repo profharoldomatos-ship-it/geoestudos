@@ -491,17 +491,17 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .sfold-body{display:flex;flex-direction:column;gap:10px;padding:10px 0 6px}
 .sf-mais{align-self:stretch;justify-content:center;gap:8px;min-height:44px}
 .sf-mais svg{width:18px;height:18px}
-.sf-badge{flex:none;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--alerta);border-radius:999px;padding:3px 9px}
+.sf-badge{flex:none;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--year);border-radius:999px;padding:3px 9px}
 @media (prefers-reduced-motion:reduce){.sfold .sf-ch{transition:none}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
-.mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--alerta);border-radius:12px;padding:10px 12px}
-.mi-d{display:flex;flex-direction:column;align-items:center;min-width:40px;padding:4px 6px;border-radius:9px;background:var(--alerta-soft);color:var(--alerta-ink);font-weight:700;line-height:1.05}
+.mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--year);border-radius:12px;padding:10px 12px}
+.mi-d{display:flex;flex-direction:column;align-items:center;min-width:40px;padding:4px 6px;border-radius:9px;background:color-mix(in srgb,var(--year) 13%,var(--surface));color:color-mix(in srgb,var(--year) 80%,var(--ink));font-weight:700;line-height:1.05}
 .mi-d b{font-size:1.1rem;font-family:var(--display)} .mi-d span{font-size:.66rem;text-transform:uppercase;letter-spacing:.05em}
 .mi-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
 .mi-tx b{line-height:1.25}
 .mi-tx span{font-size:.86rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.mi-novo{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;background:var(--alerta);border-radius:999px;padding:2px 8px;align-self:center}
+.mi-novo{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;background:var(--year);border-radius:999px;padding:2px 8px;align-self:center}
 .mural-mes{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:8px 0 2px}
 .overlay.avpop-wrap{align-items:center}
 .avpop-wrap .sheet{border-radius:20px;width:min(calc(100% - 32px),420px);max-height:86vh}
@@ -511,6 +511,7 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .avp-top span{display:flex;flex-direction:column;line-height:1.2} .avp-top small{opacity:.9;font-size:.8rem}
 .avp-txt p{margin:0 0 8px;line-height:1.5}
 .btn-alerta{background:var(--alerta);color:#fff}
+.av-ano .avp-top,.av-ano .btn-alerta{background:var(--year)}
 .avp-nav{display:flex;gap:10px;flex-wrap:wrap}
 .avp-nav .btn{flex:1;min-height:46px}
 .ttsdica{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom,0px));z-index:26;width:min(calc(100% - 32px),420px);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:.84rem;line-height:1.45;box-shadow:0 8px 22px rgba(0,0,0,.18);display:flex;gap:10px;align-items:flex-start;animation:dicaIn .25s ease-out}
@@ -1163,7 +1164,7 @@ function avisoHtml(m){
 }
 function abrirAviso(id){
   const m=((DATA&&DATA.mural)||[]).find(x=>x.id===id);if(!m){toast('Este aviso não está mais no mural.');return}
-  const o=sheet(`${avisoHtml(m)}<button class="btn btn-alerta" data-close>Fechar</button>`);o.classList.add('avpop-wrap');o.querySelector('.sheet').setAttribute('aria-labelledby','avpT');
+  const o=sheet(`${avisoHtml(m)}<button class="btn btn-alerta" data-close>Fechar</button>`);o.classList.add('avpop-wrap');if(S.tab!=='home'&&S.turma)o.classList.add('av-ano');o.querySelector('.sheet').setAttribute('aria-labelledby','avpT');
   marcarLido([id]);o.querySelector('[data-close]').focus();
 }
 function muralTodosSheet(){
@@ -1175,7 +1176,7 @@ function muralTodosSheet(){
 let popT=null;
 function checarPopups(){
   if(!DATA||!DATA.mural||document.querySelector('.overlay')||S.cap||!(S.tab==='home'||S.tab==='turma'))return;
-  const t=S.tab==='home'?(MINHA||null):S.turma,vistos=new Set(store.get('avPop',[]));
+  const t=S.tab==='home'?null:S.turma,vistos=new Set(store.get('avPop',[]));
   const lim=ISO(new Date(TODAY.getTime()-30*864e5));
   const pend=muralDe(t).filter(m=>m.popup&&!vistos.has(m.id)&&m.data>=lim);
   if(pend.length)popAvisos(pend,0);
@@ -1201,7 +1202,7 @@ function muralFold(){
   const resumo=L.length?`${L.length} ${L.length===1?'aviso':'avisos'} · último em ${dm(L[0].data)}`:'Nenhum aviso por enquanto';
   const corpo=L.length?`<div class="mural">${L.slice(0,3).map(m=>muralItem(m,lid)).join('')}</div>${L.length>3?`<button class="btn btn-ghost sf-mais" id="muralTodos">Ver todos os avisos (${L.length})</button>`:''}`
     :`<div class="card empty-card"><b>Nenhum aviso por enquanto</b><span class="meta">Quando o professor publicar um recado para a turma ${esc(S.turma)}, ele aparece aqui.</span></div>`;
-  return secFold('mural','Mural de avisos','mur','mega',resumo,corpo,nov?`<span class="sf-badge">${nov} ${nov===1?'novo':'novos'}</span>`:'');
+  return secFold('mural','Mural de avisos','ano','mega',resumo,corpo,nov?`<span class="sf-badge">${nov} ${nov===1?'novo':'novos'}</span>`:'');
 }
 function ttsDica(){
   const n=store.get('ttsDica',0);const semPT=!vozPT()||!/^pt[-_]BR/i.test((vozPT()||{}).lang||'');
@@ -1585,7 +1586,7 @@ function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
     <div class="home-head">${CONTOUR}<span class="eyebrow">GeoEstudos · Geografia · Anos finais do Ensino Fundamental</span><h1 class="home-t">Professor Haroldo Matos</h1></div>
-    ${fixosHtml(MINHA||null)}
+    ${fixosHtml(null)}
     <details class="fold mini"><summary>Quem sou eu ${CHEVD}</summary><div class="fold-body">
       <p>Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
       <p>Atuo como professor na rede pública municipal de São Luís. Nesta rede, ministro a disciplina de Geografia para estudantes dos anos finais do Ensino Fundamental.</p>
@@ -1691,7 +1692,7 @@ function vTurma(){
     <div class="sfolds">
     ${secFold('resumos','Resumos da Unidade '+y.atual,'ano','livro',total?`${total} ${total===1?'resumo':'resumos'} · ${done} ${done===1?'copiado':'copiados'} no caderno`:'Nenhum resumo publicado ainda',
       `<div class="capgrid">${capsDe(y,y.atual).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
-    ${temasDe(y,y.atual).length?secFold('temas','Temas Transversais','tt','globo',`${temasDe(y,y.atual).length} ${temasDe(y,y.atual).length===1?'aula extra':'aulas extras'} · valem ponto`,
+    ${temasDe(y,y.atual).length?secFold('temas','Temas Transversais','ano','globo',`${temasDe(y,y.atual).length} ${temasDe(y,y.atual).length===1?'aula extra':'aulas extras'} · valem ponto`,
       `<div class="capgrid">${temasDe(y,y.atual).map(temaBtn).join('')}</div>`):''}
     ${secFold('datas','Próximas datas','ano','cal',prox.length?`Próxima: ${dm(prox[0].data)} · ${esc(prox[0].titulo)}`:'Nenhuma data marcada',
       `${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}<button class="btn btn-ghost sf-mais" data-go="calendario">${SECIC.cal}Abrir o calendário completo</button>`)}
