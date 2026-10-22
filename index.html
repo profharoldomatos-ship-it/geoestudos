@@ -839,6 +839,7 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .avl-st{margin:0;display:flex;gap:10px;align-items:flex-start;font-size:.95rem}
 .avl-st>span{display:flex;flex-direction:column}
 .avl-ok{color:var(--ok)} .avl-ok .meta{color:var(--muted)}
+.avl-outro{align-self:flex-start;text-align:left;padding:4px 0}
 .avl-pend{background:var(--hl-soft);border-radius:10px;padding:8px 10px;display:block}
 .avl-ic2{background:var(--year)!important;color:#fff!important}
 .avl-dots{gap:5px}
@@ -2008,7 +2009,7 @@ function avCard(c,n){
   const feita=!COMP&&avFeitas()[a.doc],pend=avPend()[a.doc],and=avAnd()[a.doc],fech=avFechada(a);
   let est,btn='';
   if(pend){est=`<p class="avl-st avl-pend"><b>Envio pendente.</b> Suas respostas estão guardadas neste celular e serão enviadas quando houver internet.</p>`;btn=`<button class="avl-go" data-av="reenviar" data-doc="${esc(a.doc)}">Tentar enviar agora</button>`}
-  else if(feita){est=`<p class="avl-st avl-ok">${CHECK}<span><b>Atividade enviada${feita.nota!=null?` · Nota ${String(feita.nota).replace('.',',')}`:''}</b><span class="meta">Cada estudante faz uma única vez.</span></span></p>`}
+  else if(feita){est=`<p class="avl-st avl-ok">${CHECK}<span><b>Atividade enviada${feita.nota!=null?` · Nota ${String(feita.nota).replace('.',',')}`:''}</b><span class="meta">Cada estudante faz uma única vez.</span></span></p>`;if(!fech)btn=`<button class="meta link avl-outro" data-av="abrir" data-avcap="${esc(String(n))}">Outro estudante usa este celular? Toque aqui</button>`}
   else if(fech){est=`<p class="avl-st"><b>Prazo encerrado</b> em ${dm(a.prazo)}. Esta atividade não recebe mais respostas.</p>`}
   else{btn=`<button class="avl-go" data-av="abrir" data-avcap="${esc(String(n))}">${and?`Continuar a atividade (${Object.keys(and.resp||{}).length} de ${and.ids.length} respondidas)`:'Começar a atividade'}</button>`;est=''}
   return `<div class="card avcard"><div class="avl-head"><span class="avl-ic">${AVIC}</span><span class="avl-ht"><span class="avl-vale">Vale nota</span><b>Atividade avaliativa</b><span class="avl-sub">${a.qtd} questões objetivas · cada uma vale 1 ponto${a.prazo?` · prazo ${dm(a.prazo)}`:''}</span></span></div>
@@ -2033,7 +2034,7 @@ function avRender(){
   let corpo='',dots='';
   if(AV.etapa==='ident'){
     const ts=y.turmas||[],tur=ts.includes(S.turma)?S.turma:ts.includes(MINHA)?MINHA:'';
-    const nm=COMP?'':store.get('avNome','')||store.get('duvNome','');
+    const nm=COMP||avFeitas()[a.doc]?'':store.get('avNome','')||store.get('duvNome','');
     corpo=`<p class="qz-n">Identificação</p>
       <p style="margin:0">Antes de começar, informe a sua turma e o seu <b>nome completo, como está na chamada</b>. Ele precisa estar na lista da turma.</p>
       <label class="fld"><span>Ano</span><input value="${esc(y.label)}" disabled></label>
