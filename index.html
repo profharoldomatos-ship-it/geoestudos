@@ -20,7 +20,7 @@
 <style>
 /* Caderno: papel claro e quente, tinta azul de caneta, marca-texto amarelo; cada ano é uma divisória colorida de fichário. Uma coluna de app (máx. 460px). */
 :root{
-  --bg:#FBF8F1; --surface:#FFFDF8; --surface-2:#F1ECE0; --ink:#26303F; --muted:#5B6472; --line:#E3DCCB;
+  --bg:#FBF8F1; --surface:#FFFDF8; --surface-2:#F1ECE0; --ink:#26303F; --muted:#4A5260; --line:#E3DCCB;
   --pen:#1D3F8F; --pen-soft:#E3E9F7; --on-pen:#FFFFFF;
   --hl:#FFE27A; --hl-soft:#FFF0B3; --hl-ink:#6B5200;
   --margin:#E8A3A3; --rust:#A33A2C;
@@ -31,18 +31,18 @@
   --r:14px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#16191E; --surface:#1F232A; --surface-2:#272C34; --ink:#E6E2D8; --muted:#A3A8B2; --line:#343A45;
+  --bg:#16191E; --surface:#1F232A; --surface-2:#272C34; --ink:#E6E2D8; --muted:#B8BDC6; --line:#343A45;
   --pen:#9DB8FF; --pen-soft:#22304F; --on-pen:#0D1630;
   --hl:#E3C24A; --hl-soft:#4A3D12; --hl-ink:#F2D776; --margin:#7A3B3B; --rust:#F08B7D;
   --m-y:#F4D35E; --m-g:#9EDDB0; --m-p:#F5A9CB; --m-ink:#14161A; --ul:#9DB8FF; color-scheme:dark }}
 :root[data-theme="dark"]{
-  --bg:#16191E; --surface:#1F232A; --surface-2:#272C34; --ink:#E6E2D8; --muted:#A3A8B2; --line:#343A45;
+  --bg:#16191E; --surface:#1F232A; --surface-2:#272C34; --ink:#E6E2D8; --muted:#B8BDC6; --line:#343A45;
   --pen:#9DB8FF; --pen-soft:#22304F; --on-pen:#0D1630;
   --hl:#E3C24A; --hl-soft:#4A3D12; --hl-ink:#F2D776; --margin:#7A3B3B; --rust:#F08B7D;
   --m-y:#F4D35E; --m-g:#9EDDB0; --m-p:#F5A9CB; --m-ink:#14161A; --ul:#9DB8FF; color-scheme:dark }
-body.m-claro{--bg:#FBF8F1;--surface:#FFFDF8;--surface-2:#F1ECE0;--ink:#26303F;--muted:#5B6472;--line:#E3DCCB;--pen:#1D3F8F;--pen-soft:#E3E9F7;--on-pen:#FFFFFF;--hl:#FFE27A;--hl-soft:#FFF0B3;--hl-ink:#6B5200;--margin:#E8A3A3;--rust:#A33A2C;--m-y:#FFE27A;--m-g:#B9EBC4;--m-p:#FFC4DD;--m-ink:#1E2430;--ul:#1D3F8F;color-scheme:light}
-body.m-sepia{--bg:#F4ECD8;--surface:#FAF4E4;--surface-2:#EADFC6;--ink:#3B2F22;--muted:#6B5D4A;--line:#DCCFB2;--pen:#2B4A8A;--pen-soft:#E4E3EC;--on-pen:#FFFFFF;--hl:#F2CF5B;--hl-soft:#F6E3A6;--hl-ink:#5E4700;--margin:#D99A8A;--rust:#9A3A2A;--m-y:#F7DB6E;--m-g:#B7DFB5;--m-p:#F3BCCF;--m-ink:#2A2118;--ul:#2B4A8A;color-scheme:light}
-body.m-escuro{--bg:#16191E;--surface:#1F232A;--surface-2:#272C34;--ink:#E6E2D8;--muted:#A3A8B2;--line:#343A45;--pen:#9DB8FF;--pen-soft:#22304F;--on-pen:#0D1630;--hl:#E3C24A;--hl-soft:#4A3D12;--hl-ink:#F2D776;--margin:#7A3B3B;--rust:#F08B7D;--m-y:#F4D35E;--m-g:#9EDDB0;--m-p:#F5A9CB;--m-ink:#14161A;--ul:#9DB8FF;color-scheme:dark}
+body.m-claro{--bg:#FBF8F1;--surface:#FFFDF8;--surface-2:#F1ECE0;--ink:#26303F;--muted:#4A5260;--line:#E3DCCB;--pen:#1D3F8F;--pen-soft:#E3E9F7;--on-pen:#FFFFFF;--hl:#FFE27A;--hl-soft:#FFF0B3;--hl-ink:#6B5200;--margin:#E8A3A3;--rust:#A33A2C;--m-y:#FFE27A;--m-g:#B9EBC4;--m-p:#FFC4DD;--m-ink:#1E2430;--ul:#1D3F8F;color-scheme:light}
+body.m-sepia{--bg:#F4ECD8;--surface:#FAF4E4;--surface-2:#EADFC6;--ink:#3B2F22;--muted:#54483A;--line:#DCCFB2;--pen:#2B4A8A;--pen-soft:#E4E3EC;--on-pen:#FFFFFF;--hl:#F2CF5B;--hl-soft:#F6E3A6;--hl-ink:#5E4700;--margin:#D99A8A;--rust:#9A3A2A;--m-y:#F7DB6E;--m-g:#B7DFB5;--m-p:#F3BCCF;--m-ink:#2A2118;--ul:#2B4A8A;color-scheme:light}
+body.m-escuro{--bg:#16191E;--surface:#1F232A;--surface-2:#272C34;--ink:#E6E2D8;--muted:#B8BDC6;--line:#343A45;--pen:#9DB8FF;--pen-soft:#22304F;--on-pen:#0D1630;--hl:#E3C24A;--hl-soft:#4A3D12;--hl-ink:#F2D776;--margin:#7A3B3B;--rust:#F08B7D;--m-y:#F4D35E;--m-g:#9EDDB0;--m-p:#F5A9CB;--m-ink:#14161A;--ul:#9DB8FF;color-scheme:dark}
 body.y7{--year:var(--y7)} body.y8{--year:var(--y8)} body.y9{--year:var(--y9)}
 *{box-sizing:border-box}
 html,body{min-height:100%}
@@ -515,6 +515,15 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .yfold .sf-ch{color:#fff}
 .yfold[open] .sf-ch{transform:rotate(180deg)}
 .yf-body{padding:12px}
+/* Caixas recolhíveis: fechadas ficam no tom forte (cor do ano, ou azul nas Dúvidas); abertas, no tom claro */
+.sfold:not([open])>summary.sec-duv{--sc:#0369A1}
+.sfold:not([open])>summary.sec{background:var(--sc);border-left-color:var(--sc)}
+.sfold:not([open])>summary.sec h2,.sfold:not([open])>summary.sec .sec-sub,.sfold:not([open]) .sf-ch{color:#fff}
+.sfold:not([open])>summary.sec .sec-sub{opacity:.95}
+.sfold:not([open])>summary .sec-ic{background:rgba(255,255,255,.2);color:#fff}
+.sfold:not([open]) .sf-badge{background:#fff;color:var(--sc)}
+.sfold>summary.sec{transition:background-color .15s}
+@media (prefers-reduced-motion:reduce){.sfold>summary.sec{transition:none}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
 .mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--year);border-radius:12px;padding:10px 12px}
@@ -1670,10 +1679,11 @@ function duvidasDaTurma(){return ((DATA&&DATA.duvidas)||[]).filter(d=>d.turmas.i
 function duvidasSecao(){
   if(!duvOn()&&!duvidasDaTurma().length)return '';
   const ds=duvidasDaTurma(),ab=S.duvAberta||false;
-  return `${sec('Dúvidas','duv','duv','','Pergunte ao professor e veja as respostas da turma')}
+  const nR=ds.length;
+  return secFold('duvidas','Dúvidas','duv','duv',(duvOn()?'Pergunte ao professor':'Caixa fechada no momento')+' · '+(nR?nR+(nR===1?' respondida':' respondidas'):'nenhuma respondida ainda'),`
     ${duvOn()?`<button class="btn btn-ghost duvnova" data-duvida=""><span class="duv-ic sm">${DUVIC}</span>Enviar uma dúvida ao professor</button>`:''}
     <h3 class="duv-sub">Dúvidas respondidas</h3>
-    ${ds.length?`<div class="duvlist">${ds.slice(0,ab?50:3).map(d=>`<details class="duv"><summary>${d.sobre?`<span class="eyebrow">${esc(d.sobre)}</span>`:''}<b>${esc(d.pergunta)}</b></summary><div class="duv-r"><span class="duv-p">Prof. Haroldo</span>${esc(d.resposta).replace(/\n/g,'<br>')}</div></details>`).join('')}${ds.length>3&&!ab?`<button class="meta link" id="duvMais" style="align-self:center">Ver todas (${ds.length})</button>`:''}</div>`:`<p class="meta" style="margin:0">Ainda não há dúvidas respondidas para a turma ${esc(S.turma)}.</p>`}`;
+    ${ds.length?`<div class="duvlist">${ds.slice(0,ab?50:3).map(d=>`<details class="duv"><summary>${d.sobre?`<span class="eyebrow">${esc(d.sobre)}</span>`:''}<b>${esc(d.pergunta)}</b></summary><div class="duv-r"><span class="duv-p">Prof. Haroldo</span>${esc(d.resposta).replace(/\n/g,'<br>')}</div></details>`).join('')}${ds.length>3&&!ab?`<button class="meta link" id="duvMais" style="align-self:center">Ver todas (${ds.length})</button>`:''}</div>`:`<p class="meta" style="margin:0">Ainda não há dúvidas respondidas para a turma ${esc(S.turma)}.</p>`}`);
 }
 const duvLim=()=>Math.max(1,Math.min(5,+((DATA&&DATA.app&&DATA.app.duvidasPorDia)||1)));
 const msgLimDuv=()=>duvLim()===1?'Você já enviou a sua dúvida de hoje. Amanhã você pode enviar outra, ou pergunte na aula.':'Você já enviou '+duvLim()+' dúvidas hoje. Amanhã você pode enviar outras, ou pergunte na aula.';
@@ -1752,8 +1762,8 @@ function vTurma(){
     ${secFold('datas','Próximas datas','ano','cal',prox.length?`Próxima: ${dm(prox[0].data)} · ${esc(prox[0].titulo)}`:'Nenhuma data marcada',
       `${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}<button class="btn btn-ghost sf-mais" data-go="calendario">${SECIC.cal}Abrir o calendário completo</button>`)}
     ${muralFold()}
-    </div>
     ${duvidasSecao()}
+    </div>
     <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
   </section>`;
 }
