@@ -206,6 +206,11 @@ body.m-escuro:is(.my7,.my8,.my9) .tab{color:color-mix(in srgb,var(--mc) 45%,#fff
 .r-h:first-child{border-top:0;padding-top:0;margin-top:0}
 .r-h2{font-family:var(--display);font-size:1.02em;font-weight:700;margin:.5em 0 0;color:var(--pen)}
 .r-h b,.r-h2 b{background:none}
+h2.r-h{letter-spacing:0} h3.r-h2{letter-spacing:0}
+/* Alvos de toque com no mínimo 36px (acessibilidade) */
+.link,.copy,.privmini,.qact,#tipOk,.cel .link,.duv summary,.fold>summary{min-height:36px}
+.link{display:inline-flex;align-items:center}
+#tipOk{padding:0 8px}
 .ann{border-radius:3px;cursor:pointer;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .ann.c-y{background:var(--m-y);color:var(--m-ink)} .ann.c-g{background:var(--m-g);color:var(--m-ink)} .ann.c-p{background:var(--m-p);color:var(--m-ink)}
 .ann.c-y b,.ann.c-g b,.ann.c-p b{background:none}
@@ -683,8 +688,8 @@ function md(src){
     const lt=l.trim();
     if((m=lt.match(/^!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)$/))){close();out+=midia(m[2],m[1],true);continue}
     if((m=lt.match(/^\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)$/))||(m=lt.match(/^()(https?:\/\/\S+)$/))){close();out+=midia(m[2],m[1],false);continue}
-    if(m=l.match(/^#{1,2}\s+(.*)/)){close();out+=`<h3 class="r-h" data-b="${b++}">${inline(m[1])}</h3>`}
-    else if(m=l.match(/^#{3,}\s+(.*)/)){close();out+=`<h4 class="r-h2" data-b="${b++}">${inline(m[1])}</h4>`}
+    if(m=l.match(/^#{1,2}\s+(.*)/)){close();out+=`<h2 class="r-h" data-b="${b++}">${inline(m[1])}</h2>`}
+    else if(m=l.match(/^#{3,}\s+(.*)/)){close();out+=`<h3 class="r-h2" data-b="${b++}">${inline(m[1])}</h3>`}
     else if(m=l.match(/^\s*[-•]\s+(.*)/)){if(list!=='ul'){close();out+='<ul>';list='ul'}out+=`<li data-b="${b++}">${inline(m[1])}</li>`}
     else if(m=l.match(/^\d+\.\s+(.*)/)){if(list!=='ol'){close();out+='<ol>';list='ol'}out+=`<li data-b="${b++}">${inline(m[1])}</li>`}
     else{close();out+=`<p data-b="${b++}">${inline(l)}</p>`}
