@@ -923,6 +923,12 @@ let COMP=store.get('compartilhado',false);
 let MINHA=COMP?null:(store.get('minha',null)||(store.get('push',null)||{}).turma||store.get('turma',null));
 if(MINHA)store.set('minha',MINHA);
 const S={fonte:store.get('fonte','padrao'),unit:null,tab:'home',turma:COMP?null:MINHA,copied:store.get('copied',{}),sent:store.get('sent',{}),size:store.get('size',1),mode:store.get('mode','auto'),tip:store.get('tip',true),vistos:store.get('vistos',[]),calM:TODAY.getMonth(),calY:TODAY.getFullYear(),sel:TODAY.getDate(),cap:null};
+/* Lugar atual (aba, turma, resumo e rolagem): guardado na sessão, para que recarregar a página (arrastar para baixo) volte ao mesmo ponto.
+   Fica só enquanto a aba/app estiver aberto: abrir o app do zero continua começando no Início. */
+const LUGAR0=(()=>{try{return JSON.parse(sessionStorage.getItem('geo:lugar')||'null')}catch(e){return null}})();
+let lugarPronto=false;
+function salvarLugar(){if(!lugarPronto)return;try{sessionStorage.setItem('geo:lugar',JSON.stringify({tab:S.tab,cap:S.cap,turma:S.turma,unit:S.unit,y:Math.round(scrollY),t:Date.now()}))}catch(e){}}
+{let tl=0;addEventListener('scroll',()=>{clearTimeout(tl);tl=setTimeout(salvarLugar,300)},{passive:true});addEventListener('pagehide',salvarLugar);document.addEventListener('visibilitychange',()=>{if(document.hidden)salvarLugar()})}
 if(DATA&&MINHA&&!TURMAS.includes(MINHA)){MINHA=null;store.set('minha',null)}
 if(DATA&&S.turma&&!TURMAS.includes(S.turma))S.turma=null;
 let ANN=[],pending=null,editing=null,adjusting=null;
@@ -2416,7 +2422,7 @@ function toast(msg,undo){
   if(undo)t.querySelector('.undo').onclick=()=>{t.remove();undo()};
   document.body.appendChild(t);setTimeout(()=>t.remove(),undo?6000:2400);
 }
-function go(tab,cap){if(adjusting)cancelAdjust();if(TTS.on)ttsParar();fecharRevisao();S.tab=tab;S.cap=cap||null;render();scrollTo(0,0);
+function go(tab,cap){if(adjusting)cancelAdjust();if(TTS.on)ttsParar();fecharRevisao();S.tab=tab;S.cap=cap||null;render();scrollTo(0,0);salvarLugar();
   if(S.cap&&S.restore){const r=S.restore;S.restore=null;requestAnimationFrame(()=>irParaBloco(r))}}
 
 /* Baixa os dados do robô */
@@ -2517,6 +2523,17 @@ function abrirDeAviso(o){
   const c=o.cap?capOf(capId(o.cap)):null;
   if(c&&c.resumo&&tab==='resumos'){S.unit=c.u;go('resumos',c.id)}else go(tab);
 }
+(()=>{ // volta ao mesmo lugar depois de recarregar (só se não veio de um link com destino)
+  const l=LUGAR0;
+  if(!location.search&&l&&Date.now()-l.t<6*3600e3&&DATA&&l.tab&&l.tab!=='home'){
+    try{
+      if(l.turma&&TURMAS.includes(l.turma))S.turma=l.turma;
+      S.unit=l.unit==null?null:l.unit;
+      if(l.tab!=='turma'||S.turma){go(l.tab,l.cap!=null?capId(l.cap):null);const y=l.y||0;requestAnimationFrame(()=>setTimeout(()=>scrollTo(0,y),80))}
+    }catch(e){}
+  }
+  lugarPronto=true;salvarLugar();
+})();
 (()=>{const q=new URLSearchParams(location.search);if(q.has('professor')){const on=q.get('professor')!=='0';store.set('prof',on);history.replaceState(null,'',location.pathname);setTimeout(()=>{render();toast(on?'Modo professor ligado neste aparelho: as atividades em teste aparecem aqui.':'Modo professor desligado.')},600)}})();
 (()=>{const q=new URLSearchParams(location.search);if(q.has('convite')){history.replaceState(null,'',location.pathname);setTimeout(boasVindas,400)}})();
 (()=>{const q=new URLSearchParams(location.search);if(q.get('ir')||q.get('turma')){const o={ir:q.get('ir'),turma:q.get('turma'),cap:q.get('cap')};history.replaceState(null,'',location.pathname);applyMode();render();abrirDeAviso(o)}})();
