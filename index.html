@@ -303,6 +303,11 @@ h2.r-h{letter-spacing:0} h3.r-h2{letter-spacing:0}
 .cap.off{color:var(--muted)}
 .pdf-card{display:flex;flex-direction:column;gap:12px}
 .pdf-ic{flex:none;width:42px;height:50px;border-radius:6px;background:var(--rust);color:#fff;display:grid;place-items:end center;padding-bottom:7px;font-size:.7rem;font-weight:700;letter-spacing:.04em}
+.atv-pdf{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:2px 0 12px}
+.atv-pdf .ap-t{display:flex;flex-direction:column;gap:1px;min-width:0}
+.atv-pdf .ap-b{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.atv-pdf .btn{justify-content:center}
+.atv-pdf .pdf-ic{width:34px;height:40px;font-size:.62rem;padding-bottom:5px}
 .pdf-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .share-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .share-opt{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--ink);text-decoration:none;padding:8px 2px;border-radius:12px;border:1px solid var(--line);background:var(--bg)}
@@ -1858,13 +1863,7 @@ function vCap(n){
       <span class="meta">Marque quando terminar de copiar. Fica salvo só no seu celular.</span>
     </div>
     ${revCard(c,n)}
-    ${c.pdf?`<div class="card pdf-card">
-      <div style="display:flex;gap:12px;align-items:center"><span class="pdf-ic" aria-hidden="true">PDF</span><span><b>Resumo em PDF</b><br><span class="meta">Para imprimir, guardar ou enviar a um colega.</span></span></div>
-      <div class="pdf-actions">
-        <a class="btn btn-ghost" href="${esc(c.pdf)}" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Abrir PDF</a>
-        <button class="btn btn-ghost" id="sharePdf"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>Compartilhar</button>
-      </div>
-    </div>`:''}
+    ${pdfCard(pdfDe(c),'Resumo em PDF','Para imprimir, guardar ou enviar a um colega.','res')}
     ${c.atividade?`<div class="card act" id="actBox">
       <div class="act-head"><span class="act-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg></span><span><b class="act-t">Atividade de fixação</b><br><span class="act-sub">Capítulo ${n} · ${esc(c.titulo)}</span></span><span class="vale">Vale nota</span></div>
       <p class="act-why">Esta atividade gera pontuação para a sua nota no período.${pAt?` <b>Prazo final: ${dm(pAt)}.</b>`:''}</p>
@@ -1908,12 +1907,12 @@ function vTema(n,c){
       <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Aula estudada':'Já estudei esta aula'}</button>
       <span class="meta">Marque quando terminar de estudar. Fica salvo só no seu celular.</span>
     </div>
-    ${c.pdf?`<div class="card pdf-card"><div style="display:flex;gap:12px;align-items:center"><span class="pdf-ic" aria-hidden="true">PDF</span><span><b>Aula em PDF</b><br><span class="meta">Para imprimir, guardar ou enviar a um colega.</span></span></div>
-      <div class="pdf-actions"><a class="btn btn-ghost" href="${esc(c.pdf)}" target="_blank" rel="noopener">Abrir PDF</a><button class="btn btn-ghost" id="sharePdf">Compartilhar</button></div></div>`:''}
+    ${pdfCard(pdfDe(c),'Aula em PDF','Para imprimir, guardar ou enviar a um colega.','res')}
     <div class="card act tt-act" id="actBox">
       <div class="act-head"><span class="act-ic tt-ic">${TTIC}</span><span><b class="act-t">Atividade do Tema Transversal</b><br><span class="act-sub">Tema ${c.n} · ${esc(c.titulo)}</span></span><span class="vale">Vale ponto</span></div>
       <p class="act-why">Esta atividade vale ponto na recuperação paralela.${pr?` <b>Prazo: ${dm(pr)}.</b>`:''}</p>
       ${c.atividadeTexto?`<div class="tt-texto">${md(c.atividadeTexto)}</div>`:''}
+      ${c.pdfAtv?`<div class="atv-pdf"><span class="pdf-ic" aria-hidden="true">PDF</span><span class="ap-t"><b>Atividade em PDF</b><span class="meta">Para imprimir e responder à mão, se o professor pedir.</span></span><span class="ap-b"><a class="btn btn-ghost" href="${esc(c.pdfAtv)}" target="_blank" rel="noopener">${PDF_DL}Abrir</a><button class="btn btn-ghost" data-sharepdf="atv">${PDF_SH}Enviar</button></span></div>`:''}
       ${c.atividade?`<a class="btn act-go" href="${esc(c.atividade)}" target="_blank" rel="noopener">${c.atividadeTexto?'Responder no formulário':'Fazer a atividade'}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`:''}
       ${temAtv(c)?`<button class="copy-btn${sent?' on':''}" id="sentBtn" aria-pressed="${sent}">${sent?CHECK+' Atividade feita':'Já fiz esta atividade'}</button><span class="meta">${c.atividade?'Depois de enviar o formulário, volte aqui e marque.':'Siga as orientações do professor para a entrega e marque aqui quando terminar.'}</span>`
       :`<p class="meta" style="margin:0"><b>Aguarde:</b> a atividade deste tema será publicada em breve. Você recebe um aviso quando ela sair.</p>`}
@@ -1927,10 +1926,26 @@ function ttAtvCard(t){
     <div class="atv-acts">${!temAtv(t)?'<span class="meta">A atividade será publicada em breve.</span>':sent?'':t.atividade&&!t.atividadeTexto?`<a class="btn act-go" href="${esc(t.atividade)}" target="_blank" rel="noopener">Fazer a atividade<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`:`<button class="btn act-go" data-act="${id}">Ver atividade</button>`}${temAtv(t)?`<button class="btn btn-ghost" data-sent="${id}">${sent?'Desmarcar':'Já fiz'}</button>`:''}${t.resumo?`<button class="btn btn-ghost" data-cap="${id}">Ver aula</button>`:''}</div></div>`;
 }
 
-function sharePdf(){
-  const y=Y(),c=capOf(S.cap),url=c.pdf;
-  const title=c.tema?`Aula de Geografia · ${y.label} · Tema Transversal ${c.n}: ${c.titulo}`:`Resumo de Geografia · ${y.label} · Cap. ${c.n}: ${c.titulo}`;
-  compartilhar(title,`${title} (PDF)`,url,'Compartilhar resumo');
+/* PDF: o link manual da planilha tem prioridade; senão, o PDF que o robô gera do próprio Doc */
+const pdfDe=c=>c.pdf||c.pdfDoc||'';
+const PDF_DL='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
+const PDF_SH='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>';
+function pdfCard(url,tit,meta,tipo){
+  if(!url)return '';
+  return `<div class="card pdf-card">
+      <div style="display:flex;gap:12px;align-items:center"><span class="pdf-ic" aria-hidden="true">PDF</span><span><b>${tit}</b><br><span class="meta">${meta}</span></span></div>
+      <div class="pdf-actions">
+        <a class="btn btn-ghost" href="${esc(url)}" target="_blank" rel="noopener">${PDF_DL}Abrir PDF</a>
+        <button class="btn btn-ghost" data-sharepdf="${tipo}">${PDF_SH}Compartilhar</button>
+      </div>
+    </div>`;
+}
+function sharePdf(tipo){
+  const y=Y(),c=capOf(S.cap);
+  const atv=tipo==='atv',url=atv?c.pdfAtv:pdfDe(c);
+  if(!url)return;
+  const title=atv?`Atividade de Geografia · ${y.label} · Tema Transversal ${c.n}: ${c.titulo}`:c.tema?`Aula de Geografia · ${y.label} · Tema Transversal ${c.n}: ${c.titulo}`:`Resumo de Geografia · ${y.label} · Cap. ${c.n}: ${c.titulo}`;
+  compartilhar(title,`${title} (PDF)`,url,atv?'Compartilhar atividade':'Compartilhar resumo');
 }
 /* Compartilhar o próprio app: o link leva "?convite=1", que abre as boas-vindas com o passo a passo de instalação */
 function shareApp(){
@@ -2121,7 +2136,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('[data-back]'))return go('resumos');
   const day=t.closest('[data-day]');if(day){S.sel=+day.dataset.day;return render()}
   if(t.closest('#prevM')||t.closest('#nextM')){const d=t.closest('#prevM')?-1:1;S.calM+=d;if(S.calM<0){S.calM=11;S.calY--}if(S.calM>11){S.calM=0;S.calY++}S.sel=1;return render()}
-  if(t.closest('#sharePdf'))return sharePdf();
+  {const sp=t.closest('[data-sharepdf]');if(sp)return sharePdf(sp.dataset.sharepdf);}
   if(t.closest('#shareApp'))return shareApp();
   if(t.closest('#readBtn'))return readSheet();
   if(t.closest('#listBtn'))return listSheet();

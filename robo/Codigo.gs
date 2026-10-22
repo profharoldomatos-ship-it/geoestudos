@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-22 · mural v8';
+const VERSAO_ROBO = '2026-10-22 · pdf v9';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -516,17 +516,31 @@ function textoComEstilo_(el) {
 /* Monta anos, unidades e capítulos                                    */
 /* ------------------------------------------------------------------ */
 function montarAnos_(conf, conteudo, docs, anterior) {
-  const antCaps = {}, antTxt = {}, antRev = {};
+  const antCaps = {}, antTxt = {}, antRev = {}, antPdf = {};
   ((anterior && anterior.anos) || []).forEach(a => (a.unidades || []).forEach(u => {
     (u.caps || []).forEach(c => {
       if (c.doc) antCaps[c.doc] = c;
+      if (c.doc && c.pdfDoc) antPdf[c.doc] = { at: c.atualizado, pdf: c.pdfDoc };
       if (c.docRevisao) antRev[c.docRevisao] = { at: c.atualizadoRevisao, r: c.revisao, err: c.revisaoErros };
     });
     (u.temas || []).forEach(t => {
       if (t.doc) antTxt[t.doc] = { at: t.atualizado, txt: t.resumo };
       if (t.docAtividade) antTxt[t.docAtividade] = { at: t.atualizadoAtividade, txt: t.atividadeTexto };
+      if (t.doc && t.pdfDoc) antPdf[t.doc] = { at: t.atualizado, pdf: t.pdfDoc };
+      if (t.docAtividade && t.pdfAtv) antPdf[t.docAtividade] = { at: t.atualizadoAtividade, pdf: t.pdfAtv };
     });
   }));
+  // PDF gerado do próprio Doc (refeito só quando o Doc muda)
+  let pdfsNovos = 0;
+  const pdfDe = (id, at, nome) => {
+    const ant = antPdf[id];
+    if (ant && ant.pdf && ant.at === at) return ant.pdf;
+    // no máximo 10 PDFs novos por rodada (o resto sai nas próximas, a cada 5 min)
+    if (pdfsNovos >= 10) return ant ? ant.pdf : '';
+    pdfsNovos++;
+    try { return gerarPdf_(id, nome); }
+    catch (err) { Logger.log('PDF do Doc ' + id + ': ' + err); return ant ? ant.pdf : ''; }
+  };
   const textoDoc = (d) => {
     const ant = antTxt[d.id];
     if (ant && ant.txt && ant.at === d.atualizado) return ant.txt;
@@ -558,6 +572,7 @@ function montarAnos_(conf, conteudo, docs, anterior) {
         try { cap.resumo = docParaTexto_(DocumentApp.openById(d.id)); }
         catch (err) { Logger.log('Não consegui ler o Doc ' + d.id + ': ' + err); cap.resumo = ant ? ant.resumo : ''; }
       }
+      cap.pdfDoc = pdfDe(d.id, d.atualizado, 'GeoEstudos · ' + ano + 'º ano · Cap. ' + n + ' – ' + (cap.titulo || d.nome));
     });
     // Revisão rápida: perguntas do Doc "NN Revisão" (o app sorteia 6 e embaralha as alternativas)
     const rAno = (docs.revs || {})[ano] || {};
@@ -586,9 +601,11 @@ function montarAnos_(conf, conteudo, docs, anterior) {
       if (d.aula) {
         if (!t.titulo) t.titulo = d.aula.nome;
         t.doc = d.aula.id; t.atualizado = d.aula.atualizado; t.resumo = textoDoc(d.aula);
+        t.pdfDoc = pdfDe(d.aula.id, d.aula.atualizado, 'GeoEstudos · ' + ano + 'º ano · Tema Transversal ' + n + ' – ' + (t.titulo || d.aula.nome));
       }
       if (d.atividade) {
         t.docAtividade = d.atividade.id; t.atualizadoAtividade = d.atividade.atualizado; t.atividadeTexto = textoDoc(d.atividade);
+        t.pdfAtv = pdfDe(d.atividade.id, d.atividade.atualizado, 'GeoEstudos · ' + ano + 'º ano · Tema Transversal ' + n + ' – Atividade');
       }
     }));
     const lista = Object.keys(unidades).map(Number).sort((a, b) => a - b).map(n => {
@@ -1139,6 +1156,26 @@ function prepararAbaTemas_() {
 }
 
 /* ---------- Imagens dos Docs ---------- */
+/* PDFs gerados automaticamente a partir dos Docs (resumos, aulas e atividades dos Temas) */
+function pastaPdfs_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('pastaPdfs');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) { } }
+  const p = DriveApp.getFolderById(GEO.PASTA_APP).createFolder('GeoEstudos - PDFs do app (não apagar)');
+  props.setProperty('pastaPdfs', p.getId());
+  return p;
+}
+function gerarPdf_(docId, nome) {
+  const props = PropertiesService.getScriptProperties();
+  const chave = 'pdf-' + docId;
+  const velho = props.getProperty(chave);
+  const blob = DriveApp.getFileById(docId).getAs(MimeType.PDF).setName(String(nome).replace(/[\\/:*?"<>|]+/g, '-').slice(0, 120) + '.pdf');
+  const f = pastaPdfs_().createFile(blob);
+  f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  props.setProperty(chave, f.getId());
+  if (velho && velho !== f.getId()) { try { DriveApp.getFileById(velho).setTrashed(true); } catch (e) { } }
+  return 'https://drive.google.com/file/d/' + f.getId() + '/view';
+}
 function pastaImagens_() {
   const props = PropertiesService.getScriptProperties();
   const id = props.getProperty('pastaImagens');
