@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-21 · revisão v6';
+const VERSAO_ROBO = '2026-10-22 · mural v7';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -134,6 +134,7 @@ function instalar() {
   planilhaInscricoes_();
   prepararAbaTemas_();
   prepararConfigDuvidas_();
+  abaMural_();
   const d = atualizar();
   Logger.log('Atualização automática ligada: a cada ' + GEO.MINUTOS + ' minutos, e na hora quando você edita as planilhas ou as ' + agendas + ' agendas.');
   Logger.log(resumoTexto_(d));
@@ -183,6 +184,8 @@ function atualizar() {
       agenda: agenda
     };
     try { dados.duvidas = lerDuvidasRespondidas_(dados); } catch (err) { Logger.log('Dúvidas: ' + err); dados.duvidas = (anterior && anterior.duvidas) || []; }
+    let mural = null;
+    try { mural = lerMural_(dados); dados.mural = mural.itens; } catch (err) { Logger.log('Mural: ' + err); dados.mural = (anterior && anterior.mural) || []; }
     dados.avisos = calcularAvisos_(dados, anterior, conf);
     let novas = [];
     try {
@@ -197,6 +200,7 @@ function atualizar() {
     if (novas.length) {
       try { enviarAvisos_(novas); } catch (err) { Logger.log('Envio de avisos: ' + err); }
     }
+    if (mural) { try { mural.escreverSituacao(); } catch (err) { Logger.log('Mural (situação): ' + err); } }
     return dados;
   } finally {
     lock.releaseLock();
@@ -754,6 +758,7 @@ function resumoTexto_(d) {
     (c.revisaoErros || []).forEach(e => l.push('   ⚠ ' + e));
   })));
   l.push('Avisos de novidade ativos: ' + (d.avisos || []).length);
+  l.push('Mural de avisos: ' + (d.mural || []).length + ' aviso(s) publicado(s)');
   return l.join('\n');
 }
 
@@ -788,6 +793,13 @@ function novasNotificacoes_(dados, anterior, conf) {
     ts.forEach(t => add(t, { tipo: 'novidade', titulo: a.titulo, texto: a.texto, cap: a.cap || null, tab: a.tipo === 'resumo' ? 'resumos' : a.tipo === 'duvida' ? 'turma' : 'calendario' }));
   });
 
+  // 1b) Avisos do mural marcados com "Notificação no celular? = Sim" (uma vez só por aviso)
+  (dados.mural || []).forEach(m => {
+    if (!m.notificar || props.getProperty('mural-' + m.id)) return;
+    m.turmas.forEach(t => add(t, { tipo: 'mural', titulo: '📢 ' + m.titulo, texto: m.texto.slice(0, 220), cap: m.id, tab: 'mural' }));
+    props.setProperty('mural-' + m.id, agora);
+  });
+
   // 2) Lembretes: na véspera e no dia de cada entrega, atividade ou avaliação
   const fmt = (d, f) => Utilities.formatDate(d, GEO.FUSO, f);
   const agoraD = new Date();
@@ -815,6 +827,7 @@ function novasNotificacoes_(dados, anterior, conf) {
   Object.keys(porTurma).forEach(t => {
     const its = porTurma[t];
     const lemb = its.filter(i => i.tipo === 'lembrete'), nov = its.filter(i => i.tipo === 'novidade');
+    its.filter(i => i.tipo === 'mural').forEach((i, k) => out.push({ id: 'n-' + t + '-' + agora + '-m' + k, turma: t, quando: agora, titulo: i.titulo, texto: i.texto, cap: i.cap, tab: 'mural' }));
     lemb.forEach((i, k) => out.push({ id: 'n-' + t + '-' + agora + '-l' + k, turma: t, quando: agora, titulo: i.titulo, texto: i.texto, cap: i.cap, tab: i.tab }));
     if (nov.length === 1) out.push({ id: 'n-' + t + '-' + agora, turma: t, quando: agora, titulo: nov[0].titulo, texto: nov[0].texto, cap: nov[0].cap, tab: nov[0].tab });
     else if (nov.length > 1) out.push({ id: 'n-' + t + '-' + agora, turma: t, quando: agora, titulo: nov.length + ' novidades no GeoEstudos', texto: nov.map(i => i.texto).join(' · ').slice(0, 220), cap: null, tab: 'turma' });
@@ -992,6 +1005,117 @@ function jwtAviso_(aud, ch) {
 
 /* ---------- Aba "Temas Transversais" na planilha de Conteúdo ---------- */
 /** Cria a aba (se não existir) e acrescenta uma linha para cada Tema Transversal encontrado nas pastas. */
+/* ================================================================== */
+/* Mural de avisos: aba "Mural de avisos" na planilha de Configurações */
+/* ================================================================== */
+const ABA_MURAL = 'Mural de avisos';
+const COLS_MURAL = ['Data de publicação', 'Título', 'Mensagem', 'Para quem', 'Destaque', 'Fixo no topo até', 'Notificação no celular?', 'Link (opcional)', 'Publicar?', 'Situação (o robô preenche)', 'Código'];
+const NOTAS_MURAL = [
+  'Opcional. Em branco: o aviso entra no ar assim que você marcar "Publicar?" = Sim, e o robô anota a data aqui. Com uma data futura, o aviso fica agendado e entra no ar nesse dia (a partir das 6h).',
+  'Curto e direto. Ex.: Feriado na sexta-feira (25/10)',
+  'O texto completo do aviso. Pode ter várias linhas (Ctrl+Enter ou Alt+Enter quebra a linha dentro da célula).',
+  'Escolha na lista: Todas as turmas, um ano inteiro ou uma turma. Para algumas turmas, escreva separado por ponto e vírgula. Ex.: 71; 72',
+  'Normal: só no mural.\nPop-up: aparece na frente da tela uma vez, quando o aluno abrir o app.\nFixo no topo: faixa vermelha no alto da página da turma até a data da coluna F.\nPop-up e fixo no topo: os dois.',
+  'Só vale para avisos fixos. Último dia em que a faixa aparece. Em branco: fica fixo por 7 dias.',
+  'Sim: os celulares com avisos ativados recebem uma notificação (uma vez só, quando o aviso entra no ar).',
+  'Opcional. Um endereço (https://...) que vira o botão "Abrir link" no aviso.',
+  'Marque Sim só quando o aviso estiver pronto. Enquanto estiver Não ou em branco, é um rascunho e ninguém vê.',
+  'Preenchida pelo robô: mostra se o aviso está no ar, agendado ou se falta alguma coisa.',
+  'Uso interno do robô. Não apague.'
+];
+function abaMural_() {
+  const ss = SpreadsheetApp.openById(GEO.PLANILHA_CONFIG);
+  let sh = ss.getSheetByName(ABA_MURAL);
+  if (sh) return sh;
+  sh = ss.insertSheet(ABA_MURAL);
+  const n = COLS_MURAL.length, linhas = 400;
+  sh.getRange(1, 1, 1, n).setValues([COLS_MURAL]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#B42B2B').setWrap(true).setVerticalAlignment('middle');
+  sh.getRange(1, 1, 1, n).setNotes([NOTAS_MURAL]);
+  sh.setFrozenRows(1);
+  sh.setRowHeight(1, 42);
+  [120, 220, 380, 150, 170, 120, 120, 180, 90, 260, 80].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+  sh.getRange(2, 3, linhas, 1).setWrap(true);
+  sh.getRange(2, 1, linhas, n).setVerticalAlignment('top');
+  const data = SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(false).setHelpText('Digite uma data, ex.: 25/10/2026').build();
+  sh.getRange(2, 1, linhas, 1).setDataValidation(data).setNumberFormat('dd/MM/yyyy');
+  sh.getRange(2, 6, linhas, 1).setDataValidation(data).setNumberFormat('dd/MM/yyyy');
+  const conf = lerConfig_();
+  const turmas = [].concat.apply([], Object.keys(conf.turmas).sort().map(a => conf.turmas[a]));
+  const para = ['Todas as turmas', '7º ano', '8º ano', '9º ano'].concat(turmas);
+  sh.getRange(2, 4, linhas, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(para, true).setAllowInvalid(true).setHelpText('Escolha na lista ou escreva turmas separadas por ponto e vírgula, ex.: 71; 72').build());
+  sh.getRange(2, 5, linhas, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Normal', 'Pop-up', 'Fixo no topo', 'Pop-up e fixo no topo'], true).build());
+  const simNao = SpreadsheetApp.newDataValidation().requireValueInList(['Sim', 'Não'], true).build();
+  sh.getRange(2, 7, linhas, 1).setDataValidation(simNao);
+  sh.getRange(2, 9, linhas, 1).setDataValidation(simNao);
+  sh.getRange(2, 10, linhas, 1).setFontColor('#5B6472').setFontStyle('italic');
+  sh.hideColumns(11);
+  return sh;
+}
+function lerMural_(dados) {
+  const sh = abaMural_();
+  const fmt = (d, f) => Utilities.formatDate(d, GEO.FUSO, f);
+  const hoje = fmt(new Date(), 'yyyy-MM-dd');
+  const dm = iso => iso.slice(8, 10) + '/' + iso.slice(5, 7);
+  const props = PropertiesService.getScriptProperties();
+  const porAno = {}, todas = [];
+  dados.anos.forEach(a => { porAno[a.ano] = a.turmas; a.turmas.forEach(t => todas.push(t)); });
+  const ult = sh.getLastRow();
+  const linhas = ult > 1 ? sh.getRange(2, 1, ult - 1, COLS_MURAL.length).getValues() : [];
+  const itens = [], situacao = [];
+  const isoDe = v => (v instanceof Date && !isNaN(v)) ? fmt(v, 'yyyy-MM-dd') : '';
+  linhas.forEach((l, i) => {
+    const linha = i + 2;
+    const titulo = String(l[1] || '').trim(), texto = String(l[2] || '').trim();
+    if (!titulo && !texto) { situacao.push(['']); return; }
+    let id = String(l[10] || '').trim();
+    if (!id) { id = 'm' + Utilities.getUuid().replace(/-/g, '').slice(0, 10); sh.getRange(linha, 11).setValue(id); }
+    if (!titulo || !texto) { situacao.push(['⚠ Falta ' + (!titulo ? 'o título' : 'a mensagem')]); return; }
+    if (!sim_(l[8])) { situacao.push(['Rascunho · marque "Publicar?" = Sim quando estiver pronto']); return; }
+    let data = isoDe(l[0]);
+    const semData = !data;
+    if (semData) data = hoje;
+    if (data > hoje) { situacao.push(['Agendado para ' + dm(data)]); return; }
+    // Para quem
+    const p = semAcento_(l[3]);
+    let ts = [];
+    if (!p || p.indexOf('toda') >= 0) ts = todas.slice();
+    else {
+      (p.match(/(\d)\s*o?\s*º?\s*ano/g) || []).forEach(x => (porAno[x[0]] || []).forEach(t => ts.push(t)));
+      (p.match(/\b\d{2}\b/g) || []).forEach(t => { if (todas.indexOf(t) >= 0) ts.push(t); });
+    }
+    ts = ts.filter((t, k) => ts.indexOf(t) === k);
+    if (!ts.length) { situacao.push(['⚠ Não reconheci a coluna "Para quem". Use a lista ou escreva, ex.: 71; 72']); return; }
+    if (semData) sh.getRange(linha, 1).setValue(new Date());
+    const dest = semAcento_(l[4]);
+    const popup = dest.indexOf('pop') >= 0, fixo = dest.indexOf('fix') >= 0;
+    let fixoAte = '';
+    if (fixo) fixoAte = isoDe(l[5]) || fmt(new Date(Date.parse(data + 'T12:00:00') + 7 * 864e5), 'yyyy-MM-dd');
+    let link = String(l[7] || '').trim();
+    if (link && !/^https?:\/\//i.test(link)) link = '';
+    const notificar = sim_(l[6]);
+    itens.push({ id: id, data: data, titulo: titulo.slice(0, 120), texto: texto.slice(0, 1500), turmas: ts, todas: ts.length === todas.length, popup: popup, fixoAte: fixoAte, link: link, notificar: notificar });
+    situacao.push([null]); // preenchida depois das notificações
+    situacao[situacao.length - 1].item = itens[itens.length - 1];
+  });
+  itens.sort((a, b) => b.data.localeCompare(a.data));
+  return {
+    itens: itens.slice(0, 80),
+    escreverSituacao: () => {
+      if (!situacao.length) return;
+      const out = situacao.map(r => {
+        const m = r.item;
+        if (!m) return [r[0]];
+        let t = 'No ar desde ' + dm(m.data);
+        if (m.fixoAte) t += m.fixoAte >= hoje ? ' · fixo no topo até ' + dm(m.fixoAte) : ' · já saiu do topo';
+        if (m.popup) t += ' · pop-up';
+        if (m.notificar) t += props.getProperty('mural-' + m.id) ? ' · notificação enviada' : ' · notificação na fila';
+        return [t];
+      });
+      sh.getRange(2, 10, out.length, 1).setValues(out);
+    }
+  };
+}
+
 function prepararAbaTemas_() {
   const ss = SpreadsheetApp.openById(GEO.PLANILHA_CONTEUDO);
   let sh = ss.getSheets().filter(s => semAcento_(s.getName()).indexOf('temas') === 0)[0];

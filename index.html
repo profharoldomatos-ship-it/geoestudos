@@ -465,6 +465,41 @@ body.m-claro,body.m-sepia{--ok:#1F7A45;--ok-soft:#E3F3E8;--bad:#A61E5C;--bad-sof
 .qz-btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:6px}
 .qz-btns .btn{justify-content:center;min-height:48px}
 .qz-back{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--year);color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.25);min-height:44px}
+
+/* Mural de avisos do professor: vermelho padronizado (pop-up, faixa fixa e mural) */
+:root{--alerta:#B42B2B;--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--alerta-soft:#3A1D1D;--alerta-ink:#F5A8A8}}
+:root[data-theme="dark"],body.m-escuro{--alerta-soft:#3A1D1D;--alerta-ink:#F5A8A8}
+body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-soft:#F6E1D8;--alerta-ink:#8E1F1F}
+.sec-mur{--sc:var(--alerta);--sc-on:#fff;background:var(--alerta-soft)}
+.fixo{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;background:var(--alerta);color:#fff;border-radius:var(--r);padding:12px 14px;box-shadow:0 6px 16px rgba(180,43,43,.25)}
+.fixo .fx-ic{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center}
+.fixo .fx-ic svg{width:20px;height:20px}
+.fixo .fx-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.fixo .fx-ey{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;opacity:.92}
+.fixo b{font-size:1rem;line-height:1.25}
+.fixo .fx-t{font-size:.88rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fixo:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mural{display:flex;flex-direction:column;gap:8px}
+.mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--alerta);border-radius:12px;padding:10px 12px}
+.mi-d{display:flex;flex-direction:column;align-items:center;min-width:40px;padding:4px 6px;border-radius:9px;background:var(--alerta-soft);color:var(--alerta-ink);font-weight:700;line-height:1.05}
+.mi-d b{font-size:1.1rem;font-family:var(--display)} .mi-d span{font-size:.66rem;text-transform:uppercase;letter-spacing:.05em}
+.mi-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mi-tx b{line-height:1.25}
+.mi-tx span{font-size:.86rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mi-novo{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;background:var(--alerta);border-radius:999px;padding:2px 8px;align-self:center}
+.mural-mes{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:8px 0 2px}
+.overlay.avpop-wrap{align-items:center}
+.avpop-wrap .sheet{border-radius:20px;width:min(calc(100% - 32px),420px);max-height:86vh}
+.avp-top{display:flex;gap:10px;align-items:center;background:var(--alerta);color:#fff;border-radius:14px;padding:10px 12px}
+.avp-top .fx-ic{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}
+.avp-top .fx-ic svg{width:18px;height:18px}
+.avp-top span{display:flex;flex-direction:column;line-height:1.2} .avp-top small{opacity:.9;font-size:.8rem}
+.avp-txt p{margin:0 0 8px;line-height:1.5}
+.btn-alerta{background:var(--alerta);color:#fff}
+.avp-nav{display:flex;gap:10px;flex-wrap:wrap}
+.avp-nav .btn{flex:1;min-height:46px}
 .ttsdica{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom,0px));z-index:26;width:min(calc(100% - 32px),420px);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:.84rem;line-height:1.45;box-shadow:0 8px 22px rgba(0,0,0,.18);display:flex;gap:10px;align-items:flex-start;animation:dicaIn .25s ease-out}
 .ttsdica b{color:#1D3F8F}[data-theme="dark"] .ttsdica b{color:#9DB6F0}
 .ttsdica button{flex:none;font-weight:700;color:#1D3F8F;padding:4px 6px;min-height:36px}[data-theme="dark"] .ttsdica button{color:#9DB6F0}
@@ -1089,6 +1124,58 @@ function qzRever(p){
   if(!v){v=document.createElement('button');v.className='qz-back';v.innerHTML='← Voltar à revisão';document.body.appendChild(v);
     v.onclick=()=>{v.remove();const o=document.querySelector('.qz-o');if(o){o.hidden=false;document.body.style.overflow='hidden';(o.querySelector('#qzFoco')||o.querySelector('#qzQ'))?.focus({preventScroll:true})}}}
 }
+
+/* ===== Mural de avisos do professor =====
+   Vem da aba "Mural de avisos" da planilha de Configurações. Cada aviso pode ser
+   só do mural, pop-up (aparece uma vez na frente da tela) e/ou fixo no topo. */
+const muralDe=t=>((DATA&&DATA.mural)||[]).filter(m=>m.todas||(t&&m.turmas.includes(t)));
+const avLidos=()=>new Set(store.get('avLidos',[]));
+function marcarLido(ids){const s=avLidos();ids.forEach(i=>s.add(i));store.set('avLidos',[...s].slice(-300));
+  ids.forEach(id=>document.querySelectorAll(`.mural-it[data-aviso="${id}"]`).forEach(e=>{e.querySelector('.mi-novo')?.remove()}));
+  const dot=document.querySelector('[data-tab=turma]');if(dot)dot.classList.toggle('has-new',!!(S.turma&&DATA&&(avisosNovos().length||muralNaoLidos(S.turma))));}
+const muralNaoLidos=t=>{const l=avLidos();return muralDe(t).filter(m=>!l.has(m.id)).length};
+const dataExt=iso=>{const[a,m,d]=iso.split('-').map(Number);return d+' de '+MESES[m-1]+(a!==TODAY.getFullYear()?' de '+a:'')};
+function fixosHtml(t){
+  return muralDe(t).filter(m=>m.fixoAte&&m.fixoAte>=HOJE).slice(0,3).map(m=>`<button class="fixo" data-aviso="${esc(m.id)}"><span class="fx-ic" aria-hidden="true">${SECIC.mega}</span><span class="fx-tx"><span class="fx-ey">Aviso · ${esc(dm(m.data))}</span><b>${esc(m.titulo)}</b><span class="fx-t">${esc(m.texto)}</span></span>${CHEVR}</button>`).join('');
+}
+function muralItem(m,lid){const[,mm,dd]=m.data.split('-');
+  return `<button class="mural-it" data-aviso="${esc(m.id)}"><span class="mi-d" aria-hidden="true"><b>${+dd}</b><span>${MESES[+mm-1].slice(0,3)}</span></span><span class="mi-tx"><b>${esc(m.titulo)}</b><span>${esc(m.texto)}</span><span class="sr-only">Publicado em ${dataExt(m.data)}</span></span>${lid.has(m.id)?'':'<span class="mi-novo">novo</span>'}</button>`}
+function muralSecao(){
+  const L=muralDe(S.turma);if(!L.length)return '';const lid=avLidos();
+  return `${sec('Mural de avisos','mur','mega',L.length>3?`<button class="meta link" id="muralTodos">Ver todos (${L.length})</button>`:'','Recados do professor, do mais recente ao mais antigo')}<div class="mural">${L.slice(0,3).map(m=>muralItem(m,lid)).join('')}</div>`;
+}
+function avisoHtml(m){
+  const paras=esc(m.texto).split(/\n+/).map(p=>`<p>${p}</p>`).join('');
+  return `<div class="avp-top"><span class="fx-ic" aria-hidden="true">${SECIC.mega}</span><span><b>Aviso do Prof. Haroldo</b><small>${dataExt(m.data)}${m.todas?' · todas as turmas':' · '+(m.turmas.length>1?'turmas ':'turma ')+esc(listaT(m.turmas))}</small></span></div>
+    <h2 id="avpT">${esc(m.titulo)}</h2><div class="avp-txt">${paras}</div>${m.link?`<a class="btn btn-ghost" href="${esc(m.link)}" target="_blank" rel="noopener">Abrir link</a>`:''}`;
+}
+function abrirAviso(id){
+  const m=((DATA&&DATA.mural)||[]).find(x=>x.id===id);if(!m){toast('Este aviso não está mais no mural.');return}
+  const o=sheet(`${avisoHtml(m)}<button class="btn btn-alerta" data-close>Fechar</button>`);o.classList.add('avpop-wrap');o.querySelector('.sheet').setAttribute('aria-labelledby','avpT');
+  marcarLido([id]);o.querySelector('[data-close]').focus();
+}
+function muralTodosSheet(){
+  const L=muralDe(S.turma),lid=avLidos();let mes='',h='';
+  L.forEach(m=>{const k=m.data.slice(0,7);if(k!==mes){mes=k;const[a,mm]=k.split('-');h+=`<div class="mural-mes">${MESES[+mm-1]} de ${a}</div>`}h+=muralItem(m,lid)});
+  sheet(`<h2>Mural de avisos</h2><p class="meta" style="margin:0">Turma ${esc(S.turma)} · do mais recente ao mais antigo</p><div class="mural">${h}</div><button class="btn btn-ghost" data-close>Fechar</button>`,
+    (o,close)=>o.querySelectorAll('[data-aviso]').forEach(b=>b.onclick=()=>{close();abrirAviso(b.dataset.aviso)}));
+}
+let popT=null;
+function checarPopups(){
+  if(!DATA||!DATA.mural||document.querySelector('.overlay')||S.cap||!(S.tab==='home'||S.tab==='turma'))return;
+  const t=S.tab==='home'?(MINHA||null):S.turma,vistos=new Set(store.get('avPop',[]));
+  const lim=ISO(new Date(TODAY.getTime()-30*864e5));
+  const pend=muralDe(t).filter(m=>m.popup&&!vistos.has(m.id)&&m.data>=lim);
+  if(pend.length)popAvisos(pend,0);
+}
+function popAvisos(L,i){
+  const m=L[i],ult=i===L.length-1;
+  const v=new Set(store.get('avPop',[]));v.add(m.id);store.set('avPop',[...v].slice(-300));marcarLido([m.id]);
+  const o=sheet(`${avisoHtml(m)}<div class="avp-nav">${ult?'<button class="btn btn-alerta" data-close>Entendi</button>':`<button class="btn btn-alerta" id="avpProx">Próximo aviso (${i+2} de ${L.length})</button>`}</div>`,
+    (o,close)=>{const b=o.querySelector('#avpProx');if(b)b.onclick=()=>{close();popAvisos(L,i+1)}});
+  o.classList.add('avpop-wrap');o.querySelector('.sheet').setAttribute('aria-labelledby','avpT');
+  (o.querySelector('#avpProx')||o.querySelector('[data-close]')).focus();
+}
 function ttsDica(){
   const n=store.get('ttsDica',0);const semPT=!vozPT()||!/^pt[-_]BR/i.test((vozPT()||{}).lang||'');
   if(n<0||(n>=3&&!semPT))return;store.set('ttsDica',n+1);
@@ -1367,6 +1454,7 @@ const SECIC={
  livro:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg>',
  globo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/></svg>',
  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+ mega:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M3.5 10.5v3a1 1 0 0 0 1 1H7l9.5 5V4.5L7 9.5H4.5a1 1 0 0 0-1 1z"/><path d="M7.5 14.5l1.3 5h2.6l-1.1-4"/><path d="M20 10v4"/></svg>',
  sino:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
  atv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11l2 2 4-4M9 17h6"/></svg>'};
 const sec=(titulo,tipo,ic,extra,sub)=>`<div class="sec sec-${tipo}"><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span><span class="sec-tx"><h2>${titulo}</h2>${sub?`<span class="sec-sub">${sub}</span>`:''}</span>${extra||''}</div>`;
@@ -1422,6 +1510,7 @@ function vSobre(){
       ${ok('A turma escolhida e o modo de cores','')}
       ${ok('As marcações de estudo','"Resumo copiado", "atividade enviada", marca-texto e comentários nos textos.')}
       ${ok('Os resultados da revisão rápida','Quantas perguntas você acertou. Não vale nota e o professor não vê.')}
+      ${ok('Quais avisos do mural você já leu','Para não mostrar o mesmo pop-up de novo.')}
       ${ok('Os resumos baixados para ler sem internet','')}
       </ul>
       <p class="meta">Para apagar tudo isso, basta limpar os dados do site nas configurações do navegador ou desinstalar o app.</p>`)}
@@ -1469,6 +1558,7 @@ function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
     <div class="home-head">${CONTOUR}<span class="eyebrow">GeoEstudos · Geografia · Anos finais do Ensino Fundamental</span><h1 class="home-t">Professor Haroldo Matos</h1></div>
+    ${fixosHtml(MINHA||null)}
     <details class="fold mini"><summary>Quem sou eu ${CHEVD}</summary><div class="fold-body">
       <p>Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
       <p>Atuo como professor na rede pública municipal de São Luís. Nesta rede, ministro a disciplina de Geografia para estudantes dos anos finais do Ensino Fundamental.</p>
@@ -1557,6 +1647,7 @@ function vTurma(){
   return `<section class="section">
     ${COMP?`<div class="cel"><span>👥 Celular compartilhado</span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}
     ${MINHA&&S.turma!==MINHA?`<div class="outra"><span>Você está vendo a <b>Turma ${esc(S.turma)}</b>. Sua turma é a <b>${esc(MINHA)}</b>.</span><div class="outra-b"><button class="btn btn-primary" data-turma="${esc(MINHA)}">Voltar para a ${esc(MINHA)}</button><button class="link" id="mudarMinha">Esta é a minha turma</button></div></div>`:''}
+    ${fixosHtml(S.turma)}
     <div class="card hello">${CONTOUR}
       <span class="eyebrow">Turma ${esc(S.turma)} · ${y.label}${S.turma===MINHA?' · minha turma':''}</span>
       <h1>Unidade ${y.atual}</h1>
@@ -1568,6 +1659,7 @@ function vTurma(){
     </div>
     ${continuarCard()}
     ${pushCard()}
+    ${muralSecao()}
     ${avisosHtml()}
     ${unitChips(y.atual)}
     ${sec('Resumos da Unidade '+y.atual,'ano','livro')}
@@ -1757,12 +1849,13 @@ function render(){
   if(S.tab!=='sobre'&&(S.tab!=='home'||S.cap)&&(!DATA||!S.turma||!YEARS[anoT()])){S.tab='home';S.cap=null}
   document.querySelector('.tabs').hidden=!S.turma||!DATA||(S.tab==='home'&&!S.cap&&!S.turma);
   const tl=document.querySelector('[data-tab=turma] .tl');if(tl)tl.textContent=S.turma?'Turma '+S.turma:'Turma';
-  const dot=document.querySelector('[data-tab=turma]');if(dot)dot.classList.toggle('has-new',!!(S.turma&&DATA&&avisosNovos().length));
+  const dot=document.querySelector('[data-tab=turma]');if(dot)dot.classList.toggle('has-new',!!(S.turma&&DATA&&(avisosNovos().length||muralNaoLidos(S.turma))));
   document.body.classList.toggle('lendo',!!S.cap);
   document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
   $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre}[S.tab]();
   if(MINHA&&S.turma&&S.turma!==MINHA&&S.tab!=='home'&&S.tab!=='turma')$('#view').insertAdjacentHTML('afterbegin',`<div class="outra mini"><span>Vendo a <b>Turma ${esc(S.turma)}</b> · sua turma é a ${esc(MINHA)}</span><button class="link" data-turma="${esc(MINHA)}">Voltar</button></div>`);
   if(S.cap){loadAnn();paintResumo()}
+  clearTimeout(popT);popT=setTimeout(checarPopups,700);
   document.querySelectorAll('.tab').forEach(b=>{b.removeAttribute('aria-current');if(b.dataset.tab===S.tab)b.setAttribute('aria-current','page')});
 }
 /* Menu de turmas: abre para cima a partir da aba Turma */
@@ -1843,6 +1936,8 @@ document.addEventListener('click',ev=>{
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
   if(t.closest('#modeBtn'))return modeSheet();
   if(t.closest('#ttsBtn'))return TTS.on?ttsParar():ttsIniciar();
+  const av=t.closest('[data-aviso]');if(av){abrirAviso(av.dataset.aviso);return}
+  if(t.closest('#muralTodos')){muralTodosSheet();return}
   if(t.closest('[data-rev]')){abrirRevisao(capId(t.closest('[data-rev]').dataset.rev));return}
   if(t.closest('[data-continuar]')){const u=(store.get('ultimo',{})||{})[anoT()];const c=u&&capOf(u.cap);if(c){S.unit=c.u;S.restore={b:u.b};go('resumos',c.id)}return}
   const bh=t.closest('[data-busca-cap]');if(bh){const id=capId(bh.dataset.buscaCap),c=capOf(id);if(c){S.unit=c.u;S.restore={b:+bh.dataset.buscaB,flash:true};go('resumos',id)}return}
@@ -1875,6 +1970,9 @@ function abrirDeAviso(o){
   if(!o||!DATA)return;
   if(o.turma&&TURMAS.includes(o.turma)){S.turma=o.turma;store.set('turma',S.turma)}
   if(!S.turma)return;
+  if(o.ir==='mural'){
+    if(o.cap){const v=new Set(store.get('avPop',[]));v.add(o.cap);store.set('avPop',[...v].slice(-300))}
+    go('turma');if(o.cap)setTimeout(()=>abrirAviso(o.cap),250);return}
   const tab=['turma','resumos','atividades','calendario'].includes(o.ir)?o.ir:'turma';
   const c=o.cap?capOf(capId(o.cap)):null;
   if(c&&c.resumo&&tab==='resumos'){S.unit=c.u;go('resumos',c.id)}else go(tab);
