@@ -408,6 +408,16 @@ body.m-escuro .sec-duv{--sc:#7DD3FC;--sc-on:#0C1A24}
 .sb-contato .btn{align-self:flex-start;text-decoration:none;word-break:break-all}
 .sobre-lk{margin-top:6px;font-weight:700;color:inherit;text-decoration:underline;text-underline-offset:3px;text-align:left}
 .foot-b{display:flex;gap:8px;flex-wrap:wrap}
+/* Botão de privacidade: azul da identidade do app, sempre em destaque */
+.privbtn{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;text-align:left;background:#1D3F8F;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 6px 16px rgba(29,63,143,.3);font-size:.95rem;line-height:1.3}
+.privbtn b{font-family:var(--display);font-size:1.02rem;color:#fff}
+.privbtn small{font-size:.8rem;color:#DCE4F7}
+.privbtn .pv-ic{width:38px;height:38px;border-radius:11px;background:#FFE27A;color:#1D3F8F;display:grid;place-items:center}
+.privbtn .pv-ch{font-size:1.6rem;line-height:1;color:#FFE27A}
+.privbtn:active{transform:translateY(1px)}
+.fold .privbtn{color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .privbtn{background:#2F5BC4;box-shadow:0 0 0 1.5px #9DB8FF,0 6px 16px rgba(0,0,0,.4)}}
+body.m-escuro .privbtn{background:#2F5BC4;box-shadow:0 0 0 1.5px #9DB8FF,0 6px 16px rgba(0,0,0,.4)}
 /* Outra turma */
 .outra{display:flex;flex-direction:column;gap:8px;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:var(--r);padding:12px;font-size:.92rem}
 .outra-b{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -533,7 +543,8 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
   <main id="view"></main>
   <footer class="foot">
     <p style="margin:0">Em caso de dúvidas, problemas técnicos, problemas com os conteúdos de aula ou envio de atividades e trabalhos, envie e-mail para <a href="mailto:prof.haroldomatos@gmail.com">prof.haroldomatos@gmail.com</a>.</p>
-    <div class="foot-b"><button class="copy" id="copyMail">Copiar e-mail</button><button class="copy" data-go="sobre">🔒 Sobre o app e privacidade</button></div>
+    <div class="foot-b"><button class="copy" id="copyMail">Copiar e-mail</button></div>
+    <button class="privbtn" data-go="sobre"><span class="pv-ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><span><b>Sobre o app e privacidade</b><br><small>Segurança, dados dos estudantes e base legal</small></span><span aria-hidden="true" class="pv-ch">›</span></button>
   </footer>
 </div>
 <nav class="tabs" aria-label="Seções do app">
@@ -1107,7 +1118,7 @@ function vHome(){
     </div></details>
     <details class="fold mini"><summary>Sobre este aplicativo ${CHEVD}</summary><div class="fold-body">
       <p>Este aplicativo foi desenvolvido para dar suporte às minhas aulas e, aqui, os estudantes encontrarão materiais de apoio, de pesquisa e atividades.</p>
-      <button class="sobre-lk" data-go="sobre">🔒 Privacidade, segurança e base legal do app ›</button>
+      <button class="privbtn" data-go="sobre" style="margin-top:8px"><span class="pv-ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><span><b>Sobre o app e privacidade</b><br><small>Segurança, dados dos estudantes e base legal</small></span><span aria-hidden="true" class="pv-ch">›</span></button>
     </div></details>
     ${msg?`<div class="banner">${esc(msg)}</div>`:''}
     <div><h2>Navegue por ano e turma</h2><p class="meta" style="margin:4px 0 0">Escolha a sua turma para ver os resumos e as atividades.</p></div>
