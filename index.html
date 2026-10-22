@@ -566,6 +566,16 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .act .copy-btn.on{background:var(--year);border-color:var(--year);color:#fff}
 .qact,.qact.tt-q{background:color-mix(in srgb,var(--year) 12%,var(--surface));color:color-mix(in srgb,var(--year) 80%,var(--ink));border-color:color-mix(in srgb,var(--year) 40%,transparent)}
 .qact.ok{background:var(--year);color:#fff;border-color:var(--year)}
+.foot-share{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;margin-top:2px;border:1.5px dashed color-mix(in srgb,var(--pen) 45%,var(--line));border-radius:18px;background:var(--surface);color:var(--pen);font-weight:700;font-size:.86rem;padding:8px 12px}
+.btn[hidden]{display:none}
+.bv-hero{display:flex;gap:12px;align-items:center}
+.bv-hero img{width:56px;height:56px;border-radius:14px;flex:none;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.bv-hero b{font-family:var(--display);font-size:1.25rem;line-height:1.2;display:block}
+.bv-passos{margin:0;padding-left:0;list-style:none;counter-reset:b;display:flex;flex-direction:column;gap:8px}
+.bv-passos li{counter-increment:b;display:flex;gap:10px;align-items:flex-start;line-height:1.45}
+.bv-passos li::before{content:counter(b);flex:none;width:24px;height:24px;border-radius:50%;background:var(--pen);color:var(--on-pen);display:grid;place-items:center;font-weight:700;font-size:.82rem}
+.bv-ic{display:inline-flex;vertical-align:-4px;border:1px solid var(--line);border-radius:6px;padding:1px 4px;background:var(--surface-2)}
+.bv-alerta{background:var(--hl-soft);border-left:4px solid var(--hl);border-radius:10px;padding:8px 12px;font-size:.9rem;line-height:1.45;color:var(--ink)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
 .mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--year);border-radius:12px;padding:10px 12px}
@@ -795,6 +805,7 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
   <footer class="foot">
     <p style="margin:0">Em caso de dúvidas, problemas técnicos, problemas com os conteúdos de aula ou envio de atividades e trabalhos, envie e-mail para <a href="mailto:prof.haroldomatos@gmail.com">prof.haroldomatos@gmail.com</a>.</p>
     <div class="foot-b"><button class="copy" id="copyMail">Copiar e-mail</button><button class="privmini" data-go="sobre"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Sobre o GeoEstudos e privacidade</span><span aria-hidden="true" class="pm-ch">›</span></button></div>
+    <button class="foot-share" id="shareApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg><span>Compartilhar o GeoEstudos com um colega</span></button>
   </footer>
 </div>
 <nav class="tabs" aria-label="Seções do app">
@@ -1426,7 +1437,7 @@ function marcarVisto(ids){S.vistos=[...new Set([...S.vistos,...ids])].slice(-300
 /* Instalar o app */
 let deferredPrompt=null;
 const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(S.tab==='home'&&!S.cap)render()});
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=document.querySelector('#bvInstalar');if(b)b.hidden=false;if(S.tab==='home'&&!S.cap&&!document.querySelector('.overlay'))render()});
 addEventListener('appinstalled',()=>{deferredPrompt=null;toast('GeoEstudos instalado!');render()});
 function installCard(){
   if(standalone())return '';
@@ -1919,10 +1930,51 @@ function ttAtvCard(t){
 function sharePdf(){
   const y=Y(),c=capOf(S.cap),url=c.pdf;
   const title=c.tema?`Aula de Geografia · ${y.label} · Tema Transversal ${c.n}: ${c.titulo}`:`Resumo de Geografia · ${y.label} · Cap. ${c.n}: ${c.titulo}`;
-  const text=`${title} (PDF)`;
+  compartilhar(title,`${title} (PDF)`,url,'Compartilhar resumo');
+}
+/* Compartilhar o próprio app: o link leva "?convite=1", que abre as boas-vindas com o passo a passo de instalação */
+function shareApp(){
+  const url=new URL('./',location.href).href+'?convite=1';
+  compartilhar('GeoEstudos · Geografia com o Prof. Haroldo Matos','Estude Geografia com o GeoEstudos: resumos, atividades de fixação e o calendário da turma, direto no celular. É gratuito e não precisa de login. Abra o link e instale:',url,'Compartilhar o GeoEstudos');
+}
+
+/* Boas-vindas para quem chega por um link compartilhado (?convite=1): explica como instalar */
+const noAppDeOutro=()=>/Instagram|FBAN|FBAV|FB_IAB|WhatsApp|Line\/|MicroMessenger|Snapchat|TikTok|musical_ly/i.test(navigator.userAgent);
+const ehCelular=()=>/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+const SHARE_IOS='<span class="bv-ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11v9h12v-9"/></svg></span>';
+function boasVindas(){
+  if(standalone())return;
+  let corpo;
+  if(noAppDeOutro()){
+    corpo=`<div class="bv-alerta">Você abriu o link <b>dentro de outro aplicativo</b> (WhatsApp, Instagram…). Para instalar, abra no navegador do celular:</div>
+      <ol class="bv-passos"><li><span>Toque nos <b>três pontinhos ⋮</b> (ou em <b>⋯</b>) no canto da tela.</span></li><li><span>Escolha <b>Abrir no navegador</b>, <b>Abrir no Chrome</b> ou <b>Abrir no Safari</b>.</span></li><li><span>Lá, siga as instruções para instalar.</span></li></ol>
+      <button class="btn btn-ghost" id="bvCopiar">Copiar o link do app</button>`;
+  }else if(ehIOS()){
+    corpo=`<ol class="bv-passos"><li><span>Confira se está no <b>Safari</b>. Se não estiver, copie o link e abra no Safari.</span></li><li><span>Toque em <b>Compartilhar</b> ${SHARE_IOS}, na barra de baixo.</span></li><li><span>Role e escolha <b>Adicionar à Tela de Início</b>, depois <b>Adicionar</b>.</span></li><li><span>Abra o GeoEstudos <b>pelo ícone</b> e escolha a sua turma.</span></li></ol>`;
+  }else if(ehCelular()){
+    corpo=`<button class="btn btn-primary" id="bvInstalar"${deferredPrompt?'':' hidden'}>Instalar o GeoEstudos agora</button>
+      <ol class="bv-passos" id="bvPassos"><li><span>No <b>Chrome</b>, toque nos <b>três pontinhos ⋮</b>, no canto de cima.</span></li><li><span>Escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</span></li><li><span>Abra o GeoEstudos <b>pelo ícone</b> e escolha a sua turma.</span></li></ol>`;
+  }else{
+    corpo=`<div class="bv-alerta">O GeoEstudos foi feito para o <b>celular</b>. Abra este link no seu celular para instalar. No computador, dá para usar normalmente pelo navegador.</div>
+      <button class="btn btn-ghost" id="bvCopiar">Copiar o link do app</button>`;
+  }
+  sheet(`<div class="bv-hero"><img src="icones/geoestudos-192.png" alt=""><span><b>Bem-vindo ao GeoEstudos!</b><span class="meta">Geografia com o Prof. Haroldo Matos</span></span></div>
+    <p style="margin:0">Resumos para copiar no caderno, atividades de fixação, calendário da turma e avisos no celular. É <b>gratuito</b> e <b>não precisa de login</b>.</p>
+    <p style="margin:0;font-weight:700">Instale como aplicativo, em menos de um minuto:</p>
+    ${corpo}
+    <p class="meta" style="margin:0">Instalado, ele ganha um ícone na tela do celular, abre mais rápido e funciona até sem internet.</p>
+    <button class="btn btn-ghost" data-close>Agora não</button>`,
+  (o,close)=>{
+    const ins=o.querySelector('#bvInstalar');
+    if(ins)ins.onclick=()=>{if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{if(r&&r.outcome==='accepted')close()}).finally(()=>{deferredPrompt=null;ins.hidden=true})};
+    const cp=o.querySelector('#bvCopiar');
+    if(cp)cp.onclick=()=>{const u=new URL('./',location.href).href;try{navigator.clipboard.writeText(u).then(()=>toast('Link copiado. Cole no navegador.'),()=>toast(u))}catch(e){toast(u)}};
+  });
+}
+function compartilhar(title,text,url,cab){
   const fallback=()=>{
     const msg=encodeURIComponent(text+'\n'+url);
-    sheet(`<h2>Compartilhar resumo</h2><p class="meta" style="margin:0">${esc(title)}</p>
+    sheet(`<h2>${esc(cab)}</h2><p class="meta" style="margin:0">${esc(title)}</p>
       <div class="share-grid">
         <a class="share-opt" href="https://wa.me/?text=${msg}" target="_blank" rel="noopener"><span class="si" style="background:#25D366">W</span>WhatsApp</a>
         <a class="share-opt" href="https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}" target="_blank" rel="noopener"><span class="si" style="background:#229ED9">T</span>Telegram</a>
@@ -2070,6 +2122,7 @@ document.addEventListener('click',ev=>{
   const day=t.closest('[data-day]');if(day){S.sel=+day.dataset.day;return render()}
   if(t.closest('#prevM')||t.closest('#nextM')){const d=t.closest('#prevM')?-1:1;S.calM+=d;if(S.calM<0){S.calM=11;S.calY--}if(S.calM>11){S.calM=0;S.calY++}S.sel=1;return render()}
   if(t.closest('#sharePdf'))return sharePdf();
+  if(t.closest('#shareApp'))return shareApp();
   if(t.closest('#readBtn'))return readSheet();
   if(t.closest('#listBtn'))return listSheet();
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
@@ -2118,6 +2171,7 @@ function abrirDeAviso(o){
   const c=o.cap?capOf(capId(o.cap)):null;
   if(c&&c.resumo&&tab==='resumos'){S.unit=c.u;go('resumos',c.id)}else go(tab);
 }
+(()=>{const q=new URLSearchParams(location.search);if(q.has('convite')){history.replaceState(null,'',location.pathname);setTimeout(boasVindas,400)}})();
 (()=>{const q=new URLSearchParams(location.search);if(q.get('ir')||q.get('turma')){const o={ir:q.get('ir'),turma:q.get('turma'),cap:q.get('cap')};history.replaceState(null,'',location.pathname);applyMode();render();abrirDeAviso(o)}})();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.geoAbrir)abrirDeAviso(e.data.geoAbrir)});
 applyMode();applyFonte();if(!document.querySelector('#view').innerHTML)render();carregar().then(conferirPush);
