@@ -839,6 +839,7 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .avl-st{margin:0;display:flex;gap:10px;align-items:flex-start;font-size:.95rem}
 .avl-st>span{display:flex;flex-direction:column}
 .avl-ok{color:var(--ok)} .avl-ok .meta{color:var(--muted)}
+.avl-teste{margin:0;padding:8px 14px;background:var(--hl-soft);color:var(--ink);font-size:.86rem;border-bottom:1px solid var(--line)}
 .avl-outro{align-self:flex-start;text-align:left;padding:4px 0}
 .avl-pend{background:var(--hl-soft);border-radius:10px;padding:8px 10px;display:block}
 .avl-ic2{background:var(--year)!important;color:#fff!important}
@@ -1973,8 +1974,9 @@ function vTema(n,c){
       <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Aula estudada':'Já estudei esta aula'}</button>
       <span class="meta">Marque quando terminar de estudar. Fica salvo só no seu celular.</span>
     </div>
+    ${avCard(c,n)}
     ${pdfCard(pdfDe(c),'Aula em PDF','Para imprimir, guardar ou enviar a um colega.','res')}
-    <div class="card act tt-act" id="actBox">
+    ${temAtv(c)||!avVisivel(c)?`    <div class="card act tt-act" id="actBox">
       <div class="act-head"><span class="act-ic tt-ic">${TTIC}</span><span><b class="act-t">Atividade do Tema Transversal</b><br><span class="act-sub">Tema ${c.n} · ${esc(c.titulo)}</span></span><span class="vale">Vale ponto</span></div>
       <p class="act-why">Esta atividade vale ponto na recuperação paralela.${pr?` <b>Prazo: ${dm(pr)}.</b>`:''}</p>
       ${c.atividadeTexto?`<div class="tt-texto">${md(c.atividadeTexto)}</div>`:''}
@@ -1982,7 +1984,7 @@ function vTema(n,c){
       ${c.atividade?`<a class="btn act-go" href="${esc(c.atividade)}" target="_blank" rel="noopener">${c.atividadeTexto?'Responder no formulário':'Fazer a atividade'}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`:''}
       ${temAtv(c)?`<button class="copy-btn${sent?' on':''}" id="sentBtn" aria-pressed="${sent}">${sent?CHECK+' Atividade feita':'Já fiz esta atividade'}</button><span class="meta">${c.atividade?'Depois de enviar o formulário, volte aqui e marque.':'Siga as orientações do professor para a entrega e marque aqui quando terminar.'}</span>`
       :`<p class="meta" style="margin:0"><b>Aguarde:</b> a atividade deste tema será publicada em breve. Você recebe um aviso quando ela sair.</p>`}
-    </div>
+    </div>`:''}
     ${duvidaCard()}
   </article>`;
 }
@@ -2003,16 +2005,18 @@ const avFeitas=()=>store.get('avFeitas',{})||{};
 const avPend=()=>store.get('avPend',{})||{};
 const avAnd=()=>store.get('avAnd',{})||{};
 const avFechada=a=>!!a.prazo&&HOJE>a.prazo;
+const avVisivel=c=>!!(c&&c.aval&&c.aval.qs&&c.aval.qs.length&&(!c.aval.teste||store.get('prof',false)));
 let AV=null;
 function avCard(c,n){
   const a=c.aval;if(!a||!a.qs||!a.qs.length)return '';
-  const feita=!COMP&&avFeitas()[a.doc],pend=avPend()[a.doc],and=avAnd()[a.doc],fech=avFechada(a);
+  if(a.teste&&!store.get('prof',false))return '';
+  const feita=!a.teste&&!COMP&&avFeitas()[a.doc],pend=avPend()[a.doc],and=avAnd()[a.doc],fech=avFechada(a);
   let est,btn='';
   if(pend){est=`<p class="avl-st avl-pend"><b>Envio pendente.</b> Suas respostas estão guardadas neste celular e serão enviadas quando houver internet.</p>`;btn=`<button class="avl-go" data-av="reenviar" data-doc="${esc(a.doc)}">Tentar enviar agora</button>`}
   else if(feita){est=`<p class="avl-st avl-ok">${CHECK}<span><b>Atividade enviada${feita.nota!=null?` · Nota ${String(feita.nota).replace('.',',')}`:''}</b><span class="meta">Cada estudante faz uma única vez.</span></span></p>`;if(!fech)btn=`<button class="meta link avl-outro" data-av="abrir" data-avcap="${esc(String(n))}">Outro estudante usa este celular? Toque aqui</button>`}
   else if(fech){est=`<p class="avl-st"><b>Prazo encerrado</b> em ${dm(a.prazo)}. Esta atividade não recebe mais respostas.</p>`}
   else{btn=`<button class="avl-go" data-av="abrir" data-avcap="${esc(String(n))}">${and?`Continuar a atividade (${Object.keys(and.resp||{}).length} de ${and.ids.length} respondidas)`:'Começar a atividade'}</button>`;est=''}
-  return `<div class="card avcard"><div class="avl-head"><span class="avl-ic">${AVIC}</span><span class="avl-ht"><span class="avl-vale">Vale nota</span><b>Atividade avaliativa</b><span class="avl-sub">${a.qtd} questões objetivas · cada uma vale 1 ponto${a.prazo?` · prazo ${dm(a.prazo)}`:''}</span></span></div>
+  return `<div class="card avcard"><div class="avl-head"><span class="avl-ic">${AVIC}</span><span class="avl-ht"><span class="avl-vale">Vale nota</span><b>Atividade avaliativa</b><span class="avl-sub">${a.qtd} questões objetivas · cada uma vale 1 ponto${a.prazo?` · prazo ${dm(a.prazo)}`:''}</span></span></div>${a.teste?`<p class="avl-teste"><b>Prévia do professor.</b> Só aparece neste celular; os alunos não veem. Pode fazer quantas vezes quiser, com qualquer nome. Os envios vão para a aba “(teste)” da planilha de notas.</p>`:''}
     <div class="avl-body">${est}${!feita&&!fech&&!pend?`<ul class="avl-rules"><li><b>Você só pode fazer uma vez.</b> Responda com calma e atenção.</li><li>Antes de enviar, dá para voltar e trocar respostas.</li><li>Precisa de internet para começar. Ao final, você vê a sua nota.</li></ul>`:''}${btn}</div></div>`;
 }
 function avAbrir(n){
@@ -2030,13 +2034,13 @@ function avGuardar(){if(!AV||!AV.st)return;AV.st.i=AV.i;const x=avAnd();x[AV.a.d
 function avRender(){
   const o=document.querySelector('.avl-o');if(!o||!AV)return;
   const {a,c,st}=AV,y=Y();
-  const topo=`<div class="qz-top"><span class="rev-ic avl-ic2">${AVIC}</span><span class="qz-tt"><b>Atividade avaliativa</b><span class="meta">Cap. ${c.n} · ${esc(c.titulo)}</span></span><button class="qz-x" data-av="sair" aria-label="Sair da atividade">${XIC}</button></div>`;
+  const topo=`<div class="qz-top"><span class="rev-ic avl-ic2">${AVIC}</span><span class="qz-tt"><b>Atividade avaliativa</b><span class="meta">${c.tema?'Tema Transversal':'Cap.'} ${c.n} · ${esc(c.titulo)}</span></span><button class="qz-x" data-av="sair" aria-label="Sair da atividade">${XIC}</button></div>`;
   let corpo='',dots='';
   if(AV.etapa==='ident'){
     const ts=y.turmas||[],tur=ts.includes(S.turma)?S.turma:ts.includes(MINHA)?MINHA:'';
     const nm=COMP||avFeitas()[a.doc]?'':store.get('avNome','')||store.get('duvNome','');
     corpo=`<p class="qz-n">Identificação</p>
-      <p style="margin:0">Antes de começar, informe a sua turma e o seu <b>nome completo, como está na chamada</b>. Ele precisa estar na lista da turma.</p>
+      <p style="margin:0">${a.teste?'<b>Teste do professor:</b> qualquer turma e qualquer nome com sobrenome servem, e dá para repetir.':'Antes de começar, informe a sua turma e o seu <b>nome completo, como está na chamada</b>. Ele precisa estar na lista da turma.'}</p>
       <label class="fld"><span>Ano</span><input value="${esc(y.label)}" disabled></label>
       <label class="fld"><span>Sua turma *</span><select id="avTurma"><option value="">Escolha</option>${ts.map(t=>`<option${t===tur?' selected':''}>${t}</option>`).join('')}</select></label>
       <label class="fld"><span>Seu nome completo *</span><input id="avNome" maxlength="70" autocomplete="name" value="${esc(nm)}"></label>
@@ -2104,7 +2108,7 @@ async function avClique(e){
       const j=await avChamar('avalcheck',{doc:AV.a.doc,turma,nome});
       AV.busy=false;
       if(!j.ok){AV.erro=j.erro||(j.anos?'O robô ainda não foi atualizado para as atividades avaliativas. Avise o professor.':'Não foi possível conferir agora.');
-        if(j.ja&&!COMP){const f=avFeitas();f[AV.a.doc]=f[AV.a.doc]||{nota:null};store.set('avFeitas',f)}
+        if(j.ja&&!COMP&&!AV.a.teste){const f=avFeitas();f[AV.a.doc]=f[AV.a.doc]||{nota:null};store.set('avFeitas',f)}
         return avRender()}
       const sorteio=avSortear(AV.a);if(!sorteio){AV.erro='Esta atividade ainda não tem questões.';return avRender()}
       if(!COMP)store.set('avNome',nome);
@@ -2113,7 +2117,7 @@ async function avClique(e){
     return;
   }
   if(a==='enviar'){
-    const pl={doc:AV.a.doc,turma:st.turma,nome:st.nome,resp:st.ids.map(h=>({h,r:st.resp[h]||''})),tempo:Math.round((Date.now()-st.ini)/1000),em:new Date().toISOString()};
+    const pl={teste:!!AV.a.teste,doc:AV.a.doc,turma:st.turma,nome:st.nome,resp:st.ids.map(h=>({h,r:st.resp[h]||''})),tempo:Math.round((Date.now()-st.ini)/1000),em:new Date().toISOString()};
     AV.busy=true;avRender();
     const r=await avEnviar(pl);
     AV.busy=false;AV.etapa='fim';AV.res=r;avRender();
@@ -2126,8 +2130,8 @@ async function avEnviar(pl){
   try{
     const j=await avChamar('avaliacao',pl);
     const p=avPend();delete p[doc];store.set('avPend',p);
-    if(j.ok){limpa();if(!COMP){const f=avFeitas();f[doc]={nota:j.nota,em:HOJE};store.set('avFeitas',f)}return {nota:j.nota,valor:j.valor}}
-    if(j.ja||j.encerrada){limpa();if(j.ja&&!COMP){const f=avFeitas();f[doc]=f[doc]||{nota:null};store.set('avFeitas',f)}return {msg:j.erro}}
+    if(j.ok){limpa();if(!COMP&&!pl.teste){const f=avFeitas();f[doc]={nota:j.nota,em:HOJE};store.set('avFeitas',f)}return {nota:j.nota,valor:j.valor}}
+    if(j.ja||j.encerrada){limpa();if(j.ja&&!COMP&&!pl.teste){const f=avFeitas();f[doc]=f[doc]||{nota:null};store.set('avFeitas',f)}return {msg:j.erro}}
     return {msg:j.erro||'Não foi possível enviar. Tente de novo.'};
   }catch(e){
     const p=avPend();p[doc]=pl;store.set('avPend',p);limpa();
@@ -2455,7 +2459,7 @@ document.addEventListener('click',ev=>{
   const g=t.closest('[data-go]');if(g)return go(g.dataset.go);
   const un=t.closest('[data-unit]');if(un){S.unit=+un.dataset.unit;return go('resumos')}
   const ac=t.closest('[data-act]');if(ac){const id=capId(ac.dataset.act),cc=capOf(id);S.unit=cc?cc.u:null;go('resumos',id);const b=$('#actBox');if(b){b.scrollIntoView({block:'start'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
-  const jp=t.closest('[data-jump]');if(jp){const b=$('#actBox');if(b){b.scrollIntoView({block:'start',behavior:'smooth'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
+  const jp=t.closest('[data-jump]');if(jp){const b=$('#actBox')||$('.avcard');if(b){b.scrollIntoView({block:'start',behavior:'smooth'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
   const avi=t.closest('[data-aviso]');if(avi)marcarVisto([avi.dataset.aviso]);
   const cap=t.closest('[data-cap]');if(cap){const id=capId(cap.dataset.cap),c=capOf(id);if(c)S.unit=c.u;return go('resumos',id)}
   if(t.closest('[data-back]'))return go('resumos');
@@ -2513,6 +2517,7 @@ function abrirDeAviso(o){
   const c=o.cap?capOf(capId(o.cap)):null;
   if(c&&c.resumo&&tab==='resumos'){S.unit=c.u;go('resumos',c.id)}else go(tab);
 }
+(()=>{const q=new URLSearchParams(location.search);if(q.has('professor')){const on=q.get('professor')!=='0';store.set('prof',on);history.replaceState(null,'',location.pathname);setTimeout(()=>{render();toast(on?'Modo professor ligado neste aparelho: as atividades em teste aparecem aqui.':'Modo professor desligado.')},600)}})();
 (()=>{const q=new URLSearchParams(location.search);if(q.has('convite')){history.replaceState(null,'',location.pathname);setTimeout(boasVindas,400)}})();
 (()=>{const q=new URLSearchParams(location.search);if(q.get('ir')||q.get('turma')){const o={ir:q.get('ir'),turma:q.get('turma'),cap:q.get('cap')};history.replaceState(null,'',location.pathname);applyMode();render();abrirDeAviso(o)}})();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.geoAbrir)abrirDeAviso(e.data.geoAbrir)});

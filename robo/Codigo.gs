@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-22 · avaliação v10';
+const VERSAO_ROBO = '2026-10-22 · avaliação nos Temas v11';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -351,15 +351,21 @@ function lerDocs_() {
         const tds = pt.getFilesByType(MimeType.GOOGLE_DOCS);
         while (tds.hasNext()) {
           const f = tds.next();
-          const nome = f.getName();
+          let nome = f.getName();
           if (/^\s*\[\s*rascunho/i.test(nome)) continue;
+          // "[teste] 1 Avaliação": aparece só no celular do professor (link ?professor=1)
+          const teste = /^\s*\[\s*teste\s*\]/i.test(nome);
+          if (teste) nome = nome.replace(/^\s*\[\s*teste\s*\]\s*/i, '');
           const mt = nome.match(/^\s*(?:tt\s*)?(\d+)\s*[-–—.:|]?\s*(.*)$/i);
           if (!mt) continue;
           const n = parseInt(mt[1], 10), resto = mt[2].trim();
+          const ehAval = /^(avalia[çc][ãa]o|atividade\s+avaliativa)\b/i.test(resto);
+          if (teste && !ehAval) continue;
           const u = parseInt(mu[1], 10);
           const t = (((temas[ano] = temas[ano] || {})[u] = temas[ano][u] || {})[n] = temas[ano][u][n] || {});
-          const info = { id: f.getId(), nome: resto, atualizado: f.getLastUpdated().toISOString() };
-          if (/^atividade\b/i.test(resto)) t.atividade = info; else t.aula = info;
+          const info = { id: f.getId(), nome: resto, atualizado: f.getLastUpdated().toISOString(), teste: teste };
+          if (ehAval) t.aval = info;
+          else if (/^atividade\b/i.test(resto)) t.atividade = info; else t.aula = info;
         }
       }
     }
@@ -545,6 +551,7 @@ function montarAnos_(conf, conteudo, docs, anterior) {
       if (t.docAtividade) antTxt[t.docAtividade] = { at: t.atualizadoAtividade, txt: t.atividadeTexto };
       if (t.doc && t.pdfDoc) antPdf[t.doc] = { at: t.atualizado, pdf: t.pdfDoc };
       if (t.docAtividade && t.pdfAtv) antPdf[t.docAtividade] = { at: t.atualizadoAtividade, pdf: t.pdfAtv };
+      if (t.aval) antAval[t.aval.doc] = { at: t.atualizadoAval, a: t.aval, err: t.avalErros };
     });
   }));
   // PDF gerado do próprio Doc (refeito só quando o Doc muda)
@@ -639,10 +646,23 @@ function montarAnos_(conf, conteudo, docs, anterior) {
         t.docAtividade = d.atividade.id; t.atualizadoAtividade = d.atividade.atualizado; t.atividadeTexto = textoDoc(d.atividade);
         t.pdfAtv = pdfDe(d.atividade.id, d.atividade.atualizado, 'GeoEstudos · ' + ano + 'º ano · Tema Transversal ' + n + ' – Atividade');
       }
+      if (d.aval) {
+        // Atividade avaliativa do Tema: questões publicadas SEM o gabarito (quem corrige é o robô)
+        const ant = antAval[d.aval.id];
+        t.atualizadoAval = d.aval.atualizado;
+        if (ant && ant.a && ant.at === d.aval.atualizado && !!ant.a.teste === !!d.aval.teste) { t.aval = ant.a; t.avalErros = ant.err || []; }
+        else {
+          try {
+            const lido = lerAvaliacao_(DocumentApp.openById(d.aval.id).getBody().getText());
+            t.avalErros = lido.erros;
+            if (lido.perguntas.length) { t.aval = avaliacaoPublica_(d.aval.id, lido); if (d.aval.teste) t.aval.teste = true; }
+          } catch (err) { Logger.log('Não consegui ler a avaliação ' + d.aval.id + ': ' + err); if (ant) { t.aval = ant.a; t.avalErros = ant.err || []; } }
+        }
+      }
     }));
     const lista = Object.keys(unidades).map(Number).sort((a, b) => a - b).map(n => {
       const u = unidades[n];
-      const temas = Object.keys(u.temas).map(Number).sort((a, b) => a - b).map(k => u.temas[k]).filter(t => t.resumo || t.atividade || t.atividadeTexto);
+      const temas = Object.keys(u.temas).map(Number).sort((a, b) => a - b).map(k => u.temas[k]).filter(t => t.resumo || t.atividade || t.atividadeTexto || t.aval);
       return { n: n, titulo: u.titulo, caps: Object.keys(u.caps).map(Number).sort((a, b) => a - b).map(k => u.caps[k]), temas: temas };
     });
     let atual = Object.keys(sheetU).map(Number).filter(n => sheetU[n].atual)[0];
@@ -813,6 +833,12 @@ function resumoTexto_(d) {
     const av = c.aval;
     l.push('Avaliação ' + a.nome + ' · Cap. ' + c.n + ': ' + (av ? av.qs.length + ' questão(ões) ok · ' + av.qtd + ' por aluno · valor ' + String(av.valor).replace('.', ',') + (av.prazo ? ' · prazo ' + av.prazo.split('-').reverse().join('/') : ' · sem prazo') : 'não publicada') + ((c.avalErros || []).length ? ' · PROBLEMAS:' : ''));
     (c.avalErros || []).forEach(e => l.push('   ⚠ ' + e));
+  })));
+  d.anos.forEach(a => a.unidades.forEach(u => (u.temas || []).forEach(t => {
+    if (!t.aval && !(t.avalErros || []).length) return;
+    const av = t.aval;
+    l.push('Avaliação ' + a.nome + ' · Tema ' + t.n + (av && av.teste ? ' [TESTE: só no celular do professor]' : '') + ': ' + (av ? av.qs.length + ' questão(ões) ok · ' + av.qtd + ' por aluno' + (av.prazo ? ' · prazo ' + av.prazo.split('-').reverse().join('/') : ' · sem prazo') : 'não publicada') + ((t.avalErros || []).length ? ' · PROBLEMAS:' : ''));
+    (t.avalErros || []).forEach(e => l.push('   ⚠ ' + e));
   })));
   l.push('Avisos de novidade ativos: ' + (d.avisos || []).length);
   l.push('Mural de avisos: ' + (d.mural || []).length + ' aviso(s) publicado(s)');
@@ -1402,7 +1428,10 @@ function avaliacaoPublicada_(docId) {
   try { d = JSON.parse(lerCache_() || (arquivoDados_() ? arquivoDados_().getBlob().getDataAsString('UTF-8') : '{}')); } catch (e) { }
   let achou = null;
   ((d && d.anos) || []).forEach(a => (a.unidades || []).forEach(u => (u.caps || []).forEach(c => {
-    if (c.aval && c.aval.doc === docId) achou = { ano: String(a.ano), cap: c.n, titulo: c.titulo, aval: c.aval, turmas: a.turmas || [] };
+    if (c.aval && c.aval.doc === docId) achou = { ano: String(a.ano), rot: 'Cap. ' + c.n, titulo: c.titulo, aval: c.aval, turmas: a.turmas || [] };
+  })));
+  ((d && d.anos) || []).forEach(a => (a.unidades || []).forEach(u => (u.temas || []).forEach(t => {
+    if (t.aval && t.aval.doc === docId) achou = { ano: String(a.ano), rot: 'Tema ' + t.n, titulo: t.titulo, aval: t.aval, turmas: a.turmas || [] };
   })));
   return achou;
 }
@@ -1425,10 +1454,11 @@ function planilhaNotas_() {
 }
 function abaNotas_(info) {
   const ss = planilhaNotas_(), props = PropertiesService.getScriptProperties();
-  const k = 'notas-' + info.aval.doc, gid = props.getProperty(k);
+  const k = 'notas-' + info.aval.doc + (info.aval.teste ? '-teste' : ''), gid = props.getProperty(k);
   if (gid) { const sh = ss.getSheets().filter(x => String(x.getSheetId()) === gid)[0]; if (sh) return sh; }
-  let nome = info.ano + 'º ano · Cap. ' + info.cap, i = 2;
-  while (ss.getSheetByName(nome)) nome = info.ano + 'º ano · Cap. ' + info.cap + ' (' + (i++) + ')';
+  const base = info.ano + 'º ano · ' + info.rot + (info.aval.teste ? ' (teste)' : '');
+  let nome = base, i = 2;
+  while (ss.getSheetByName(nome)) nome = base + ' (' + (i++) + ')';
   const sh = ss.insertSheet(nome);
   const cab = ['Enviado em', 'Ano', 'Turma', 'Nome (na lista de alunos)', 'Nome digitado pelo aluno', 'Acertos', 'Nota', 'Tempo', 'Respostas (número da questão no Doc)', 'Chave'];
   sh.getRange(1, 1, 1, cab.length).setValues([cab]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F').setWrap(true);
@@ -1447,6 +1477,7 @@ function validarIdent_(b, info) {
   const turma = String(b.turma || ''), nome = textoSeguro_(b.nome, 70);
   if (info.turmas.indexOf(turma) < 0) return { erro: 'Escolha a sua turma.' };
   if (chaveNome_(nome).split(' ').filter(x => x.length > 1).length < 2) return { erro: 'Escreva o seu nome completo (nome e sobrenome).' };
+  if (info.aval.teste) return { turma: turma, nome: nome, oficial: '(teste do professor)', chave: chaveNome_(nome) + '|' + turma + '|' + Date.now() };
   const lista = alunosDaTurma_(turma);
   if (!lista.length) return { turma: turma, nome: nome, oficial: '(turma sem lista)', chave: chaveNome_(nome) + '|' + turma };
   const r = acharAluno_(nome, lista);
@@ -1523,7 +1554,7 @@ function receberAvaliacao_(b) {
     const dia = Utilities.formatDate(new Date(), GEO.FUSO, 'yyyyMMdd');
     const disp = String(b.aparelho || '').replace(/[^\w-]/g, '').slice(0, 40) || 'sem-id';
     const kA = 'aval|' + dia + '|' + disp, nA = parseInt(cache.get(kA) || '0', 10);
-    if (nA >= 6) return { ok: false, erro: 'Muitos envios por este celular hoje. Fale com o professor.' };
+    if (nA >= 6 && !info.aval.teste) return { ok: false, erro: 'Muitos envios por este celular hoje. Fale com o professor.' };
     // gabarito: lido do Doc agora (nunca sai do robô)
     const lido = lerAvaliacao_(DocumentApp.openById(info.aval.doc).getBody().getText());
     const gab = {};
