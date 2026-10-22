@@ -493,6 +493,8 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .sf-mais svg{width:18px;height:18px}
 .sf-badge{flex:none;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--year);border-radius:999px;padding:3px 9px}
 @media (prefers-reduced-motion:reduce){.sfold .sf-ch{transition:none}}
+.duv-sub{font-size:.92rem;font-weight:700;color:var(--muted);margin:6px 0 0;text-transform:uppercase;letter-spacing:.06em;font-family:var(--body)}
+.duv-regra{display:flex;flex-direction:column;gap:2px;border-left:4px solid var(--hl);background:var(--hl-soft);color:var(--ink);border-radius:10px;padding:8px 12px;font-size:.86rem;line-height:1.45}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
 .mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--year);border-radius:12px;padding:10px 12px}
@@ -1626,17 +1628,19 @@ function duvidasDaTurma(){return ((DATA&&DATA.duvidas)||[]).filter(d=>d.turmas.i
 function duvidasSecao(){
   if(!duvOn()&&!duvidasDaTurma().length)return '';
   const ds=duvidasDaTurma(),ab=S.duvAberta||false;
-  return `${sec('Dúvidas respondidas','duv','duv','','Perguntas da turma respondidas pelo professor')}
-    ${ds.length?`<div class="duvlist">${ds.slice(0,ab?50:3).map(d=>`<details class="duv"><summary>${d.sobre?`<span class="eyebrow">${esc(d.sobre)}</span>`:''}<b>${esc(d.pergunta)}</b></summary><div class="duv-r"><span class="duv-p">Prof. Haroldo</span>${esc(d.resposta).replace(/\n/g,'<br>')}</div></details>`).join('')}${ds.length>3&&!ab?`<button class="meta link" id="duvMais" style="align-self:center">Ver todas (${ds.length})</button>`:''}</div>`:`<p class="meta" style="margin:0">Ainda não há dúvidas respondidas para a turma ${esc(S.turma)}.</p>`}
-    ${duvOn()?`<button class="btn btn-ghost duvnova" data-duvida=""><span class="duv-ic sm">${DUVIC}</span>Enviar uma dúvida</button>`:''}`;
+  return `${sec('Dúvidas','duv','duv','','Pergunte ao professor e veja as respostas da turma')}
+    ${duvOn()?`<button class="btn btn-ghost duvnova" data-duvida=""><span class="duv-ic sm">${DUVIC}</span>Enviar uma dúvida ao professor</button>`:''}
+    <h3 class="duv-sub">Dúvidas respondidas</h3>
+    ${ds.length?`<div class="duvlist">${ds.slice(0,ab?50:3).map(d=>`<details class="duv"><summary>${d.sobre?`<span class="eyebrow">${esc(d.sobre)}</span>`:''}<b>${esc(d.pergunta)}</b></summary><div class="duv-r"><span class="duv-p">Prof. Haroldo</span>${esc(d.resposta).replace(/\n/g,'<br>')}</div></details>`).join('')}${ds.length>3&&!ab?`<button class="meta link" id="duvMais" style="align-self:center">Ver todas (${ds.length})</button>`:''}</div>`:`<p class="meta" style="margin:0">Ainda não há dúvidas respondidas para a turma ${esc(S.turma)}.</p>`}`;
 }
 function duvidaSheet(sobre){
   const y=Y(),ts=Object.values(YEARS).flatMap(a=>a.turmas),tur=S.turma||MINHA||'';
   const ops=[...capsDe(y,y.atual).filter(c=>c.resumo).map(c=>'Cap. '+c.n+' – '+c.titulo),...temasDe(y,y.atual).filter(t=>t.resumo).map(t=>'Tema '+t.n+' – '+t.titulo)];
   if(sobre&&!ops.includes(sobre))ops.unshift(sobre);
   const nomeSalvo=COMP?'':store.get('duvNome','');
-  sheet(`<h2>Enviar uma dúvida</h2>
-    <p class="meta" style="margin:0">Esta caixa é para <b>dúvidas sobre o conteúdo</b>. O professor lê todas as mensagens. Escreva com respeito.</p>
+  sheet(`<h2>Enviar uma dúvida ao professor</h2>
+    <p class="meta" style="margin:0">Esta caixa é para <b>dúvidas sobre o conteúdo</b> das aulas. O professor lê todas as mensagens.</p>
+    <div class="duv-regra"><b>Combinado de respeito</b><span>Escreva como se estivesse falando com o professor na sala de aula: com educação, sem palavrões, ofensas ou brincadeiras. Mensagens desrespeitosas não são respondidas.</span></div>
     <label class="fld"><span>Seu nome completo *</span><input id="dvNome" maxlength="60" autocomplete="name" value="${esc(nomeSalvo)}"></label>
     <label class="fld"><span>Sua turma *</span><select id="dvTurma">${ts.map(t=>`<option${t===tur?' selected':''}>${t}</option>`).join('')}</select></label>
     <label class="fld"><span>Sobre</span><select id="dvSobre">${ops.map(o=>`<option${o===sobre?' selected':''}>${esc(o)}</option>`).join('')}<option${!sobre?' selected':''}>Outro assunto da aula</option></select></label>
