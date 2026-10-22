@@ -811,7 +811,6 @@ const CHEVR='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke=
 const CHEVD='<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 const CHECK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
 const GLOBO_HH='<svg class="contour globo-hh" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76"/><path d="M12 50h76"/><path d="M17.5 31h65M17.5 69h65"/></g><path d="M8 66c14 13 64 13 84-10" opacity=".7"/></svg>';
-const CONTOUR='<svg class="contour" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M20 55c5-18 25-30 42-24s24 22 16 36-30 20-44 14-18-12-14-26z"/><path d="M30 55c4-11 17-18 28-14s15 14 10 23-19 13-28 9-12-8-10-18z"/><path d="M40 55c2-6 9-9 15-7s8 8 5 12-10 7-15 5-6-4-5-10z"/></svg>';
 
 /* Mídias nos textos: um endereço sozinho numa linha vira vídeo, áudio, imagem ou botão */
 function midia(url,rotulo,ehImagem){
@@ -1538,7 +1537,7 @@ function vSobre(){
   const bloco=(tipo,ic,titulo,sub,corpo)=>`<details class="sbsec sec-${tipo}"><summary><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span><span class="sec-tx"><b>${titulo}</b><span class="sec-sub">${sub}</span></span>${CHEVD}</summary><div class="sbsec-body">${corpo}</div></details>`;
   const lei=(titulo,corpo)=>`<details class="fold sb-fold"><summary>${titulo} ${CHEVD}</summary><div class="fold-body">${corpo}</div></details>`;
   return `<section class="section sobre">
-    <div class="home-head">${CONTOUR}<span class="eyebrow">GeoEstudos · Prof. Haroldo Matos</span><h1 class="home-t">Sobre o GeoEstudos e privacidade</h1></div>
+    <div class="home-head">${GLOBO_HH}<span class="eyebrow">GeoEstudos · Prof. Haroldo Matos</span><h1 class="home-t">Sobre o GeoEstudos e privacidade</h1></div>
     <p class="sb-lead">O GeoEstudos é um <b>recurso pedagógico</b> das aulas de Geografia. Ele <b>não usa câmera, microfone nem localização</b> e <b>todo o conteúdo pode ser usado sem fornecer dados pessoais</b>. Toque em cada tema abaixo para ler mais.</p>
     <div class="sbsecs">
     ${bloco('pen','livro','Quem fez o GeoEstudos','Autoria e início do projeto',`
@@ -1718,7 +1717,7 @@ function vTurma(){
     ${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}
     ${MINHA&&S.turma!==MINHA?`<div class="outra"><span>Você está vendo a <b>Turma ${esc(S.turma)}</b>. Sua turma é a <b>${esc(MINHA)}</b>.</span><div class="outra-b"><button class="btn btn-primary" data-turma="${esc(MINHA)}">Voltar para a ${esc(MINHA)}</button><button class="link" id="mudarMinha">Esta é a minha turma</button></div></div>`:''}
     ${fixosHtml(S.turma)}
-    <div class="card hello">${CONTOUR}
+    <div class="card hello">${GLOBO_HH}
       <span class="eyebrow">Turma ${esc(S.turma)} · ${y.label}${S.turma===MINHA?' · minha turma':''}</span>
       <h1>Unidade ${y.atual}</h1>
       <div style="margin-top:2px;font-size:.98rem">${esc(y.unit)}</div>
