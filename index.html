@@ -500,6 +500,8 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .cx-list li{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;line-height:1.45}
 .cx-ic{flex:none;width:30px;height:30px;border-radius:9px;background:var(--surface-2);display:grid;place-items:center;font-size:1rem}
 .cc-como{align-self:flex-start;font-size:.84rem;margin-top:2px}
+.home-head .hh-l{display:block;position:relative}
+.home-head .home-t+.hh-l{margin-top:6px}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
 .mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--year);border-radius:12px;padding:10px 12px}
@@ -1612,7 +1614,7 @@ function vSobre(){
 function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
-    <div class="home-head">${CONTOUR}<span class="eyebrow">GeoEstudos · Geografia · Anos finais do Ensino Fundamental</span><h1 class="home-t">Professor Haroldo Matos</h1></div>
+    <div class="home-head">${CONTOUR}<h1 class="home-t">GeoEstudos</h1><span class="eyebrow hh-l">Desenvolvido pelo Prof. Me. Haroldo Matos</span><span class="eyebrow hh-l">Geografia · Anos finais do Ensino Fundamental</span></div>
     ${fixosHtml(null)}
     <details class="fold mini"><summary>Quem sou eu ${CHEVD}</summary><div class="fold-body">
       <p>Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
