@@ -480,6 +480,19 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .fixo b{font-size:1rem;line-height:1.25}
 .fixo .fx-t{font-size:.88rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .fixo:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+.sfolds{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.sfold>summary{list-style:none;cursor:pointer;margin-top:0;min-height:56px}
+.sfold>summary::-webkit-details-marker{display:none}
+.sfold .sf-ch{flex:none;color:var(--sc);transition:transform .2s}
+.sfold[open] .sf-ch{transform:rotate(180deg)}
+.sfold>summary:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+.sfold .sec-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sfold-body{display:flex;flex-direction:column;gap:10px;padding:10px 0 6px}
+.sf-mais{align-self:stretch;justify-content:center;gap:8px;min-height:44px}
+.sf-mais svg{width:18px;height:18px}
+.sf-badge{flex:none;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--alerta);border-radius:999px;padding:3px 9px}
+@media (prefers-reduced-motion:reduce){.sfold .sf-ch{transition:none}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
 .mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--alerta);border-radius:12px;padding:10px 12px}
@@ -1143,10 +1156,6 @@ function fixosHtml(t){
 }
 function muralItem(m,lid){const[,mm,dd]=m.data.split('-');
   return `<button class="mural-it" data-aviso="${esc(m.id)}"><span class="mi-d" aria-hidden="true"><b>${+dd}</b><span>${MESES[+mm-1].slice(0,3)}</span></span><span class="mi-tx"><b>${esc(m.titulo)}</b><span>${esc(m.texto)}</span><span class="sr-only">Publicado em ${dataExt(m.data)}</span></span>${lid.has(m.id)?'':'<span class="mi-novo">novo</span>'}</button>`}
-function muralSecao(){
-  const L=muralDe(S.turma);if(!L.length)return '';const lid=avLidos();
-  return `${sec('Mural de avisos','mur','mega',L.length>3?`<button class="meta link" id="muralTodos">Ver todos (${L.length})</button>`:'','Recados do professor, do mais recente ao mais antigo')}<div class="mural">${L.slice(0,3).map(m=>muralItem(m,lid)).join('')}</div>`;
-}
 function avisoHtml(m){
   const paras=esc(m.texto).split(/\n+/).map(p=>`<p>${p}</p>`).join('');
   return `<div class="avp-top"><span class="fx-ic" aria-hidden="true">${SECIC.mega}</span><span><b>Aviso do Prof. Haroldo</b><small>${dataExt(m.data)}${m.todas?' · todas as turmas':' · '+(m.turmas.length>1?'turmas ':'turma ')+esc(listaT(m.turmas))}</small></span></div>
@@ -1178,6 +1187,21 @@ function popAvisos(L,i){
     (o,close)=>{const b=o.querySelector('#avpProx');if(b)b.onclick=()=>{close();popAvisos(L,i+1)}});
   o.classList.add('avpop-wrap');o.querySelector('.sheet').setAttribute('aria-labelledby','avpT');
   (o.querySelector('#avpProx')||o.querySelector('[data-close]')).focus();
+}
+
+/* Seções recolhíveis da página da turma. Cada aluno escolhe o que deixa aberto (fica salvo no celular). */
+const SF_CHEV='<svg class="sf-ch" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+function secFold(key,titulo,tipo,ic,resumo,corpo,badge){
+  const ab=(store.get('secAbertas',{})||{})[key];
+  return `<details class="sfold" data-sfold="${key}"${ab?' open':''}><summary class="sec sec-${tipo}"><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span><span class="sec-tx"><h2>${titulo}</h2><span class="sec-sub">${resumo}</span></span>${badge||''}${SF_CHEV}</summary><div class="sfold-body">${corpo}</div></details>`;
+}
+document.addEventListener('toggle',e=>{const d=e.target;if(!d.matches||!d.matches('.sfold'))return;const m=store.get('secAbertas',{})||{};m[d.dataset.sfold]=d.open;store.set('secAbertas',m)},true);
+function muralFold(){
+  const L=muralDe(S.turma),lid=avLidos(),nov=L.filter(m=>!lid.has(m.id)).length;
+  const resumo=L.length?`${L.length} ${L.length===1?'aviso':'avisos'} · último em ${dm(L[0].data)}`:'Nenhum aviso por enquanto';
+  const corpo=L.length?`<div class="mural">${L.slice(0,3).map(m=>muralItem(m,lid)).join('')}</div>${L.length>3?`<button class="btn btn-ghost sf-mais" id="muralTodos">Ver todos os avisos (${L.length})</button>`:''}`
+    :`<div class="card empty-card"><b>Nenhum aviso por enquanto</b><span class="meta">Quando o professor publicar um recado para a turma ${esc(S.turma)}, ele aparece aqui.</span></div>`;
+  return secFold('mural','Mural de avisos','mur','mega',resumo,corpo,nov?`<span class="sf-badge">${nov} ${nov===1?'novo':'novos'}</span>`:'');
 }
 function ttsDica(){
   const n=store.get('ttsDica',0);const semPT=!vozPT()||!/^pt[-_]BR/i.test((vozPT()||{}).lang||'');
@@ -1662,14 +1686,17 @@ function vTurma(){
     </div>
     ${continuarCard()}
     ${pushCard()}
-    ${muralSecao()}
     ${avisosHtml()}
     ${unitChips(y.atual)}
-    ${sec('Resumos da Unidade '+y.atual,'ano','livro')}
-    <div class="capgrid">${capsDe(y,y.atual).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>
-    ${temasDe(y,y.atual).length?`${sec('Temas Transversais','tt','globo','','Aulas extras · valem ponto na recuperação paralela')}<div class="capgrid">${temasDe(y,y.atual).map(temaBtn).join('')}</div>`:''}
-    ${sec('Próximas datas','ano','cal','<button class="meta link" data-go="calendario">Calendário</button>')}
-    ${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}
+    <div class="sfolds">
+    ${secFold('resumos','Resumos da Unidade '+y.atual,'ano','livro',total?`${total} ${total===1?'resumo':'resumos'} · ${done} ${done===1?'copiado':'copiados'} no caderno`:'Nenhum resumo publicado ainda',
+      `<div class="capgrid">${capsDe(y,y.atual).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
+    ${temasDe(y,y.atual).length?secFold('temas','Temas Transversais','tt','globo',`${temasDe(y,y.atual).length} ${temasDe(y,y.atual).length===1?'aula extra':'aulas extras'} · valem ponto`,
+      `<div class="capgrid">${temasDe(y,y.atual).map(temaBtn).join('')}</div>`):''}
+    ${secFold('datas','Próximas datas','ano','cal',prox.length?`Próxima: ${dm(prox[0].data)} · ${esc(prox[0].titulo)}`:'Nenhuma data marcada',
+      `${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}<button class="btn btn-ghost sf-mais" data-go="calendario">${SECIC.cal}Abrir o calendário completo</button>`)}
+    ${muralFold()}
+    </div>
     ${duvidasSecao()}
     <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
   </section>`;
