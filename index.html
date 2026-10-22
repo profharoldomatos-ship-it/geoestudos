@@ -503,6 +503,18 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .cc-como{align-self:flex-start;font-size:.84rem;margin-top:2px}
 .home-head .hh-l{display:block;position:relative}
 .home-head .home-t+.hh-l{margin-top:6px}
+.yfolds{display:flex;flex-direction:column;gap:10px}
+.yfold{border-radius:var(--r);overflow:hidden;border:1.5px solid var(--yc);background:var(--bg)}
+.yf-h{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;background:var(--yc);color:#fff;padding:12px 14px;min-height:60px}
+.yf-h::-webkit-details-marker{display:none}
+.yf-h:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.yf-tx{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+.yf-tx b{font-family:var(--display);font-size:1.25rem;line-height:1.15}
+.yf-tx span{font-size:.86rem;opacity:.95;line-height:1.3}
+.yf-minha{flex:none;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.55);border-radius:999px;padding:3px 9px}
+.yfold .sf-ch{color:#fff}
+.yfold[open] .sf-ch{transform:rotate(180deg)}
+.yf-body{padding:12px}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
 .mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--year);border-radius:12px;padding:10px 12px}
@@ -1206,7 +1218,7 @@ function secFold(key,titulo,tipo,ic,resumo,corpo,badge){
   const ab=(store.get('secAbertas',{})||{})[key];
   return `<details class="sfold" data-sfold="${key}"${ab?' open':''}><summary class="sec sec-${tipo}"><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span><span class="sec-tx"><h2>${titulo}</h2><span class="sec-sub">${resumo}</span></span>${badge||''}${SF_CHEV}</summary><div class="sfold-body">${corpo}</div></details>`;
 }
-document.addEventListener('toggle',e=>{const d=e.target;if(!d.matches||!d.matches('.sfold'))return;const m=store.get('secAbertas',{})||{};m[d.dataset.sfold]=d.open;store.set('secAbertas',m)},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('.yfold')){const m=store.get('anosAbertos',{})||{};m[d.dataset.ano]=d.open;store.set('anosAbertos',m);return}if(!d.matches||!d.matches('.sfold'))return;const m=store.get('secAbertas',{})||{};m[d.dataset.sfold]=d.open;store.set('secAbertas',m)},true);
 function muralFold(){
   const L=muralDe(S.turma),lid=avLidos(),nov=L.filter(m=>!lid.has(m.id)).length;
   const resumo=L.length?`${L.length} ${L.length===1?'aviso':'avisos'} · último em ${dm(L[0].data)}`:'Nenhum aviso por enquanto';
@@ -1626,8 +1638,10 @@ function vHome(){
       <button class="privmini" style="margin-top:8px;width:100%" data-go="sobre"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Sobre o GeoEstudos e privacidade</span><span aria-hidden="true" class="pm-ch">›</span></button>
     </div></details>
     ${msg?`<div class="banner">${esc(msg)}</div>`:''}
-    <div><h2>Navegue por ano e turma</h2><p class="meta" style="margin:4px 0 0">Escolha a sua turma para ver os resumos e as atividades.</p></div>
-    ${DATA?Object.values(YEARS).map(y=>`<div class="card year" style="--yc:${y.color}"><div class="year-h"><b class="year-t">${y.label}</b><span class="meta">Unidade ${y.atual} · ${esc(y.unit)}</span></div><div class="choice">${y.turmas.map(t=>`<button data-turma="${t}" aria-pressed="${MINHA===t}"><span>Turma</span>${t}${MINHA===t?'<small>Minha turma</small>':''}</button>`).join('')}</div></div>`).join(''):semDados()}
+    <div><h2>Navegue por ano e turma</h2><p class="meta" style="margin:4px 0 0">Toque no seu ano e escolha a sua turma para ver os resumos e as atividades.</p></div>
+    ${DATA?`<div class="yfolds">${Object.values(YEARS).map(y=>{const minhaAqui=MINHA&&y.turmas.includes(MINHA),ab=(store.get('anosAbertos',{})||{})[y.ano],aberto=ab===undefined?!!minhaAqui:ab;
+      return `<details class="yfold" data-ano="${y.ano}" style="--yc:${y.color}"${aberto?' open':''}><summary class="yf-h"><span class="yf-tx"><b>${y.label}</b><span>Unidade ${y.atual} · ${esc(y.unit)}</span></span>${minhaAqui?`<span class="yf-minha">Turma ${esc(MINHA)}</span>`:''}${SF_CHEV}</summary>
+      <div class="yf-body"><div class="choice">${y.turmas.map(t=>`<button data-turma="${t}" aria-pressed="${MINHA===t}"><span>Turma</span>${t}${MINHA===t?'<small>Minha turma</small>':''}</button>`).join('')}</div></div></details>`}).join('')}</div>`:semDados()}
     ${celularCard()}
     ${installCard()}
   </section>`;
