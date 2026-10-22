@@ -494,6 +494,7 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .sf-badge{flex:none;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--year);border-radius:999px;padding:3px 9px}
 @media (prefers-reduced-motion:reduce){.sfold .sf-ch{transition:none}}
 .duv-sub{font-size:.92rem;font-weight:700;color:var(--muted);margin:6px 0 0;text-transform:uppercase;letter-spacing:.06em;font-family:var(--body)}
+.duv-lim{margin:0;font-size:.88rem}
 .duv-regra{display:flex;flex-direction:column;gap:2px;border-left:4px solid var(--hl);background:var(--hl-soft);color:var(--ink);border-radius:10px;padding:8px 12px;font-size:.86rem;line-height:1.45}
 .cx-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .cx-list li{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;line-height:1.45}
@@ -1657,13 +1658,19 @@ function duvidasSecao(){
     <h3 class="duv-sub">Dúvidas respondidas</h3>
     ${ds.length?`<div class="duvlist">${ds.slice(0,ab?50:3).map(d=>`<details class="duv"><summary>${d.sobre?`<span class="eyebrow">${esc(d.sobre)}</span>`:''}<b>${esc(d.pergunta)}</b></summary><div class="duv-r"><span class="duv-p">Prof. Haroldo</span>${esc(d.resposta).replace(/\n/g,'<br>')}</div></details>`).join('')}${ds.length>3&&!ab?`<button class="meta link" id="duvMais" style="align-self:center">Ver todas (${ds.length})</button>`:''}</div>`:`<p class="meta" style="margin:0">Ainda não há dúvidas respondidas para a turma ${esc(S.turma)}.</p>`}`;
 }
+const duvLim=()=>Math.max(1,Math.min(5,+((DATA&&DATA.app&&DATA.app.duvidasPorDia)||1)));
+const msgLimDuv=()=>duvLim()===1?'Você já enviou a sua dúvida de hoje. Amanhã você pode enviar outra, ou pergunte na aula.':'Você já enviou '+duvLim()+' dúvidas hoje. Amanhã você pode enviar outras, ou pergunte na aula.';
+const nomeChave=n=>semAc(n).replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();
 function duvidaSheet(sobre){
+  if(!COMP&&(store.get('duvCont',{})[HOJE]||0)>=duvLim()){
+    sheet(`<h2>${duvLim()===1?'Sua dúvida de hoje já foi enviada':'Você já enviou as dúvidas de hoje'}</h2><p style="margin:0">Cada estudante pode enviar <b>${duvLim()===1?'1 dúvida':duvLim()+' dúvidas'} por dia</b>. Amanhã a caixa abre de novo para você. Se for urgente, pergunte ao professor na aula.</p><button class="btn btn-primary" data-close>Entendi</button>`);return}
   const y=Y(),ts=Object.values(YEARS).flatMap(a=>a.turmas),tur=S.turma||MINHA||'';
   const ops=[...capsDe(y,y.atual).filter(c=>c.resumo).map(c=>'Cap. '+c.n+' – '+c.titulo),...temasDe(y,y.atual).filter(t=>t.resumo).map(t=>'Tema '+t.n+' – '+t.titulo)];
   if(sobre&&!ops.includes(sobre))ops.unshift(sobre);
   const nomeSalvo=COMP?'':store.get('duvNome','');
   sheet(`<h2>Enviar uma dúvida ao professor</h2>
     <p class="meta" style="margin:0">Esta caixa é para <b>dúvidas sobre o conteúdo</b> das aulas. O professor lê todas as mensagens.</p>
+    <p class="duv-lim">Cada estudante pode enviar <b>${duvLim()===1?'1 dúvida':duvLim()+' dúvidas'} por dia</b>. Capriche na pergunta!</p>
     <div class="duv-regra"><b>Combinado de respeito</b><span>Escreva como se estivesse falando com o professor na sala de aula: com educação, sem palavrões, ofensas ou brincadeiras. Mensagens desrespeitosas não são respondidas e <b>serão levadas à coordenação da escola e ao conhecimento dos responsáveis</b>.</span></div>
     <label class="fld"><span>Seu nome completo *</span><input id="dvNome" maxlength="60" autocomplete="name" value="${esc(nomeSalvo)}"></label>
     <label class="fld"><span>Sua turma *</span><select id="dvTurma">${ts.map(t=>`<option${t===tur?' selected':''}>${t}</option>`).join('')}</select></label>
@@ -1679,7 +1686,9 @@ function duvidaSheet(sobre){
       const nome=$o('#dvNome').value.trim(),texto=$o('#dvTexto').value.trim(),turma=$o('#dvTurma').value,so=$o('#dvSobre').value;
       if(nome.length<3)return err('Escreva o seu nome.');
       if(texto.length<5)return err('Escreva a sua dúvida.');
-      const hoje=HOJE,cnt=store.get('duvCont',{});if((cnt[hoje]||0)>=5)return err('Você já enviou 5 dúvidas hoje. Tente amanhã ou pergunte na aula.');
+      const hoje=HOJE,cnt=store.get('duvCont',{}),kn=nomeChave(nome),pn=store.get('duvNomes',{});
+      if(!COMP&&(cnt[hoje]||0)>=duvLim())return err(msgLimDuv());
+      if(pn.dia===hoje&&((pn.n||{})[kn]||0)>=duvLim())return err(msgLimDuv());
       let ap=store.get('aparelho','');if(!ap){ap=Math.random().toString(36).slice(2)+Date.now().toString(36);store.set('aparelho',ap)}
       $o('#dvEnviar').disabled=true;$o('#dvEnviar').textContent='Enviando…';
       try{
@@ -1688,6 +1697,7 @@ function duvidaSheet(sobre){
         const j=await r.json();
         if(!j.ok){$o('#dvEnviar').disabled=false;$o('#dvEnviar').textContent='Enviar dúvida';return err(j.erro||(j.anos?'O robô ainda não tem a caixa de dúvidas publicada.':'Não foi possível enviar.'))}
         cnt[hoje]=(cnt[hoje]||0)+1;store.set('duvCont',{[hoje]:cnt[hoje]});if(!COMP)store.set('duvNome',nome);
+        const pn2=pn.dia===hoje?pn:{dia:hoje,n:{}};pn2.n[kn]=(pn2.n[kn]||0)+1;store.set('duvNomes',pn2);
         close();toast('Dúvida enviada ao professor.');
       }catch(e){$o('#dvEnviar').disabled=false;$o('#dvEnviar').textContent='Enviar dúvida';err('Sem conexão. Tente de novo com internet.')}
     };

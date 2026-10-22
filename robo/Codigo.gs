@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-22 · mural v7';
+const VERSAO_ROBO = '2026-10-22 · mural v8';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -177,7 +177,8 @@ function atualizar() {
         avisoNovo: conf.avisoNovo,
         lembreteVespera: conf.lembreteVespera || '18:00',
         lembreteDia: conf.lembreteDia || '07:00',
-        duvidas: conf.duvidas
+        duvidas: conf.duvidas,
+        duvidasPorDia: conf.duvPorDia
       },
       anos: anos,
       mensagens: lerMensagens_(),
@@ -224,7 +225,7 @@ function anoDe_(v) { const m = String(v || '').match(/(\d)/); return m ? m[1] : 
 
 function lerConfig_() {
   const linhas = SpreadsheetApp.openById(GEO.PLANILHA_CONFIG).getSheets()[0].getDataRange().getDisplayValues();
-  const c = { turmas: {}, anosAtivos: [], avisoNovo: true, duvidas: true };
+  const c = { turmas: {}, anosAtivos: [], avisoNovo: true, duvidas: true, duvPorDia: 1 };
   linhas.forEach(l => {
     const k = semAcento_(l[0]), v = String(l[1] || '').trim();
     let m;
@@ -237,6 +238,7 @@ function lerConfig_() {
     else if (k.indexOf('aviso de atividade nova') === 0) c.avisoNovo = sim_(v);
     else if (k.indexOf('mensagem da tela inicial') === 0) c.mensagem = v;
     else if (k.indexOf('caixa de duvidas') === 0) c.duvidas = sim_(v);
+    else if (k.indexOf('duvidas por aluno') === 0) c.duvPorDia = Math.max(1, Math.min(5, parseInt(v, 10) || 1));
   });
   return c;
 }
@@ -1190,6 +1192,8 @@ function prepararConfigDuvidas_() {
   const sh = SpreadsheetApp.openById(GEO.PLANILHA_CONFIG).getSheets()[0];
   const tem = sh.getDataRange().getDisplayValues().some(l => semAcento_(l[0]).indexOf('caixa de duvidas') === 0);
   if (!tem) sh.appendRow(['Caixa de dúvidas', 'Sim', 'Mostrar a caixa de dúvidas no app (Sim/Não)']);
+  const temLim = sh.getDataRange().getDisplayValues().some(l => semAcento_(l[0]).indexOf('duvidas por aluno') === 0);
+  if (!temLim) sh.appendRow(['Dúvidas por aluno por dia', '1', 'Quantas dúvidas cada estudante pode enviar por dia (de 1 a 5)']);
 }
 function textoSeguro_(s, max) {
   s = String(s || '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -1211,7 +1215,20 @@ function receberDuvida_(b) {
     const disp = String(b.aparelho || '').replace(/[^\w-]/g, '').slice(0, 40) || 'sem-id';
     const kA = 'duv|' + dia + '|' + disp, kT = 'duv|' + dia + '|total';
     const nA = parseInt(cache.get(kA) || '0', 10), nT = parseInt(cache.get(kT) || '0', 10);
-    if (nA >= 5) return { ok: false, erro: 'Você já enviou 5 dúvidas hoje. Tente amanhã ou pergunte na aula.' };
+    const lim = conf.duvPorDia || 1;
+    const msgLim = lim === 1 ? 'Você já enviou a sua dúvida de hoje. Amanhã você pode enviar outra, ou pergunte na aula.' : 'Você já enviou ' + lim + ' dúvidas hoje. Amanhã você pode enviar outras, ou pergunte na aula.';
+    if (nA >= lim * 3) return { ok: false, erro: msgLim };   // um celular pode ser de irmãos: até 3 estudantes
+    // Limite por estudante (nome + turma), confere nas dúvidas recebidas hoje
+    try {
+      const shD = planilhaDuvidas_(), ultD = shD.getLastRow();
+      if (ultD > 1) {
+        const ini = Math.max(2, ultD - 400);
+        const chave = semAcento_(nome).replace(/[^a-z ]/g, '').replace(/\s+/g, ' ') + '|' + turma;
+        const deHoje = shD.getRange(ini, 1, ultD - ini + 1, 3).getValues().filter(l => l[0] instanceof Date && Utilities.formatDate(l[0], GEO.FUSO, 'yyyyMMdd') === dia
+          && semAcento_(l[2]).replace(/[^a-z ]/g, '').replace(/\s+/g, ' ') + '|' + String(l[1]) === chave).length;
+        if (deHoje >= lim) return { ok: false, erro: msgLim };
+      }
+    } catch (err) { Logger.log('Limite por aluno: ' + err); }
     if (nT >= 300) return { ok: false, erro: 'Muitas dúvidas hoje. Tente amanhã.' };
     const lock = LockService.getScriptLock();
     lock.waitLock(20000);
