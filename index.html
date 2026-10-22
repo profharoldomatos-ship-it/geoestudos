@@ -524,6 +524,30 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .sfold:not([open]) .sf-badge{background:#fff;color:var(--sc)}
 .sfold>summary.sec{transition:background-color .15s}
 @media (prefers-reduced-motion:reduce){.sfold>summary.sec{transition:none}}
+/* Atividades: cabeçalhos no tom forte do ano, cartões brancos com borda na cor do ano */
+.atv-top{background:var(--year);color:#fff;border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px}
+.atv-top+.atv-regra,.atv-top+.atvlist{margin-top:-2px}
+.at-row{display:flex;align-items:center;gap:12px}
+.at-ic{flex:none;width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.2);display:grid;place-items:center}
+.at-ic svg{width:20px;height:20px}
+.at-tx{display:flex;flex-direction:column;flex:1;min-width:0}
+.at-tx b{font-family:var(--display);font-size:1.15rem;line-height:1.2}
+.at-tx span{font-size:.86rem;opacity:.95}
+.at-num{flex:none;font-family:var(--display);font-weight:700;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.atv-top .bar{background:rgba(255,255,255,.28);margin:0}.atv-top .bar i{background:#fff}
+.at-sub{font-size:.88rem}
+.tt-top{margin-top:10px}
+.atv-regra{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font-size:.88rem;line-height:1.45;color:var(--ink)}
+.atv{border:1.5px solid color-mix(in srgb,var(--year) 22%,var(--line));border-left:5px solid var(--year)}
+.atv.ok{border-left-color:var(--year);background:color-mix(in srgb,var(--year) 6%,var(--surface))}
+.atv.late{border-left-color:var(--rust)}
+.atv.tt{border-left-color:var(--year)}
+.atv-st{background:var(--surface-2);color:var(--ink)}
+.atv-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.atv-acts .btn{justify-content:center;min-height:42px}
+.atv-acts .act-go{grid-column:1/-1;background:var(--year);color:#fff}
+.atv-acts .meta{grid-column:1/-1}
+.atv .tt-cn{background:var(--year);color:#fff}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
 .mural-it{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-left:4px solid var(--year);border-radius:12px;padding:10px 12px}
@@ -1904,13 +1928,14 @@ function vAtividades(){
   const outras=y.list.filter(u=>u.n!==y.atual&&u.caps.some(c=>c.atividade)).sort((a,b)=>b.n-a.n);
   return `<section class="section">
     <div><span class="ypill">${y.label} · Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Atividades</h1></div>
-    <div class="card atv-hero"><span class="vale">Vale nota</span><b style="font-size:1.05rem">Atividades de fixação · Unidade ${y.atual}</b>
-      ${atuais.length?`<div class="bar" role="img" aria-label="${sent} de ${atuais.length} enviadas"><i style="width:${Math.round(sent/atuais.length*100)}%"></i></div><span style="font-size:.9rem">${sent} de ${atuais.length} atividades enviadas</span>`:''}
-      <span class="meta" style="color:var(--ink)">Responda com atenção e uma única vez: vale a resposta mais antiga. Depois de enviar, marque aqui.</span></div>
+    <div class="atv-top"><div class="at-row"><span class="at-ic" aria-hidden="true">${SECIC.atv}</span><span class="at-tx"><b>Atividades de fixação</b><span>Unidade ${y.atual} · vale nota</span></span>${atuais.length?`<span class="at-num">${sent}/${atuais.length}</span>`:''}</div>
+      ${atuais.length?`<div class="bar" role="img" aria-label="${sent} de ${atuais.length} enviadas"><i style="width:${Math.round(sent/atuais.length*100)}%"></i></div><span class="at-sub">${sent} de ${atuais.length} atividades enviadas</span>`:''}</div>
+    <div class="atv-regra"><b>Como funciona</b><span>Responda com atenção e uma única vez: vale a resposta mais antiga. Depois de enviar o formulário, volte aqui e toque em <b>Já enviei</b>.</span></div>
     ${atuais.length?`<div class="atvlist">${atuais.map(atvCard).join('')}</div>`:'<div class="card empty-card"><b>Nenhuma atividade publicada nesta unidade</b><span class="meta">Quando o professor publicar, ela aparece aqui.</span></div>'}
     ${(()=>{const ts=[...y.list].sort((a,b)=>(b.n===y.atual)-(a.n===y.atual)||b.n-a.n).flatMap(u=>(u.temas||[]).filter(t=>t.resumo||temAtv(t)));
-      return ts.length?`<div class="card tt-hero"><span class="vale">Vale ponto</span><b style="font-size:1.05rem">Temas Transversais · recuperação paralela</b><span class="meta" style="color:var(--ink)">Aulas extras com atividades que ajudam a recuperar pontos no período.</span></div><div class="atvlist">${ts.map(ttAtvCard).join('')}</div>`:''})()}
-    ${outras.map(u=>`${sec('Atividades · Unidade '+u.n,'ano','atv')}<div class="atvlist">${u.caps.filter(c=>c.atividade).map(atvCard).join('')}</div>`).join('')}
+      const tf=ts.filter(t=>isSent('t'+t.n)).length;
+      return ts.length?`<div class="atv-top tt-top"><div class="at-row"><span class="at-ic" aria-hidden="true">${SECIC.globo}</span><span class="at-tx"><b>Temas Transversais</b><span>Aulas extras · recuperação paralela · vale ponto</span></span><span class="at-num">${tf}/${ts.length}</span></div></div><div class="atvlist">${ts.map(ttAtvCard).join('')}</div>`:''})()}
+    ${outras.length?`<div class="sfolds">${outras.map(u=>{const l=u.caps.filter(c=>c.atividade),e=l.filter(c=>isSent(c.n)).length;return secFold('atv-u'+u.n,'Atividades · Unidade '+u.n,'ano','atv',`${l.length} ${l.length===1?'atividade':'atividades'} · ${e} ${e===1?'enviada':'enviadas'}`,`<div class="atvlist">${l.map(atvCard).join('')}</div>`)}).join('')}</div>`:''}
   </section>`;
 }
 function vCalendario(){
