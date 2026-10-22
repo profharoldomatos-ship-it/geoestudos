@@ -408,6 +408,52 @@ body.f-dis .resumo .r-h,body.f-dis .resumo .r-h2{font-family:'OpenDyslexic',var(
 /* Ouvir */
 .tool svg{vertical-align:-3px;margin-right:3px}
 .falando{background:color-mix(in srgb,var(--hl) 45%,transparent);border-radius:6px;box-shadow:0 0 0 4px color-mix(in srgb,var(--hl) 45%,transparent);transition:background .2s}
+
+/* Revisão rápida (autoavaliação sem nota) */
+:root{--ok:#1F7A45;--ok-soft:#E3F3E8;--bad:#A61E5C;--bad-soft:#FBE6EF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ok:#7BD39A;--ok-soft:#173326;--bad:#F28DB5;--bad-soft:#3A1A28}}
+:root[data-theme="dark"],body.m-escuro{--ok:#7BD39A;--ok-soft:#173326;--bad:#F28DB5;--bad-soft:#3A1A28}
+body.m-claro,body.m-sepia{--ok:#1F7A45;--ok-soft:#E3F3E8;--bad:#A61E5C;--bad-soft:#FBE6EF}
+.revcard{display:flex;flex-direction:column;gap:10px;border:1.5px dashed color-mix(in srgb,var(--year) 45%,var(--line))}
+.rev-head{display:flex;gap:12px;align-items:center}
+.rev-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;background:color-mix(in srgb,var(--year) 14%,var(--surface));color:var(--year)}
+.rev-why{margin:0;font-size:.92rem}
+.rev-go{align-self:flex-start;background:var(--year);color:#fff;border-radius:12px;padding:10px 16px;font-weight:700;min-height:44px}
+.qz-o{position:fixed;inset:0;z-index:60;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch}
+.qz-o[hidden]{display:none}
+.qz{max-width:460px;margin:0 auto;padding:12px max(16px,env(safe-area-inset-left,0px)) calc(28px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;min-height:100%}
+.qz-top{display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--bg);padding:6px 0;z-index:1}
+.qz-top .qz-tt{flex:1;min-width:0}
+.qz-top b{font-family:var(--display);font-size:1.05rem;display:block}
+.qz-x{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);background:var(--surface);flex:none}
+.qz-dots{display:flex;gap:6px}
+.qz-dots i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.qz-dots i.cur{background:var(--year)}
+.qz-dots i.ok{background:var(--ok)} .qz-dots i.bad{background:var(--bad)}
+.qz-n{margin:0;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.qz-q{font-size:1.15rem;line-height:1.35;font-weight:700;margin:0}
+.qz-ops{display:flex;flex-direction:column;gap:10px}
+.qz-op{display:flex;gap:12px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:12px;min-height:52px;line-height:1.4;width:100%}
+.qz-op:not([disabled]):hover{border-color:var(--year)}
+.qz-l{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:.9rem;background:var(--surface-2);color:var(--ink)}
+.qz-op[disabled]{cursor:default;opacity:1}
+.qz-op.ok{border-color:var(--ok);background:var(--ok-soft)} .qz-op.ok .qz-l{background:var(--ok);color:var(--bg)}
+.qz-op.bad{border-color:var(--bad);background:var(--bad-soft)} .qz-op.bad .qz-l{background:var(--bad);color:var(--bg)}
+.qz-op.dim{opacity:.62}
+.qz-fb{border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;border-left:5px solid}
+.qz-fb.ok{background:var(--ok-soft);border-color:var(--ok)} .qz-fb.bad{background:var(--bad-soft);border-color:var(--bad)}
+.qz-fb b{font-size:1rem} .qz-fb.ok b{color:var(--ok)} .qz-fb.bad b{color:var(--bad)}
+.qz-fb p{margin:0;font-size:.95rem}
+.qz-fb:focus{outline:none}
+.qz-rever{align-self:flex-start;color:var(--pen);font-weight:700;font-size:.92rem;padding:6px 0;min-height:36px;text-decoration:underline;text-underline-offset:3px}
+.qz-next{background:var(--year);color:#fff;border-radius:14px;padding:12px 18px;font-weight:700;min-height:48px;margin-top:auto}
+.qz-end{text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;padding-top:8px}
+.qz-score{font-family:var(--display);font-size:2.6rem;font-weight:700;color:var(--year);line-height:1}
+.qz-miss{text-align:left;width:100%;display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.qz-miss .card{padding:12px;display:flex;flex-direction:column;gap:4px}
+.qz-btns{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:6px}
+.qz-btns .btn{justify-content:center;min-height:48px}
+.qz-back{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--year);color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.25);min-height:44px}
 .ttsdica{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom,0px));z-index:26;width:min(calc(100% - 32px),420px);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:.84rem;line-height:1.45;box-shadow:0 8px 22px rgba(0,0,0,.18);display:flex;gap:10px;align-items:flex-start;animation:dicaIn .25s ease-out}
 .ttsdica b{color:#1D3F8F}[data-theme="dark"] .ttsdica b{color:#9DB6F0}
 .ttsdica button{flex:none;font-weight:700;color:#1D3F8F;padding:4px 6px;min-height:36px}[data-theme="dark"] .ttsdica button{color:#9DB6F0}
@@ -930,6 +976,107 @@ const TTS={on:false,parado:false,idx:0,blocos:[],partes:[],p:0,vel:store.get('tt
 function vozPT(){const vs=speechSynthesis.getVoices();return vs.find(v=>/^pt[-_]BR/i.test(v.lang))||vs.find(v=>/^pt/i.test(v.lang))||null}
 if(ttsOk())speechSynthesis.onvoiceschanged=()=>{};
 function partesDe(txt){const out=[];txt.replace(/\s+/g,' ').trim().split(/(?<=[.!?;:])\s+/).forEach(f=>{while(f.length>220){const k=f.lastIndexOf(' ',220);out.push(f.slice(0,k>40?k:220));f=f.slice(k>40?k+1:220)}if(f)out.push(f)});return out}
+
+/* ===== Revisão rápida: autoavaliação sem nota =====
+   O professor escreve até 12 perguntas no Doc "NN Revisão"; aqui o app sorteia 6,
+   embaralha as alternativas, corrige e explica. O resultado fica só no celular. */
+const REVIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.4-2.8 4"/><path d="M12 17.6h.01"/></svg>';
+const XIC='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const QPOR=6;let Q=null;
+const hashQ=t=>{let h=5381;for(const ch of String(t))h=((h<<5)+h+ch.charCodeAt(0))|0;return (h>>>0).toString(36)};
+const embaralhar=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const revKey=n=>anoT()+'-'+n;
+function revCard(c,n){
+  const r=c.revisao;if(!r||!r.length)return '';
+  const st=(store.get('rev',{})||{})[revKey(n)],qt=Math.min(QPOR,r.length);
+  return `<div class="card revcard"><div class="rev-head"><span class="rev-ic">${REVIC}</span><span><b>Revisão rápida</b><br><span class="meta">Opcional · não vale nota · ${qt} perguntas</span></span></div>
+    <p class="rev-why">Se quiser, faça uma revisão rápida para fixar o que estudou neste resumo. O app corrige e explica cada resposta.</p>
+    ${st&&st.ult?`<p class="meta" style="margin:0">Última revisão: ${st.ult.a} de ${st.ult.t} acertos.</p>`:''}
+    <button class="rev-go" data-rev="${esc(String(n))}">${st&&st.ult?'Fazer outra revisão':'Começar revisão'}</button></div>`;
+}
+function sortearRevisao(n,c){
+  const all=store.get('rev',{})||{},st=all[revKey(n)]||{},vistas=new Set(st.vistas||[]);
+  const itens=c.revisao.map(p=>({p,h:hashQ(p.q)}));
+  let novas=embaralhar(itens.filter(x=>!vistas.has(x.h))),velhas=embaralhar(itens.filter(x=>vistas.has(x.h)));
+  const escolha=novas.concat(velhas).slice(0,QPOR);
+  return escolha.map(({p,h})=>{const ord=embaralhar([0,1,2,3]);return {h,q:p.q,a:ord.map(i=>p.a[i]),c:ord.indexOf(p.c),e:p.e||'',certa:p.a[p.c]}});
+}
+function abrirRevisao(n){
+  const c=capOf(n);if(!c||!c.revisao||!c.revisao.length)return;
+  if(TTS.on)ttsParar();
+  Q={n,c,lista:sortearRevisao(n,c),i:0,res:[],resp:null};
+  let o=document.querySelector('.qz-o');
+  if(!o){o=document.createElement('div');o.className='qz-o overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Revisão rápida');document.body.appendChild(o);
+    o.addEventListener('click',qzClique);document.addEventListener('keydown',qzTecla)}
+  o.hidden=false;document.querySelector('.qz-back')?.remove();document.body.style.overflow='hidden';
+  qzRender(true);
+}
+function fecharRevisao(){
+  const o=document.querySelector('.qz-o');if(o){o.remove();document.removeEventListener('keydown',qzTecla)}
+  document.querySelector('.qz-back')?.remove();document.body.style.overflow='';
+  if(Q){const el=document.querySelector('.revcard'),c=capOf(Q.n);if(el&&c)el.outerHTML=revCard(c,Q.n)}
+  Q=null;
+}
+function qzTecla(e){if(e.key==='Escape'&&Q&&!document.querySelector('.qz-o').hidden)fecharRevisao()}
+function qzRender(foco){
+  const o=document.querySelector('.qz-o');if(!o||!Q)return;
+  const tot=Q.lista.length,fim=Q.i>=tot;
+  const dots=Q.lista.map((_,k)=>`<i class="${k<Q.res.length?(Q.res[k]?'ok':'bad'):k===Q.i?'cur':''}"></i>`).join('');
+  const topo=`<div class="qz-top"><span class="rev-ic">${REVIC}</span><span class="qz-tt"><b>Revisão rápida</b><span class="meta">Cap. ${Q.c.n} · ${esc(Q.c.titulo)}</span></span><button class="qz-x" data-qz="fechar" aria-label="Fechar revisão">${XIC}</button></div><div class="qz-dots" aria-hidden="true">${dots}</div>`;
+  let corpo;
+  if(fim){
+    const a=Q.res.filter(Boolean).length;
+    const msg=a===tot?'Excelente! Você domina este resumo.':a>=Math.ceil(tot*0.6)?'Muito bem! Dê uma olhada nos pontos que você errou.':'Que tal reler o resumo e tentar de novo? Errar também faz parte de aprender.';
+    const erradas=Q.lista.map((p,k)=>({p,k})).filter(x=>!Q.res[x.k]);
+    corpo=`<div class="qz-end" tabindex="-1" id="qzFoco"><p class="qz-n">Resultado</p><div class="qz-score">${a} de ${tot}</div><p style="margin:0;font-weight:700">${msg}</p><p class="meta" style="margin:0">Seu resultado fica só neste celular. Não vale nota.</p>
+      ${erradas.length?`<div class="qz-miss"><p class="qz-n" style="margin-top:6px">Para rever</p>${erradas.map(x=>`<div class="card"><b>${esc(x.p.q)}</b><span class="meta">Resposta certa: ${esc(x.p.certa)}</span><button class="qz-rever" data-qz="rever" data-k="${x.k}">Rever no resumo</button></div>`).join('')}</div>`:''}
+      <div class="qz-btns"><button class="btn btn-primary" data-qz="outra">Fazer outra revisão</button><button class="btn btn-ghost" data-qz="fechar">Voltar ao resumo</button></div></div>`;
+  }else{
+    const p=Q.lista[Q.i],r=Q.resp;
+    const ops=p.a.map((t,k)=>{let cl='';if(r!==null){if(k===p.c)cl='ok';else if(k===r)cl='bad';else cl='dim'}
+      const lab=r!==null&&k===p.c?' (resposta certa)':r!==null&&k===r?' (sua resposta)':'';
+      return `<button class="qz-op ${cl}" data-op="${k}" ${r!==null?'disabled':''} aria-label="${'ABCD'[k]}) ${esc(t)}${lab}"><span class="qz-l" aria-hidden="true">${r!==null&&k===p.c?'✓':r!==null&&k===r?'✕':'ABCD'[k]}</span><span aria-hidden="true">${esc(t)}</span></button>`}).join('');
+    const acertou=r===p.c;
+    const fb=r===null?'':`<div class="qz-fb ${acertou?'ok':'bad'}" role="status" tabindex="-1" id="qzFoco"><b>${acertou?'Isso mesmo!':'Não foi dessa vez.'}</b>${acertou?'':`<p>A resposta certa é a letra <b>${'ABCD'[p.c]}</b>.</p>`}${p.e?`<p>${esc(p.e)}</p>`:''}<button class="qz-rever" data-qz="rever" data-k="${Q.i}">Rever no resumo</button></div>`;
+    corpo=`<p class="qz-n">Pergunta ${Q.i+1} de ${tot}</p><h2 class="qz-q" id="qzQ" tabindex="-1">${esc(p.q)}</h2><div class="qz-ops" role="group" aria-labelledby="qzQ">${ops}</div>${fb}
+      ${r!==null?`<button class="qz-next" data-qz="prox">${Q.i+1<tot?'Próxima pergunta':'Ver resultado'}</button>`:''}`;
+  }
+  o.innerHTML=`<div class="qz">${topo}${corpo}</div>`;
+  if(foco){const f=o.querySelector('#qzFoco')||o.querySelector('#qzQ');if(f){f.focus({preventScroll:true})}}
+  if(Q.resp===null||fim)o.scrollTop=0;
+  else{const fbEl=o.querySelector('.qz-fb');fbEl&&fbEl.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
+}
+function qzClique(e){
+  if(!Q)return;const op=e.target.closest('[data-op]'),act=e.target.closest('[data-qz]');
+  if(op&&Q.resp===null&&Q.i<Q.lista.length){Q.resp=+op.dataset.op;Q.res.push(Q.resp===Q.lista[Q.i].c);qzRender(true);return}
+  if(!act)return;const a=act.dataset.qz;
+  if(a==='fechar'){fecharRevisao();return}
+  if(a==='prox'){Q.i++;Q.resp=null;if(Q.i>=Q.lista.length)qzSalvar();qzRender(true);return}
+  if(a==='outra'){abrirRevisao(Q.n);return}
+  if(a==='rever'){qzRever(Q.lista[+act.dataset.k]);return}
+}
+function qzSalvar(){
+  const all=store.get('rev',{})||{},k=revKey(Q.n),st=all[k]||{};
+  let v=new Set(st.vistas||[]);Q.lista.forEach(p=>v.add(p.h));
+  const todas=new Set(Q.c.revisao.map(p=>hashQ(p.q)));if([...todas].every(h=>v.has(h)))v=new Set(Q.lista.map(p=>p.h)); // viu todas: recomeça o ciclo
+  all[k]={vistas:[...v].slice(-40),ult:{a:Q.res.filter(Boolean).length,t:Q.lista.length,ts:Date.now()}};store.set('rev',all);
+}
+const PALAVRAS_VAZIAS=new Set('para pela pelo pelas pelos como mais muito muita entre sobre esta este isso essa esse essas esses estes estas sendo foram porque quando onde qual quais seus suas tambem ainda apenas outro outra outros outras maior menor cerca desde contra mesmo mesma todo toda todos todas grande grandes pais regiao'.split(' '));
+function blocoDaPergunta(p){
+  const bs=[...document.querySelectorAll('.resumo [data-b]')];if(!bs.length)return null;
+  const toks=[...new Set(semAc(p.certa+' '+p.e).match(/[a-z0-9]{4,}/g)||[])].filter(w=>!PALAVRAS_VAZIAS.has(w));
+  let best=null,bs0=0;
+  bs.forEach(el=>{const t=semAc(el.textContent);if(t.length<25)return;let sc=0;toks.forEach(w=>{if(t.includes(w))sc+=w.length>=7?2:1});if(sc>bs0){bs0=sc;best=el}});
+  return best?+best.dataset.b:null;
+}
+function qzRever(p){
+  const b=blocoDaPergunta(p);
+  const o=document.querySelector('.qz-o');o.hidden=true;document.body.style.overflow='';
+  if(b!==null)irParaBloco({b,flash:true});else toast('Releia o resumo com calma.');
+  let v=document.querySelector('.qz-back');
+  if(!v){v=document.createElement('button');v.className='qz-back';v.innerHTML='← Voltar à revisão';document.body.appendChild(v);
+    v.onclick=()=>{v.remove();const o=document.querySelector('.qz-o');if(o){o.hidden=false;document.body.style.overflow='hidden';(o.querySelector('#qzFoco')||o.querySelector('#qzQ'))?.focus({preventScroll:true})}}}
+}
 function ttsDica(){
   const n=store.get('ttsDica',0);const semPT=!vozPT()||!/^pt[-_]BR/i.test((vozPT()||{}).lang||'');
   if(n<0||(n>=3&&!semPT))return;store.set('ttsDica',n+1);
@@ -1252,6 +1399,7 @@ function vSobre(){
       <ul class="sb-list">
       ${ok('A turma escolhida e o modo de cores','')}
       ${ok('As marcações de estudo','"Resumo copiado", "atividade enviada", marca-texto e comentários nos textos.')}
+      ${ok('Os resultados da revisão rápida','Quantas perguntas você acertou. Não vale nota e o professor não vê.')}
       ${ok('Os resumos baixados para ler sem internet','')}
       </ul>
       <p class="meta">Para apagar tudo isso, basta limpar os dados do site nas configurações do navegador ou desinstalar o app.</p>`)}
@@ -1445,6 +1593,7 @@ function vCap(n){
       <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Copiado no caderno':'Já copiei este resumo no caderno'}</button>
       <span class="meta">Marque quando terminar de copiar. Fica salvo só no seu celular.</span>
     </div>
+    ${revCard(c,n)}
     ${c.pdf?`<div class="card pdf-card">
       <div style="display:flex;gap:12px;align-items:center"><span class="pdf-ic" aria-hidden="true">PDF</span><span><b>Resumo em PDF</b><br><span class="meta">Para imprimir, guardar ou enviar a um colega.</span></span></div>
       <div class="pdf-actions">
@@ -1615,7 +1764,7 @@ function toast(msg,undo){
   if(undo)t.querySelector('.undo').onclick=()=>{t.remove();undo()};
   document.body.appendChild(t);setTimeout(()=>t.remove(),undo?6000:2400);
 }
-function go(tab,cap){if(adjusting)cancelAdjust();if(TTS.on)ttsParar();S.tab=tab;S.cap=cap||null;render();scrollTo(0,0);
+function go(tab,cap){if(adjusting)cancelAdjust();if(TTS.on)ttsParar();fecharRevisao();S.tab=tab;S.cap=cap||null;render();scrollTo(0,0);
   if(S.cap&&S.restore){const r=S.restore;S.restore=null;requestAnimationFrame(()=>irParaBloco(r))}}
 
 /* Baixa os dados do robô */
@@ -1671,6 +1820,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
   if(t.closest('#modeBtn'))return modeSheet();
   if(t.closest('#ttsBtn'))return TTS.on?ttsParar():ttsIniciar();
+  if(t.closest('[data-rev]')){abrirRevisao(capId(t.closest('[data-rev]').dataset.rev));return}
   if(t.closest('[data-continuar]')){const u=(store.get('ultimo',{})||{})[anoT()];const c=u&&capOf(u.cap);if(c){S.unit=c.u;S.restore={b:u.b};go('resumos',c.id)}return}
   const bh=t.closest('[data-busca-cap]');if(bh){const id=capId(bh.dataset.buscaCap),c=capOf(id);if(c){S.unit=c.u;S.restore={b:+bh.dataset.buscaB,flash:true};go('resumos',id)}return}
   const dv=t.closest('[data-duvida]');if(dv)return duvidaSheet(dv.dataset.duvida);

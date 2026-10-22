@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-21 · dúvidas v5';
+const VERSAO_ROBO = '2026-10-21 · revisão v6';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -291,7 +291,7 @@ function lerConteudo_() {
 function lerDocs_() {
   // Resultado: { caps: { '7': { 13: {id, nome, unidade, atualizado} } },
   //             temas: { '7': { 4: { 1: {aula: {...}, atividade: {...}} } } } }
-  const docs = {}, temas = {};
+  const docs = {}, temas = {}, revs = {};
   const raiz = DriveApp.getFolderById(GEO.PASTA_APP);
   const anos = raiz.getFolders();
   while (anos.hasNext()) {
@@ -311,6 +311,11 @@ function lerDocs_() {
         if (/^\s*\[\s*rascunho/i.test(nome)) continue;
         const mc = nome.match(/^\s*(\d+)\s*[-–—.:]?\s*(.*)$/);
         if (!mc) continue;
+        if (/^revis[ãa]o\b/i.test(mc[2].trim())) {
+          // "14 Revisão": perguntas da revisão rápida do capítulo 14
+          (revs[ano] = revs[ano] || {})[parseInt(mc[1], 10)] = { id: f.getId(), atualizado: f.getLastUpdated().toISOString() };
+          continue;
+        }
         (docs[ano] = docs[ano] || {})[parseInt(mc[1], 10)] = {
           id: f.getId(), nome: mc[2].trim(), unidade: parseInt(mu[1], 10),
           atualizado: f.getLastUpdated().toISOString()
@@ -337,7 +342,62 @@ function lerDocs_() {
       }
     }
   }
-  return { caps: docs, temas: temas };
+  return { caps: docs, temas: temas, revs: revs };
+}
+
+/**
+ * Lê o texto de um Doc de revisão. Formato de cada pergunta:
+ *   1. Enunciado
+ *   A) ...   B) ...   C) ...   D) ...
+ *   Resposta: B
+ *   Explicação: ...
+ * Devolve { perguntas: [{q, a:[4 textos], c: índice da correta, e}], erros: ['Pergunta 3: ...'] }.
+ */
+function lerRevisao_(texto) {
+  const linhas = String(texto || '').split(/\r?\n/).map(l => l.replace(/\u00a0/g, ' ').trim());
+  const perguntas = [], erros = [];
+  let solto = [], atual = null, primeira = true, num = 0;
+  const limpaNum = s => s.replace(/^(pergunta|quest[ãa]o)\s*\d*\s*[.:)\-–—]?\s*/i, '').replace(/^\d+\s*[.)\-–—:]\s*/, '').trim();
+  const fechar = () => {
+    if (!atual) return;
+    num++;
+    const p = atual; atual = null;
+    const falta = [];
+    if (!p.q) falta.push('enunciado');
+    const letras = ['A', 'B', 'C', 'D'].filter((L, i) => !p.ops[i]);
+    if (letras.length) falta.push('alternativa ' + letras.join(', '));
+    if (p.c < 0) falta.push('linha "Resposta:" com A, B, C ou D');
+    if (falta.length) { erros.push('Pergunta ' + num + (p.q ? ' ("' + p.q.slice(0, 40) + '…")' : '') + ': falta ' + falta.join('; ')); return; }
+    perguntas.push({ q: p.q, a: p.ops.slice(0, 4), c: p.c, e: p.e });
+  };
+  linhas.forEach(l => {
+    if (!l) return;
+    let m = l.match(/^([A-Da-d])\s*[)\].:\-–—]\s*(.+)$/);
+    if (m && !(atual && (atual.c >= 0 || atual.temExp))) {
+      const i = 'ABCD'.indexOf(m[1].toUpperCase());
+      if (!atual || atual.ops[i]) {
+        fechar();
+        let enun = solto;
+        if (primeira) {
+          let k = -1; enun.forEach((x, j) => { if (/^(\d+\s*[.)\-–—:]|pergunta|quest[ãa]o)/i.test(x)) k = j; });
+          enun = k >= 0 ? enun.slice(k) : enun.slice(-1);
+        }
+        atual = { q: limpaNum(enun.join(' ')), ops: [], c: -1, e: '', temExp: false };
+        solto = []; primeira = false;
+      }
+      atual.ops[i] = m[2].trim();
+      return;
+    }
+    m = l.match(/^(resposta|gabarito)[^:]*:\s*(?:letra\s*)?\(?\s*([A-Da-d])\b/i);
+    if (m && atual) { atual.c = 'ABCD'.indexOf(m[2].toUpperCase()); return; }
+    m = l.match(/^explica[çc][ãa]o\s*:?\s*(.*)$/i);
+    if (m && atual) { atual.e = m[1].trim(); atual.temExp = true; return; }
+    if (atual && (atual.temExp || atual.c >= 0)) { fechar(); solto = [l]; return; }
+    if (atual && atual.ops.length) { atual.ops[atual.ops.length - 1] += ' ' + l; return; }
+    solto.push(l);
+  });
+  fechar();
+  return { perguntas: perguntas, erros: erros };
 }
 
 const NIVEIS_ = () => [
@@ -450,9 +510,12 @@ function textoComEstilo_(el) {
 /* Monta anos, unidades e capítulos                                    */
 /* ------------------------------------------------------------------ */
 function montarAnos_(conf, conteudo, docs, anterior) {
-  const antCaps = {}, antTxt = {};
+  const antCaps = {}, antTxt = {}, antRev = {};
   ((anterior && anterior.anos) || []).forEach(a => (a.unidades || []).forEach(u => {
-    (u.caps || []).forEach(c => { if (c.doc) antCaps[c.doc] = c; });
+    (u.caps || []).forEach(c => {
+      if (c.doc) antCaps[c.doc] = c;
+      if (c.docRevisao) antRev[c.docRevisao] = { at: c.atualizadoRevisao, r: c.revisao, err: c.revisaoErros };
+    });
     (u.temas || []).forEach(t => {
       if (t.doc) antTxt[t.doc] = { at: t.atualizado, txt: t.resumo };
       if (t.docAtividade) antTxt[t.docAtividade] = { at: t.atualizadoAtividade, txt: t.atividadeTexto };
@@ -489,6 +552,20 @@ function montarAnos_(conf, conteudo, docs, anterior) {
         try { cap.resumo = docParaTexto_(DocumentApp.openById(d.id)); }
         catch (err) { Logger.log('Não consegui ler o Doc ' + d.id + ': ' + err); cap.resumo = ant ? ant.resumo : ''; }
       }
+    });
+    // Revisão rápida: perguntas do Doc "NN Revisão" (o app sorteia 6 e embaralha as alternativas)
+    const rAno = (docs.revs || {})[ano] || {};
+    Object.keys(rAno).forEach(n => {
+      const d = rAno[n];
+      const u = Object.keys(unidades).map(k => unidades[k]).filter(x => x.caps[n])[0];
+      if (!u) return;
+      const cap = u.caps[n], ant = antRev[d.id];
+      cap.docRevisao = d.id; cap.atualizadoRevisao = d.atualizado;
+      if (ant && ant.r && ant.at === d.atualizado) { cap.revisao = ant.r; cap.revisaoErros = ant.err || []; return; }
+      try {
+        const lido = lerRevisao_(DocumentApp.openById(d.id).getBody().getText());
+        cap.revisao = lido.perguntas; cap.revisaoErros = lido.erros;
+      } catch (err) { Logger.log('Não consegui ler a revisão ' + d.id + ': ' + err); if (ant) { cap.revisao = ant.r; cap.revisaoErros = ant.err || []; } }
     });
     // Temas Transversais (aulas extras · recuperação paralela)
     const sheetT = conteudo.temas[ano] || {};
@@ -671,6 +748,11 @@ function resumoTexto_(d) {
     l.push(a.nome + ' (turmas ' + a.turmas.join(', ') + ') · Unidade ' + a.atual + ': ' + pub + ' resumo(s) publicado(s) de ' + (u ? u.caps.length : 0));
   });
   Object.keys(d.agenda).forEach(t => l.push('Agenda ' + t + ': ' + d.agenda[t].length + ' evento(s)'));
+  d.anos.forEach(a => a.unidades.forEach(u => u.caps.forEach(c => {
+    if (!c.docRevisao) return;
+    l.push('Revisão ' + a.nome + ' · Cap. ' + c.n + ': ' + (c.revisao || []).length + ' pergunta(s) ok' + ((c.revisaoErros || []).length ? ' · PROBLEMAS:' : ''));
+    (c.revisaoErros || []).forEach(e => l.push('   ⚠ ' + e));
+  })));
   l.push('Avisos de novidade ativos: ' + (d.avisos || []).length);
   return l.join('\n');
 }
