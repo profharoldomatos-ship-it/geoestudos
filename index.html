@@ -203,7 +203,8 @@ body.m-escuro:is(.my7,.my8,.my9) .tab{color:color-mix(in srgb,var(--mc) 45%,#fff
 .back{display:inline-flex;align-items:center;gap:6px;color:var(--pen);font-weight:700;padding:4px 0}
 .tools{display:flex;gap:6px}
 .read-tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:-6px}
-.read-tools .tool{padding:8px 12px}
+.read-tools .tool{padding:8px 11px}
+@media (max-width:420px){.read-tools{gap:6px}.read-tools .tool{padding:8px 9px}}
 .rt-back{display:none!important;color:var(--pen)}
 .tool{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--surface);font-weight:700;font-size:.86rem}
 .count{min-width:20px;height:20px;border-radius:10px;background:var(--hl);color:var(--m-ink);font-size:.74rem;display:grid;place-items:center;padding:0 5px}
@@ -763,6 +764,66 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .prazo{margin-top:8px;font-size:.88rem;color:var(--muted)}
 .prazo b{color:var(--ink)}
 
+
+/* Botão Apresentar: só o ícone no celular */
+.rt-lbl{display:none}
+@media (min-width:600px){.rt-lbl{display:inline}}
+/* Modo apresentação (TV, projetor, data show) */
+.ap.overlay{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.ap-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px clamp(12px,3vw,32px);border-bottom:1px solid var(--line);background:var(--surface)}
+.ap-id{display:flex;align-items:center;gap:10px;min-width:0;font-weight:700;color:var(--pen);font-size:clamp(.82rem,1.1vw,1.05rem)}
+.ap-id span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-id svg{flex:none}
+.ap-ferr{display:flex;gap:6px;flex:none}
+.ap-ferr button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:7px 11px;background:var(--bg);font-weight:700;font-size:.86rem;min-height:38px}
+.ap-ferr .ap-sair{background:var(--pen);color:var(--on-pen);border-color:var(--pen)}
+.ap{--ycor:color-mix(in srgb,var(--year) 72%,var(--ink))}
+.ap-prog{height:5px;background:var(--surface-2)}
+.ap-prog i{display:block;height:100%;background:var(--year);transition:width .25s}
+.ap-stage{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:clamp(18px,4vh,56px) clamp(18px,5vw,80px);font-size:calc(clamp(18px,1vw + 10px,34px) * var(--aps,1) * var(--fit,1));line-height:1.55}
+.ap-sl,.ap-capa{max-width:min(1250px,100%);margin:0 auto}
+.ap-sl h2{font-family:var(--display);font-size:1.7em;line-height:1.12;color:var(--ycor);margin:0 0 .6em;text-wrap:balance;letter-spacing:-.01em}
+.ap-tx{display:flex;flex-direction:column;gap:.55em;max-width:52em}
+.ap-tx p,.ap-tx ul,.ap-tx ol{margin:0}
+.ap-tx ul,.ap-tx ol{padding-left:1.2em;display:flex;flex-direction:column;gap:.4em}
+.ap-tx li::marker{color:var(--ycor)}
+.ap-tx b{background:linear-gradient(transparent 60%,var(--hl-soft) 60%)}
+.ap-tx .r-h2{font-family:var(--display);font-size:1.12em;color:var(--pen);margin:.4em 0 0}
+.ap-tx img,.ap-tx iframe,.ap-tx video{max-width:min(100%,900px)}
+.ap-tx .media{max-width:900px}
+.ap-capa{display:flex;gap:clamp(20px,4vw,60px);align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:100%}
+.ap-capa-tx{display:flex;flex-direction:column;gap:.5em;flex:1 1 420px;min-width:0}
+.ap-ey{font-size:.72em;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ycor)}
+.ap-capa h1{font-size:2.6em;line-height:1.02;letter-spacing:-.02em;color:var(--ink)}
+.ap-autor{font-size:.8em;color:var(--muted)}
+.ap-sum{margin:.6em 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:.15em;font-size:.86em}
+.ap-sum button{text-align:left;font-weight:700;color:var(--ink);padding:.1em 0;line-height:1.35}
+.ap-sum button:hover{color:var(--ycor)}
+.ap-qr{display:flex;flex-direction:column;align-items:center;gap:.4em;font-size:.68em;color:var(--muted);text-align:center;flex:none}
+.ap-qr .qr{width:clamp(120px,15vw,240px);height:auto;border-radius:10px;border:1px solid var(--line)}
+.ap-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px clamp(12px,3vw,32px);border-top:1px solid var(--line);background:var(--surface)}
+.ap-nav button{display:inline-flex;align-items:center;gap:6px;font-weight:700;border:1.5px solid var(--line);border-radius:12px;padding:10px 16px;min-height:48px;background:var(--bg)}
+.ap-nav .ap-prox{background:var(--year);color:#fff;border-color:var(--year)}
+.ap-nav button[disabled]{opacity:.35;cursor:default}
+.ap-cont{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.ap button:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+@media (max-width:560px){.ap-ferr [data-ap="tv"] span{display:none}.ap-id span{font-size:.8rem}.ap-nav button{padding:10px 12px}}
+@media (prefers-reduced-motion:reduce){.ap-prog i{transition:none}}
+/* Ajuda: levar para a TV */
+.tv-l{display:flex;flex-direction:column;gap:10px}
+.tv-l>div{display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);font-size:.92rem;line-height:1.45}
+.tv-url{word-break:break-all;color:var(--pen)}
+.tv-qr{display:flex;gap:14px;align-items:center}
+.tv-qr .qr{width:112px;height:112px;flex:none;border-radius:8px;border:1px solid var(--line)}
+.tv-qr>span{display:flex;flex-direction:column;gap:2px}
+/* Telas grandes: tablet e computador usam mais largura */
+@media (min-width:760px){
+  .app{max-width:760px}
+  .tabs{width:min(100%,760px)}
+  .sheet{width:min(100%,600px)}
+  .qz{max-width:640px}
+  .paper{padding:22px 26px 24px 34px}
+}
 </style>
 </head>
 <body>
@@ -1824,7 +1885,7 @@ function vCap(n){
     <div><span class="ypill">${y.label} · Unidade ${c.u} · Capítulo ${n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo">Resumo</span> ${c.atividade?(isSent(n)?`<button class="qact ok" data-jump="1">${CHECK}Atividade enviada</button>`:`<button class="qact" data-jump="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg>Atividade de fixação · vale nota</button>`):''}
     ${pCad?`<div class="prazo">Entrega do caderno: <b>${dm(pCad)}</b> · ${quando(pCad).toLowerCase()}</div>`:''}</div>
     ${S.tip?`<div class="tip"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none;color:var(--pen)"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra. Para corrigir uma marcação, toque nela: dá para trocar a cor, ajustar o trecho ou apagar. O texto do resumo não muda.</span><button id="tipOk">Entendi</button></div>`:''}
-    <div class="read-tools"><button class="tool rt-back" data-back aria-label="Voltar aos resumos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button></div>
+    <div class="read-tools"><button class="tool rt-back" data-back aria-label="Voltar aos resumos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button><button class="tool" id="apresBtn" aria-label="Apresentar na TV ou no projetor">${APRIC}<span class="rt-lbl">Apresentar</span></button></div>
     <div class="paper"><div class="resumo" style="--fs:${S.size}"></div></div>
     <div class="card copy-card${done?' is-done':''}">
       <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Copiado no caderno':'Já copiei este resumo no caderno'}</button>
@@ -1869,7 +1930,7 @@ function vTema(n,c){
     <div><span class="ypill">${y.label} · Unidade ${c.u} · Tema Transversal ${c.n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo tt-lbl">Aula extra</span> <button class="qact tt-q${sent?' ok':''}" data-jump="1">${sent?CHECK+'Atividade feita':'Vale ponto · recuperação paralela'}</button>
     ${pr?`<div class="prazo">Prazo da atividade: <b>${dm(pr)}</b> · ${quando(pr).toLowerCase()}</div>`:''}</div>
     ${S.tip?`<div class="tip"><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra.</span><button id="tipOk">Entendi</button></div>`:''}
-    <div class="read-tools"><button class="tool rt-back" data-back aria-label="Voltar aos resumos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button></div>
+    <div class="read-tools"><button class="tool rt-back" data-back aria-label="Voltar aos resumos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button><button class="tool" id="apresBtn" aria-label="Apresentar na TV ou no projetor">${APRIC}<span class="rt-lbl">Apresentar</span></button></div>
     <div class="paper"><div class="resumo" style="--fs:${S.size}"></div></div>
     <div class="card copy-card${done?' is-done':''}">
       <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Aula estudada':'Já estudei esta aula'}</button>
@@ -1892,6 +1953,115 @@ function ttAtvCard(t){
   const id='t'+t.n,sent=isSent(id),pr=prazoDe(id,'tema'),late=!sent&&pr&&pr<HOJE;
   return `<div class="atv tt${sent?' ok':late?' late':''}"><div class="atv-h"><span class="cn tt-cn">${TTIC}</span><span style="min-width:0"><span class="eyebrow">Tema Transversal ${t.n}</span><b>${esc(t.titulo)}</b>${pr?`<span class="meta">Prazo: ${dm(pr)} · ${quando(pr).toLowerCase()}</span>`:''}</span><span class="atv-st">${sent?CHECK+'Feita':late?'Prazo encerrado':temAtv(t)?'Pendente':'Aguarde'}</span></div>
     <div class="atv-acts">${!temAtv(t)?'<span class="meta">A atividade será publicada em breve.</span>':sent?'':t.atividade&&!t.atividadeTexto?`<a class="btn act-go" href="${esc(t.atividade)}" target="_blank" rel="noopener">Fazer a atividade<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`:`<button class="btn act-go" data-act="${id}">Ver atividade</button>`}${temAtv(t)?`<button class="btn btn-ghost" data-sent="${id}">${sent?'Desmarcar':'Já fiz'}</button>`:''}${t.resumo?`<button class="btn btn-ghost" data-cap="${id}">Ver aula</button>`:''}</div></div>`;
+}
+
+
+/* Modo apresentação: o resumo em tela cheia, seção por seção, para TV, projetor ou data show */
+const APRIC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>';
+let AP=null;
+const BOOKD='M808.52,426.51v283.65c0,18.9-15.31,34.24-34.24,34.24h-158.64c-31.47,0-59.65,14.04-78.65,36.16l-.03.03c-.55.65-1.1,1.27-1.61,1.95-.07.1-.17.21-.27.31-5.68,6.3-13.94,10.24-23.08,10.24s-17.36-3.94-23.08-10.24c-.1-.1-.17-.21-.27-.31-.41-.55-.89-1.1-1.37-1.64-18.97-22.32-47.29-36.5-78.92-36.5h-158.64c-18.9,0-34.24-15.34-34.24-34.24v-280.22c0-20.82,16.85-37.66,37.66-37.66h155.21c57.25,0,103.65,46.4,103.65,103.61,0-57.22,46.4-103.61,103.65-103.61h158.64c18.93,0,34.24,15.31,34.24,34.24Z';
+function linkDoResumo(c){return new URL('./',location.href).href+'?turma='+encodeURIComponent(S.turma||MINHA||'')+'&ir=resumos&cap='+encodeURIComponent(c.id)}
+function slidesDe(c){
+  const tmp=document.createElement('div');tmp.innerHTML=md(c.resumo);
+  const nodes=[...tmp.children];const secs=[];let cur=null;
+  for(const n of nodes){
+    if(n.matches('h2.r-h')){cur={t:n.innerHTML,h:[]};secs.push(cur)}
+    else{if(!cur){cur={t:'',h:[],pre:true};secs.push(cur)}cur.h.push(n.outerHTML)}
+  }
+  // cabeçalho do Doc ("GEOGRAFIA – 7 ANO", "UNIDADE 4"...) já vai na capa
+  if(secs[0]&&secs[0].pre&&secs.length>1){const t=document.createElement('div');t.innerHTML=secs[0].h.join('');if([...t.children].every(x=>x.matches('p')&&x.textContent.length<90))secs.shift()}
+  // texto sem seções: divide em partes de 6 blocos
+  const out=[];
+  secs.forEach(sc=>{if(sc.h.length>8&&!sc.t){for(let i=0;i<sc.h.length;i+=6)out.push({t:'',h:sc.h.slice(i,i+6)})}else out.push(sc)});
+  return out;
+}
+function qrSvg(texto){
+  try{const q=qrcode(0,'M');q.addData(texto);q.make();const n=q.getModuleCount();let d='';
+    for(let r=0;r<n;r++)for(let col=0;col<n;col++)if(q.isDark(r,col))d+=`M${col+2} ${r+2}h1v1h-1z`;
+    return `<svg class="qr" viewBox="0 0 ${n+4} ${n+4}" role="img" aria-label="QR code do resumo"><rect width="${n+4}" height="${n+4}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`}catch(e){return ''}
+}
+function carregarQr(){return window.qrcode?Promise.resolve():new Promise(ok=>{const sc=document.createElement('script');sc.src='qrcode.min.js';sc.onload=ok;sc.onerror=ok;document.head.appendChild(sc)})}
+function abrirApres(){
+  const c=capOf(S.cap);if(!c||!c.resumo)return;
+  if(TTS.on)ttsParar();
+  const y=Y(),sl=slidesDe(c);
+  AP={c,y,sl,i:0,esc:store.get('apEsc',1)||1};
+  const o=document.createElement('div');o.className='ap overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Modo apresentação');
+  document.body.appendChild(o);document.body.style.overflow='hidden';
+  o.addEventListener('click',apClique);document.addEventListener('keydown',apTecla);
+  let x0=null;o.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')x0=e.clientX});
+  o.addEventListener('pointerup',e=>{if(x0==null)return;const dx=e.clientX-x0;x0=null;if(Math.abs(dx)>60&&!getSelection().toString())apIr(dx<0?1:-1)});
+  try{if(innerWidth>=700&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}
+  apRender();carregarQr().then(()=>{if(AP&&AP.i===0)apRender()});
+}
+function apRender(){
+  const o=document.querySelector('.ap');if(!o||!AP)return;
+  const {c,y,sl,i}=AP,tot=sl.length+1;
+  const cap=c.tema?`Tema Transversal ${c.n}`:`Capítulo ${c.n}`;
+  let corpo;
+  if(i===0){
+    corpo=`<div class="ap-capa"><div class="ap-capa-tx"><span class="ap-ey">${y.label} · Unidade ${c.u} · ${cap}</span><h1>${esc(c.titulo)}</h1><span class="ap-autor">Prof. Haroldo Matos · GeoEstudos</span>
+      ${sl.some(x=>x.t)?`<ul class="ap-sum">${sl.map((x,k)=>x.t?`<li><button data-ap-ir="${k+1}">${/^\s*\d/.test(x.t.replace(/<[^>]+>/g,''))?'':(k+1)+'. '}${x.t}</button></li>`:'').join('')}</ul>`:''}</div>
+      ${window.qrcode?`<div class="ap-qr">${qrSvg(linkDoResumo(c))}<span>Abra este ${c.tema?'texto':'resumo'} no seu celular</span></div>`:''}</div>`;
+  }else{
+    const x=sl[i-1];
+    corpo=`<article class="ap-sl">${x.t?`<h2>${x.t}</h2>`:''}<div class="ap-tx">${x.h.join('')}</div></article>`;
+  }
+  o.innerHTML=`<div class="ap-bar"><span class="ap-id"><svg viewBox="196 214 640 640" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="${BOOKD}"/><circle cx="512.01" cy="433.78" r="188.21" fill="currentColor" stroke="var(--bg)" stroke-width="25"/></svg><span>${cap} · ${esc(c.titulo)}</span></span>
+    <span class="ap-ferr"><button data-ap="menos" aria-label="Diminuir a letra">A−</button><button data-ap="mais" aria-label="Aumentar a letra">A+</button><button data-ap="tv">${APRIC}<span>Na TV</span></button>${document.fullscreenEnabled?`<button data-ap="cheia" aria-label="Tela cheia"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>`:''}<button data-ap="sair" class="ap-sair">Sair</button></span></div>
+    <div class="ap-prog" aria-hidden="true"><i style="width:${(i/(tot-1||1))*100}%"></i></div>
+    <div class="ap-stage" style="--aps:${AP.esc}">${corpo}</div>
+    <div class="ap-nav"><button data-ap="ant" ${i===0?'disabled':''}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Anterior</button><span class="ap-cont">${i===0?'Capa':i+' de '+(tot-1)}</span><button data-ap="prox" class="ap-prox" ${i===tot-1?'disabled':''}>Próximo<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></div>`;
+  const st=o.querySelector('.ap-stage');st.scrollTop=0;apAjustar(st);
+  const f=o.querySelector('.ap-prox:not([disabled])')||o.querySelector('[data-ap="ant"]');f&&f.focus({preventScroll:true});
+}
+function apAjustar(st){
+  // diminui a letra só o necessário para a seção caber na tela (até 70%)
+  let f=1;st.style.setProperty('--fit',1);
+  while(st.scrollHeight>st.clientHeight+2&&f>.7){f=Math.round((f-.05)*100)/100;st.style.setProperty('--fit',f)}
+}
+function apIr(d){if(!AP)return;const n=Math.max(0,Math.min(AP.sl.length,AP.i+d));if(n!==AP.i){AP.i=n;apRender()}}
+function apClique(e){
+  const b=e.target.closest('[data-ap],[data-ap-ir]');if(!b)return;
+  if(b.dataset.apIr){AP.i=+b.dataset.apIr;return apRender()}
+  const a=b.dataset.ap;
+  if(a==='prox')apIr(1);else if(a==='ant')apIr(-1);else if(a==='sair')fecharApres();
+  else if(a==='mais'||a==='menos'){AP.esc=Math.min(1.8,Math.max(.7,Math.round((AP.esc+(a==='mais'?.1:-.1))*10)/10));store.set('apEsc',AP.esc);const st=document.querySelector('.ap-stage');st.style.setProperty('--aps',AP.esc);apAjustar(st)}
+  else if(a==='cheia'){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(err){}}
+  else if(a==='tv')tvSheet();
+}
+function apTecla(e){
+  if(!AP||document.querySelectorAll('.overlay').length>1)return;
+  const k=e.key;
+  if(['ArrowRight','PageDown',' ','ArrowDown'].includes(k)&&!(k===' '&&e.target.closest('button'))){
+    const st=document.querySelector('.ap-stage');
+    if(k==='ArrowDown'&&st&&st.scrollTop+st.clientHeight<st.scrollHeight-4)return;
+    e.preventDefault();apIr(1)}
+  else if(['ArrowLeft','PageUp','ArrowUp'].includes(k)){
+    const st=document.querySelector('.ap-stage');
+    if(k==='ArrowUp'&&st&&st.scrollTop>4)return;
+    e.preventDefault();apIr(-1)}
+  else if(k==='Home'){AP.i=0;apRender()}else if(k==='End'){AP.i=AP.sl.length;apRender()}
+  else if(k==='Escape'||k==='Backspace'&&!e.target.closest('input,textarea')){e.preventDefault();fecharApres()}
+  else if(k==='f'||k==='F'){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(err){}}
+}
+function fecharApres(){
+  document.querySelector('.ap')?.remove();document.removeEventListener('keydown',apTecla);document.body.style.overflow='';AP=null;
+  try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
+}
+/* Como levar para a TV: espelhamento em cada aparelho + QR code para abrir o resumo em outro aparelho */
+function tvSheet(){
+  const c=capOf(S.cap),base=new URL('./',location.href).href;
+  carregarQr().then(()=>sheet(`<h2>Levar para a TV ou projetor</h2>
+    <p class="meta" style="margin:0">Use o <b>modo apresentação</b> e espelhe a tela do aparelho. Cada aparelho tem o seu caminho:</p>
+    <div class="tv-l">
+      <div><b>Celular Android</b><span>Deslize o dedo do topo da tela para baixo e toque em <b>Transmitir tela</b>, <b>Smart View</b> (Samsung) ou <b>Espelhamento</b>. Escolha a TV. Ela precisa ser Smart TV ou ter Chromecast, na mesma rede Wi-Fi.</span></div>
+      <div><b>iPhone e iPad</b><span>Abra a Central de Controle e toque em <b>Espelhar Tela</b>. Funciona com Apple TV e TVs compatíveis com AirPlay.</span></div>
+      <div><b>Computador ou notebook</b><span>Ligue no projetor ou na TV pelo <b>cabo HDMI</b>. Sem cabo: no Chrome, menu <b>⋮ › Transmitir</b>, para TVs com Chromecast.</span></div>
+      <div><b>TV com navegador</b><span>Abra o navegador da TV e digite <b class="tv-url">${esc(base.replace(/^https?:\/\//,''))}</b></span></div>
+    </div>
+    ${c&&window.qrcode?`<div class="tv-qr">${qrSvg(linkDoResumo(c))}<span><b>Abrir este resumo em outro aparelho</b><span class="meta">Aponte a câmera de um celular ou tablet para o código.</span></span></div>`:''}
+    <button class="btn btn-ghost" data-close>Fechar</button>`));
 }
 
 /* PDF: o link manual da planilha tem prioridade; senão, o PDF que o robô gera do próprio Doc */
@@ -2107,6 +2277,7 @@ document.addEventListener('click',ev=>{
   {const sp=t.closest('[data-sharepdf]');if(sp)return sharePdf(sp.dataset.sharepdf);}
   if(t.closest('#shareApp'))return shareApp();
   if(t.closest('#readBtn'))return readSheet();
+  if(t.closest('#apresBtn'))return abrirApres();
   if(t.closest('#listBtn'))return listSheet();
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
