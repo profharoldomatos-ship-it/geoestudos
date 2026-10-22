@@ -1080,7 +1080,7 @@ function lerMural_(dados) {
     let ts = [];
     if (!p || p.indexOf('toda') >= 0) ts = todas.slice();
     else {
-      (p.match(/(\d)\s*o?\s*º?\s*ano/g) || []).forEach(x => (porAno[x[0]] || []).forEach(t => ts.push(t)));
+      (p.match(/(^|[^\d])[789]\s*(º|°|o\b|ano)/g) || []).forEach(x => { const a = x.match(/[789]/)[0]; (porAno[a] || []).forEach(t => ts.push(t)); });
       (p.match(/\b\d{2}\b/g) || []).forEach(t => { if (todas.indexOf(t) >= 0) ts.push(t); });
     }
     ts = ts.filter((t, k) => ts.indexOf(t) === k);
