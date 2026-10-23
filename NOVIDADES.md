@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.5.4 · 23/10/2026
+- Rodapé: e-mail em parágrafo próprio, sem quebra no meio do endereço.
+
 ## 1.5.3 · 23/10/2026
 - Guia do estudante: rever só uma parte do tour (6 partes) ou o tour completo.
 
