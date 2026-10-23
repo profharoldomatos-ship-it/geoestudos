@@ -326,10 +326,16 @@ function prepararAbaPeriodos_(ss) {
   if (sh) return sh;
   sh = ss.insertSheet('Períodos das unidades');
   sh.getRange(1, 1, 1, 4).setValues([['Unidade', 'Início', 'Fim', 'Como funciona']]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F');
-  sh.getRange(2, 1, 4, 1).setValues([[1], [2], [3], [4]]);
+  // Calendário da SEMED São Luís 2026 (abertura e fechamento de cada bimestre; a prorrogação é só para notas e diários)
+  const d = (a, m, dia) => new Date(a, m - 1, dia, 12);
+  sh.getRange(2, 1, 4, 3).setValues([
+    [1, d(2026, 1, 26), d(2026, 4, 10)],
+    [2, d(2026, 4, 13), d(2026, 6, 26)],
+    [3, d(2026, 7, 31), d(2026, 10, 8)],
+    [4, d(2026, 10, 9), d(2026, 12, 22)]]);
   sh.getRange(2, 2, 4, 2).setNumberFormat('dd/mm/yyyy')
     .setDataValidation(SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(false).setHelpText('Digite a data no formato dia/mês/ano, ex.: 03/02/2026').build());
-  sh.getRange(2, 4).setValue('Datas do calendário da SEMED (valem para 7º, 8º e 9º anos). No app, só fica aberta a unidade que já começou e é a mais recente; as outras ficam fechadas para os alunos. Sem datas, vale a coluna "Atual" da aba Unidades.').setWrap(true);
+  sh.getRange(2, 4).setValue('Datas do calendário da SEMED 2026: abertura e fechamento de cada bimestre (valem para 7º, 8º e 9º anos; a data de prorrogação não entra, porque é para notas e diários). No app, só fica aberta a unidade que já começou e é a mais recente; as outras ficam fechadas para os alunos. Sem datas, vale a coluna "Atual" da aba Unidades.').setWrap(true);
   sh.setColumnWidth(1, 80); sh.setColumnWidth(2, 110); sh.setColumnWidth(3, 110); sh.setColumnWidth(4, 420);
   sh.setFrozenRows(1);
   return sh;
