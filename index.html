@@ -727,6 +727,12 @@ body.m-escuro .privbtn{background:#2F5BC4;box-shadow:0 0 0 1.5px #9DB8FF,0 6px 1
 .dia-h .eyebrow{display:block;color:inherit;font-weight:800;letter-spacing:.04em;font-size:.72rem;line-height:1.3}
 .dia-h .dia-q{display:block;font-size:.84rem;color:inherit;opacity:.85}
 .dia-novo{position:relative;margin-left:auto;background:var(--hl);color:#1E2430;font-weight:800;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 9px}
+.dia>summary{list-style:none;cursor:pointer}.dia>summary::-webkit-details-marker{display:none}
+.dia>summary:focus-visible{outline:3px solid var(--hl);outline-offset:-3px}
+.dia-h .dia-ch{position:relative;flex:none;margin-left:auto;transition:transform .2s}
+.dia-h .dia-novo+.dia-ch{margin-left:6px}
+details.dia[open] .dia-ch{transform:rotate(180deg)}
+details.dia:not([open]) .dia-h{border-radius:var(--r)}
 .dia-b{padding:13px 16px 16px;display:flex;flex-direction:column;gap:8px}
 .dia-t{margin:0;font-size:1.22rem;line-height:1.25}
 .dia .media{margin:4px 0}
@@ -1483,7 +1489,7 @@ function secFold(key,titulo,tipo,ic,resumo,corpo,badge){
   const ab=(store.get('secAbertas',{})||{})[key];
   return `<details class="sfold" data-sfold="${key}"${ab?' open':''}><summary class="sec sec-${tipo}"><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span><span class="sec-tx"><h2>${titulo}</h2><span class="sec-sub">${resumo}</span></span>${badge||''}${SF_CHEV}</summary><div class="sfold-body">${corpo}</div></details>`;
 }
-document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('.yfold')){const m=store.get('anosAbertos',{})||{};m[d.dataset.ano]=d.open;store.set('anosAbertos',m);return}if(!d.matches||!d.matches('.sfold'))return;const m=store.get('secAbertas',{})||{};m[d.dataset.sfold]=d.open;store.set('secAbertas',m)},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details.dia')){store.set('diaAberto',d.open);if(d.open&&d.dataset.diaid)diaMarcar(d.dataset.diaid);return}if(d.matches&&d.matches('.yfold')){const m=store.get('anosAbertos',{})||{};m[d.dataset.ano]=d.open;store.set('anosAbertos',m);return}if(!d.matches||!d.matches('.sfold'))return;const m=store.get('secAbertas',{})||{};m[d.dataset.sfold]=d.open;store.set('secAbertas',m)},true);
 function muralFold(){
   const pe=profEdit([['Abrir o mural na planilha',profP().config]]);
   const L=muralDe(S.turma),lid=avLidos(),nov=L.filter(m=>!lid.has(m.id)).length;
@@ -1906,7 +1912,8 @@ function vSobre(){
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
-const diaCab=(sub,novo)=>`<header class="dia-h">${DIA_DECO}<span class="dia-ic">${DIA_IC}</span><span><span class="eyebrow">Conteúdo Geográfico do Dia</span><span class="dia-q">${sub}</span></span>${novo?'<span class="dia-novo">Novo</span>':''}</header>`;
+const diaCab=(sub,novo,fold)=>`<${fold?'summary':'header'} class="dia-h">${DIA_DECO}<span class="dia-ic">${DIA_IC}</span><span><span class="eyebrow">Conteúdo Geográfico do Dia</span><span class="dia-q">${sub}</span></span>${novo?'<span class="dia-novo">Novo</span>':''}${fold?SF_CHEV.replace('sf-ch','dia-ch'):''}</${fold?'summary':'header'}>`;
+const diaAberta=novo=>novo||store.get('diaAberto',true)!==false;
 const DIA_ILU='<svg class="dia-ilu" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="27" cy="27" r="17"/><path d="M10 27h34M27 10c-6 6-6 28 0 34M27 10c6 6 6 28 0 34"/><path d="M39.5 39.5L54 54"/><path d="M50 8l1.6 3.4L55 13l-3.4 1.6L50 18l-1.6-3.4L45 13l3.4-1.6z" fill="currentColor" stroke="none"/></svg>';
 function diaQuando(iso){
   if(iso===HOJE)return 'Postado hoje';
@@ -1926,16 +1933,16 @@ function diaMarcar(id){const v=diaVistos();if(!v.includes(id)){v.push(id);store.
 const diaNovo=()=>{const d=diaLista()[0];return d&&!diaVistos().includes(d.id)?d:null};
 function diaHome(){
   const l=diaLista();
-  if(!l.length)return `<article class="dia dia-vazio" id="dia">${diaCab('Em breve',false)}
+  if(!l.length)return `<details class="dia dia-vazio" id="dia"${diaAberta(false)?' open':''}>${diaCab('Em breve',false,true)}
     <div class="dia-b">${DIA_ILU}<p><span class="dia-em">Prepare o seu olhar geográfico!</span>Aqui o Prof. Haroldo vai postar vídeos, imagens e curiosidades sobre o mundo e sobre o lugar onde a gente vive. Quando sair conteúdo novo, você recebe um aviso no celular.</p></div>
-    ${PROF()?`<div style="padding:0 16px 14px">${profEdit([['Fazer a primeira postagem na planilha',profP().dia||profP().config]])}</div>`:''}</article>`;
+    ${PROF()?`<div style="padding:0 16px 14px">${profEdit([['Fazer a primeira postagem na planilha',profP().dia||profP().config]])}</div>`:''}</details>`;
   const d=l[0],novo=!diaVistos().includes(d.id);
-  return `<article class="dia" id="dia" data-diaid="${esc(d.id)}" aria-labelledby="diaT">${diaCab(diaQuando(d.data),novo)}
-    <div class="dia-b"><h2 class="dia-t" id="diaT">${esc(d.titulo)}</h2>
+  return `<details class="dia" id="dia" data-diaid="${esc(d.id)}"${diaAberta(novo)?' open':''}>${diaCab(diaQuando(d.data),novo,true)}
+    <div class="dia-b"><h2 class="dia-t">${esc(d.titulo)}</h2>
     ${diaCorpo(d)}
     ${l.length>1?`<div class="dia-acts"><button class="btn btn-ghost" id="diaAnt">Conteúdos anteriores (${l.length-1})</button></div>`:''}
     ${profEdit([['Postar ou editar na planilha',profP().dia||profP().config]])}</div>
-  </article>`;
+  </details>`;
 }
 function diaTeaser(){
   const d=diaNovo();if(!d)return '';
@@ -1957,7 +1964,7 @@ function diaArquivo(){
 }
 function irParaDia(id){
   S.cap=null;go('home');
-  setTimeout(()=>{const el=document.getElementById('dia');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>{const el=document.getElementById('dia');if(el){el.open=true;}if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
     const d0=diaLista()[0];if(id&&d0&&id!==d0.id)diaAbrir(id)},250);
 }
 
@@ -2765,7 +2772,7 @@ function render(){
   if(!S.cap&&document.body.classList.contains('foco'))focoSair();
   document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
   $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre,prof:vProf}[S.tab]();
-  if(S.tab==='home'&&!S.cap){const d0=diaLista()[0];if(d0&&!diaVistos().includes(d0.id))setTimeout(()=>diaMarcar(d0.id),1500)}
+  if(S.tab==='home'&&!S.cap){const d0=diaLista()[0],el=document.getElementById('dia');if(d0&&el&&el.open&&!diaVistos().includes(d0.id))setTimeout(()=>diaMarcar(d0.id),1500)}
   if(PROF())$('#view').insertAdjacentHTML('afterbegin',profBarra());
   if(MINHA&&S.turma&&S.turma!==MINHA&&S.tab!=='home'&&S.tab!=='turma')$('#view').insertAdjacentHTML('afterbegin',`<div class="outra mini"><span>Vendo a <b>Turma ${esc(S.turma)}</b> · sua turma é a ${esc(MINHA)}</span><button class="link" data-turma="${esc(MINHA)}">Voltar</button></div>`);
   if(S.cap){loadAnn();paintResumo()}
