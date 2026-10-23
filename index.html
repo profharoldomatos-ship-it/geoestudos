@@ -531,6 +531,13 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .cx-ic{flex:none;width:30px;height:30px;border-radius:9px;background:var(--surface-2);display:grid;place-items:center;font-size:1rem}
 .cc-como{align-self:flex-start;font-size:.84rem;margin-top:2px}
 .home-head .hh-l{display:block;position:relative}
+.hh2{gap:0;padding:20px 18px 18px}
+.hh2 .home-t,.hh2 p,.hh2 .hh-sep{position:relative}
+.hh2 .home-t{line-height:1.05}
+.hh2 .hh-saud{margin:6px 0 0;font-size:1.02rem;line-height:1.4;opacity:.95}
+.hh2 .hh-sep{border:0;border-top:1px solid currentColor;opacity:.35;margin:12px 0;width:100%}
+.hh2 .nw{white-space:nowrap}
+.hh2 .hh-inf{margin:0;display:flex;flex-direction:column;gap:3px;font-size:.84rem;line-height:1.5;opacity:.9}
 .home-head .home-t+.hh-l{margin-top:6px}
 .yfolds{display:flex;flex-direction:column;gap:10px}
 .yfold{border-radius:var(--r);overflow:hidden;border:1.5px solid var(--yc);background:var(--bg)}
@@ -2038,7 +2045,7 @@ function vSobre(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.2.5',APP_DATA='2026-10-23';
+const APP_VERSAO='1.2.6',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2101,7 +2108,7 @@ function irParaDia(id){
 function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
-    <div class="home-head">${GLOBO_HH}<div class="hh-tit"><h1 class="home-t">GeoEstudos</h1><span class="hh-bv">Estudante, seja bem-vinda(o)!</span></div><span class="eyebrow hh-l">Desenvolvido pelo Prof. Me. Haroldo Matos</span><span class="eyebrow hh-l">Geografia · Anos finais do Ensino Fundamental</span><span class="eyebrow hh-l"><span style="white-space:nowrap">UI Prof. Carlos Cunha</span> · <span style="white-space:nowrap">São Luís (MA)</span></span></div>
+    <div class="home-head hh2">${GLOBO_HH}<h1 class="home-t">GeoEstudos</h1><p class="hh-saud">Estudante, seja bem-vinda(o)!</p><hr class="hh-sep"><p class="hh-inf"><span>UI Prof. Carlos Cunha</span><span>Geografia | <span class="nw">Ensino Fundamental - Anos Finais</span></span><span>Aplicação desenvolvida pelo <span class="nw">Prof. Me. Haroldo Matos</span></span></p></div>
     ${fixosHtml(null)}
     <details class="fold mini"><summary>Sobre o Prof. Haroldo Matos ${CHEVD}</summary><div class="fold-body">
       <p>Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
