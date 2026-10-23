@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-22 · períodos das unidades v13';
+const VERSAO_ROBO = '2026-10-22 · calendário SEMED 2026 v14';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -285,6 +285,7 @@ function lerConteudo_() {
   // Períodos das unidades (calendário da SEMED): a unidade ativa é a mais recente que já começou
   let abaP = aba('periodos');
   if (!abaP) abaP = prepararAbaPeriodos_(ss);
+  else semearPeriodos_(abaP);
   abaP.getDataRange().getValues().slice(1).forEach(l => {
     const u = parseInt(String(l[0]).replace(/\D+/g, ''), 10);
     if (!u) return;
@@ -320,19 +321,31 @@ function dataISO_(v) {
   let a = parseInt(m[3], 10); if (a < 100) a += 2000;
   return a + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
 }
-function prepararAbaPeriodos_(ss) {
-  ss = ss || SpreadsheetApp.openById(GEO.PLANILHA_CONTEUDO);
-  let sh = ss.getSheets().filter(x => semAcento_(x.getName()).indexOf('periodos') === 0)[0];
-  if (sh) return sh;
-  sh = ss.insertSheet('Períodos das unidades');
-  sh.getRange(1, 1, 1, 4).setValues([['Unidade', 'Início', 'Fim', 'Como funciona']]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F');
-  // Calendário da SEMED São Luís 2026 (abertura e fechamento de cada bimestre; a prorrogação é só para notas e diários)
+/** Calendário da SEMED São Luís 2026 (abertura e fechamento de cada bimestre; a prorrogação é só para notas e diários).
+ *  Preenche a aba uma única vez, e só se as datas estiverem todas vazias. */
+function semearPeriodos_(sh) {
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('periodos2026')) return;
+  const atuais = sh.getRange(2, 2, 4, 2).getValues();
+  if (atuais.some(l => l[0] !== '' || l[1] !== '')) { props.setProperty('periodos2026', 'ja-tinha'); return; }
   const d = (a, m, dia) => new Date(a, m - 1, dia, 12);
   sh.getRange(2, 1, 4, 3).setValues([
     [1, d(2026, 1, 26), d(2026, 4, 10)],
     [2, d(2026, 4, 13), d(2026, 6, 26)],
     [3, d(2026, 7, 31), d(2026, 10, 8)],
     [4, d(2026, 10, 9), d(2026, 12, 22)]]);
+  sh.getRange(2, 2, 4, 2).setNumberFormat('dd/mm/yyyy');
+  sh.getRange(2, 4).setValue('Datas do calendário da SEMED 2026: abertura e fechamento de cada bimestre (valem para 7º, 8º e 9º anos; a data de prorrogação não entra, porque é para notas e diários). No app, só fica aberta a unidade mais recente que já começou; as outras ficam fechadas para os alunos.');
+  props.setProperty('periodos2026', 'preenchido');
+}
+function prepararAbaPeriodos_(ss) {
+  ss = ss || SpreadsheetApp.openById(GEO.PLANILHA_CONTEUDO);
+  let sh = ss.getSheets().filter(x => semAcento_(x.getName()).indexOf('periodos') === 0)[0];
+  if (sh) return sh;
+  sh = ss.insertSheet('Períodos das unidades');
+  sh.getRange(1, 1, 1, 4).setValues([['Unidade', 'Início', 'Fim', 'Como funciona']]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F');
+  sh.getRange(2, 1, 4, 1).setValues([[1], [2], [3], [4]]);
+  semearPeriodos_(sh);
   sh.getRange(2, 2, 4, 2).setNumberFormat('dd/mm/yyyy')
     .setDataValidation(SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(false).setHelpText('Digite a data no formato dia/mês/ano, ex.: 03/02/2026').build());
   sh.getRange(2, 4).setValue('Datas do calendário da SEMED 2026: abertura e fechamento de cada bimestre (valem para 7º, 8º e 9º anos; a data de prorrogação não entra, porque é para notas e diários). No app, só fica aberta a unidade que já começou e é a mais recente; as outras ficam fechadas para os alunos. Sem datas, vale a coluna "Atual" da aba Unidades.').setWrap(true);
