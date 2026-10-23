@@ -1975,7 +1975,7 @@ function vEscolhaUnidade(){
     <div><span class="ypill">${y.label} · Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Escolha a unidade</h1>
       <p class="meta" style="margin:4px 0 0">${PROF()?'<b>Modo professor:</b> todas as unidades estão abertas neste aparelho.':'Só a unidade em andamento fica aberta. As outras abrem e fecham conforme o calendário da rede.'}</p></div>
     ${profEdit([['Datas das unidades (aba Períodos)',profP().conteudo]])}
-    <div class="ulist">${y.list.map(u=>uCard(u,y)).join('')}</div>
+    <div class="ulist">${[...y.list].sort((p,q)=>(+q.n===+y.atual)-(+p.n===+y.atual)||p.n-q.n).map(u=>uCard(u,y)).join('')}</div>
     ${pushCard()}
     <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
   </section>`;
