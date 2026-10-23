@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.2.2 · 23/10/2026
+- Página inicial: saudação “Estudante, seja bem-vinda(o)!” ao lado do nome.
+
 ## 1.2.1 · 23/10/2026
 - Abertura: os meridianos esvanecem no fim e o símbolo termina no formato original.
 
