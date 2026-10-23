@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.2.0 · 23/10/2026
+- Abertura animada do app instalado: o globo gira e ganha meridianos, o nome GeoEstudos sobe letra a letra (toque para pular; versão curta para quem reduz animações).
+
 ## 1.1.4 · 23/10/2026
 - Sobre/avaliações: a recuperação paralela também não diminui a média (prevalece a maior).
 

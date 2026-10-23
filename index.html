@@ -1007,9 +1007,61 @@ body.m-escuro .ul-sec,body.m-escuro .unit-card .cap .n,body.m-escuro .livro-card
 body.m-escuro .unit-card .cap .chev,body.m-escuro .unit-card .cap>svg{color:color-mix(in srgb,var(--year) 45%,#fff)}
 body.m-escuro .ul-sec.tt-sec{color:#5EEAD4}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body:not(.m-claro):not(.m-sepia) .ul-sec,:root:not([data-theme="light"]) body:not(.m-claro):not(.m-sepia) .unit-card .cap .n,:root:not([data-theme="light"]) body:not(.m-claro):not(.m-sepia) .livro-card .lv-ic{color:color-mix(in srgb,var(--year) 40%,#fff)}:root:not([data-theme="light"]) body:not(.m-claro):not(.m-sepia) .ul-sec.tt-sec{color:#5EEAD4}}
+
+/* Abertura animada (app instalado, ao abrir do zero) */
+#abertura{position:fixed;inset:0;z-index:99999;background:#1D3F8F;display:grid;place-items:center;color:#FBF8F1;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#abertura[hidden]{display:none}
+html.abrindo,html.abrindo body{overflow:hidden}
+.ab-c{display:flex;flex-direction:column;align-items:center;transform:translateY(34px);animation:abSobe .6s cubic-bezier(.2,.8,.2,1) .9s both}
+.ab-mark{width:132px;height:auto;overflow:visible;animation:abPulso .9s cubic-bezier(.3,1.4,.5,1) .05s both}
+.ab-globo{transform-box:fill-box;transform-origin:center;animation:abGira .85s cubic-bezier(.4,0,.2,1) .05s both}
+.ab-lin{stroke-dasharray:1;stroke-dashoffset:1;animation:abTraco .45s ease-out .2s forwards}
+.ab-lin.l2{animation-delay:.32s}.ab-lin.l3{animation-delay:.44s}
+.ab-mer{transform-box:fill-box;transform-origin:center;transform:scaleX(0);animation:abMer .55s cubic-bezier(.3,.9,.3,1) .3s forwards}
+.ab-mer.m2{animation-delay:.42s}
+.ab-nome{display:flex;margin-top:18px;font-family:var(--display);font-weight:800;font-size:2.1rem;letter-spacing:-.01em;line-height:1.1;overflow:hidden;padding:0 2px 4px}
+.ab-nome span{display:inline-block;transform:translateY(110%);opacity:0;animation:abLetra .45s cubic-bezier(.2,.9,.2,1) calc(.95s + var(--i)*.035s) forwards}
+.ab-sub{margin-top:4px;font-family:var(--body);font-size:.9rem;letter-spacing:.02em;opacity:0;animation:abFade .5s ease-out 1.35s forwards}
+#abertura.sai{animation:abSai .38s ease-in forwards;pointer-events:none}
+#abertura.sai .ab-c{animation:abSaiC .38s ease-in forwards}
+@keyframes abPulso{0%{transform:scale(1)}45%{transform:scale(.9)}100%{transform:scale(1)}}
+@keyframes abGira{from{transform:rotate(-200deg)}to{transform:rotate(0)}}
+@keyframes abTraco{to{stroke-dashoffset:0}}
+@keyframes abMer{to{transform:scaleX(1)}}
+@keyframes abSobe{from{transform:translateY(34px)}to{transform:translateY(0)}}
+@keyframes abLetra{to{transform:translateY(0);opacity:1}}
+@keyframes abFade{to{opacity:.85}}
+@keyframes abSai{to{opacity:0}}
+@keyframes abSaiC{from{transform:translateY(0) scale(1)}to{transform:translateY(-8px) scale(1.06)}}
+@media (prefers-reduced-motion: reduce){#abertura *{animation-duration:.01s!important;animation-delay:0s!important}.ab-c{transform:none}}
 </style>
 </head>
 <body>
+<div id="abertura" aria-hidden="true" hidden>
+  <div class="ab-c">
+    <svg class="ab-mark" viewBox="190 225 644 590" fill="none">
+      <defs><clipPath id="abGlobo"><circle cx="512" cy="433.78" r="176"/></clipPath></defs>
+      <path class="ab-livro" fill="#FBF8F1" d="M808.52,426.51v283.65c0,18.9-15.31,34.24-34.24,34.24h-158.64c-31.47,0-59.65,14.04-78.65,36.16l-.03.03c-.55.65-1.1,1.27-1.61,1.95-.07.1-.17.21-.27.31-5.68,6.3-13.94,10.24-23.08,10.24s-17.36-3.94-23.08-10.24c-.1-.1-.17-.21-.27-.31-.41-.55-.89-1.1-1.37-1.64-18.97-22.32-47.29-36.5-78.92-36.5h-158.64c-18.9,0-34.24-15.34-34.24-34.24v-280.22c0-20.82,16.85-37.66,37.66-37.66h155.21c57.25,0,103.65,46.4,103.65,103.61,0-57.22,46.4-103.61,103.65-103.61h158.64c18.93,0,34.24,15.31,34.24,34.24Z"/>
+      <g class="ab-globo">
+        <circle cx="512" cy="433.78" r="188.21" fill="#FBF8F1" stroke="#1D3F8F" stroke-width="25"/>
+        <g clip-path="url(#abGlobo)" stroke="#1D3F8F" stroke-width="13" stroke-linecap="round">
+          <path class="ab-lin" pathLength="1" d="M330 433.78H694"/>
+          <path class="ab-lin l2" pathLength="1" d="M352 345H672"/>
+          <path class="ab-lin l2" pathLength="1" d="M352 522H672"/>
+          <ellipse class="ab-mer" cx="512" cy="433.78" rx="80" ry="176"/>
+          <ellipse class="ab-mer m2" cx="512" cy="433.78" rx="145" ry="176"/>
+          <path class="ab-lin l3" pathLength="1" d="M512 250V618"/>
+        </g>
+      </g>
+    </svg>
+    <div class="ab-nome" aria-label="GeoEstudos"><span style="--i:0">G</span><span style="--i:1">e</span><span style="--i:2">o</span><span style="--i:3">E</span><span style="--i:4">s</span><span style="--i:5">t</span><span style="--i:6">u</span><span style="--i:7">d</span><span style="--i:8">o</span><span style="--i:9">s</span></div>
+    <div class="ab-sub">Geografia com o Prof. Haroldo Matos</div>
+  </div>
+</div>
+<script>(function(){try{var q=/[?&]abertura=1/.test(location.search),st=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+if((st&&!sessionStorage.getItem('geo:abriu'))||q){sessionStorage.setItem('geo:abriu','1');var a=document.getElementById('abertura');a.hidden=false;document.documentElement.classList.add('abrindo');
+var rm=matchMedia('(prefers-reduced-motion: reduce)').matches,fim=function(){if(!a.parentNode)return;a.classList.add('sai');setTimeout(function(){a.remove();document.documentElement.classList.remove('abrindo')},380)};
+setTimeout(fim,rm?700:1900);a.addEventListener('click',fim)}}catch(e){}})();</script>
 <div class="app" id="app">
   <header class="top">
     <div style="display:flex;flex-direction:column">
@@ -1966,7 +2018,7 @@ function vSobre(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.1.4',APP_DATA='2026-10-23';
+const APP_VERSAO='1.2.0',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
