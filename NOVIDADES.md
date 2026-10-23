@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.5.1 · 23/10/2026
+- “Ver o tour guiado de novo” refaz o tour completo, desde a escolha do ano, inclusive com o modo professor ligado.
+
 ## 1.5.0 · 23/10/2026
 - Tour guiado no primeiro uso: escolher ano e turma, unidade, página da turma e ferramentas de leitura (pode pular).
 - Nova página “Guia do estudante”, na página inicial e na página da turma, com o botão para rever o tour.

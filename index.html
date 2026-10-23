@@ -2148,10 +2148,11 @@ function tourMarcar(id){const m=store.get('tour',{})||{};m[id]=1;store.set('tour
 function tourPularTudo(){const m={};Object.keys(TOURS).forEach(k=>m[k]=1);store.set('tour',m);tourFechar()}
 let tourIv=null;
 function tourFechar(){TOUR=null;clearInterval(tourIv);const t=document.getElementById('tour');if(t)t.remove();removeEventListener('resize',tourPos);removeEventListener('scroll',tourPos,true)}
+let tourForcado=false;
 function tourQual(){
-  if(PROF()||document.body.classList.contains('foco'))return null;
+  if((PROF()&&!tourForcado)||document.body.classList.contains('foco'))return null;
   if(S.cap)return tourFeito('leitura')?null:'leitura';
-  if(S.tab==='home'){if(!tourFeito('inicio')&&!MINHA&&!COMP)return 'inicio';return null}
+  if(S.tab==='home'){if(!tourFeito('inicio')&&(tourForcado||(!MINHA&&!COMP)))return 'inicio';return null}
   if(S.tab==='turma'&&S.turma){if(!S.uAberta)return tourFeito('unidade')?null:'unidade';return tourFeito('turma')?null:'turma'}
   return null;
 }
@@ -2217,7 +2218,7 @@ function tourAvancarSeEspera(){
   tourMostrar();
 }
 function tourFim(){const id=TOUR&&TOUR.id;if(id)tourMarcar(id);tourFechar()}
-function tourRefazer(){store.set('tour',{});S.cap=null;go('home');setTimeout(()=>{if(!MINHA&&!COMP)tourChecar();else{S.turma=MINHA||S.turma;S.uAberta=false;go('turma')}},300)}
+function tourRefazer(){store.set('tour',{});tourForcado=true;S.cap=null;go('home');scrollTo(0,0)}
 
 /* Guia do estudante (página fixa) */
 const GUIAIC='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>';
@@ -2279,7 +2280,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.5.0',APP_DATA='2026-10-23';
+const APP_VERSAO='1.5.1',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
