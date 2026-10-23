@@ -1966,7 +1966,6 @@ function vHome(){
   return `<section class="section">
     <div class="home-head">${GLOBO_HH}<h1 class="home-t">GeoEstudos</h1><span class="eyebrow hh-l">Desenvolvido pelo Prof. Me. Haroldo Matos</span><span class="eyebrow hh-l">Geografia · Anos finais do Ensino Fundamental</span></div>
     ${fixosHtml(null)}
-    ${diaHome()}
     <details class="fold mini"><summary>Sobre o Prof. Haroldo Matos ${CHEVD}</summary><div class="fold-body">
       <p>Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
       <p>Atuo como professor na rede pública municipal de São Luís. Nesta rede, ministro a disciplina de Geografia para estudantes dos anos finais do Ensino Fundamental.</p>
@@ -1981,6 +1980,7 @@ function vHome(){
       return `<details class="yfold" data-ano="${y.ano}" style="--yc:${y.color}"${aberto?' open':''}><summary class="yf-h"><span class="yf-tx"><b>${y.label}</b><span>Unidade ${y.atual} · ${esc(y.unit)}</span></span>${minhaAqui?`<span class="yf-minha">Turma ${esc(MINHA)}</span>`:''}${SF_CHEV}</summary>
       <div class="yf-body"><div class="choice">${y.turmas.map(t=>`<button data-turma="${t}" aria-pressed="${MINHA===t}"><span>Turma</span>${t}${MINHA===t?'<small>Minha turma</small>':''}</button>`).join('')}</div></div></details>`}).join('')}</div>`:semDados()}
     ${celularCard()}
+    ${diaHome()}
     ${installCard()}
   </section>`;
 }
