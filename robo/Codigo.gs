@@ -347,7 +347,7 @@ function lerDocs_() {
       const subs = pu.getFolders();
       while (subs.hasNext()) {
         const pt = subs.next();
-        if (!/tema/i.test(pt.getName())) continue;
+        if (!/tema|aprofund/i.test(pt.getName())) continue;   // "Temas Transversais" ou "Aulas de aprofundamento"
         const tds = pt.getFilesByType(MimeType.GOOGLE_DOCS);
         while (tds.hasNext()) {
           const f = tds.next();
