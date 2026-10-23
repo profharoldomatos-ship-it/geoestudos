@@ -634,6 +634,12 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .guia-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
 .guia-btn .gb-ic{flex:none;width:38px;height:38px;border-radius:50%;background:var(--pen-soft);color:var(--pen);display:grid;place-items:center}
 .guia-btn b{display:block;font-family:var(--display)}.guia-btn .meta{font-size:.85rem}
+.tp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tp-btn{display:flex;align-items:center;gap:8px;min-width:0;overflow-wrap:break-word;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:.9rem;font-weight:700;color:var(--ink);cursor:pointer;line-height:1.25}
+.tp-btn .sec-ic{flex:none;width:30px;height:30px;border-radius:50%;background:var(--pen-soft);color:var(--pen);display:grid;place-items:center}.tp-btn .sec-ic svg{width:17px;height:17px}
+.tp-btn:active{transform:scale(.98)}
+.tp-box{display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.tp-box h2{margin:0;font-size:1.05rem}.tp-box p{margin:0;font-size:.9rem;color:var(--muted);line-height:1.45}
 .guia .g-passos{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px;line-height:1.5}
 .fora{margin:10px 0 0;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:.9rem;line-height:1.45;color:var(--ink)}
 .fora b.ft{font-size:.95rem}
@@ -2239,6 +2245,28 @@ function tourAvancarSeEspera(){
 }
 function tourFim(){const id=TOUR&&TOUR.id;if(id)tourMarcar(id);tourFechar()}
 function tourRefazer(){store.set('tour',{});tourForcado=true;S.cap=null;go('home');scrollTo(0,0)}
+/* Rever só uma parte do tour */
+const TOUR_PARTES=[
+  ['inicio','globo','Escolher ano, turma e unidade'],
+  ['turma','livro','Página da turma'],
+  ['leitura','livro','Resumos e revisão rápida'],
+  ['aprofundamento','globo','Aulas de aprofun\u00addamento'],
+  ['atividades','atv','Atividades'],
+  ['calendario','cal','Calendário']
+];
+function tourParte(k){
+  const m=store.get('tour',{})||{};Object.keys(TOURS).forEach(id=>m[id]=1);
+  const limpar=k==='inicio'?['inicio','unidade']:[k];limpar.forEach(id=>delete m[id]);store.set('tour',m);
+  tourForcado=true;TOUR=null;const tt=document.getElementById('tour');if(tt)tt.remove();
+  if(k==='inicio'){S.cap=null;go('home');return}
+  const tur=S.turma||MINHA;
+  if(!tur){toast('Primeiro escolha a sua turma.');delete m.inicio;delete m.unidade;store.set('tour',m);S.cap=null;go('home');return}
+  S.turma=tur;const y=Y();S.unit=null;
+  if(k==='turma'){S.uAberta=true;go('turma');return}
+  if(k==='atividades'||k==='calendario'){S.uAberta=true;go(k);return}
+  if(k==='leitura'){const c=capsDe(y,y.atual).find(c=>c.resumo);if(!c){toast('Ainda não há resumo publicado nesta unidade.');return}S.unit=y.atual;go('resumos',capId(c.n));return}
+  if(k==='aprofundamento'){const t=temasDe(y,y.atual).find(t=>t.resumo);if(!t){toast('Ainda não há aula de aprofundamento nesta unidade.');return}S.unit=y.atual;go('resumos','t'+t.n);return}
+}
 
 /* Guia do estudante (página fixa) */
 const GUIAIC='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>';
@@ -2249,7 +2277,9 @@ function vGuia(){
   return `<section class="section sobre guia">
     <div class="home-head">${GLOBO_HH}<span class="eyebrow">GeoEstudos</span><h1 class="home-t">Guia do estudante</h1></div>
     <p class="sb-lead">Tudo o que você pode fazer no GeoEstudos, explicado passo a passo. Toque em cada tema para ler.</p>
-    <button class="btn btn-primary" id="tourDeNovo" style="align-self:flex-start">Ver o tour guiado de novo</button>
+    <div class="tp-box"><h2>Rever o tour guiado</h2><p>Ficou com dúvida em alguma parte? Escolha só ela, ou veja o tour completo.</p>
+      <div class="tp-grid">${TOUR_PARTES.map(([k,ic,t])=>`<button class="tp-btn" data-tparte="${k}"><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span>${t}</button>`).join('')}</div>
+      <button class="btn btn-primary" id="tourDeNovo" style="align-self:flex-start">Ver o tour completo</button></div>
     <div class="sbsecs">
     ${bloco('pen','globo','Primeiros passos','Ano, turma e unidade',ol([
       'Na página inicial, toque no seu <b>ano</b> e depois na sua <b>turma</b>.',
@@ -2300,7 +2330,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.5.2',APP_DATA='2026-10-23';
+const APP_VERSAO='1.5.3',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3312,6 +3342,7 @@ document.addEventListener('click',ev=>{
   const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;S.uAberta=false;store.set('turma',S.turma);
     go('turma');if(!MINHA&&!COMP)perguntarTurma(S.turma);return}
   if(t.closest('#tourDeNovo'))return tourRefazer();
+  const tpp=t.closest('[data-tparte]');if(tpp)return tourParte(tpp.dataset.tparte);
   if(t.closest('[data-fora]'))return abrirFora();
   if(t.closest('[data-copiarlink]')){const u=URL_APP();try{navigator.clipboard.writeText(u).then(()=>toast('Link copiado. Cole no navegador.'),()=>toast(u))}catch(e){toast(u)}return}
   if(t.closest('#pushTurmas'))return turmasSheet();
