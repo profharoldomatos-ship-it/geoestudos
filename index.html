@@ -2139,7 +2139,25 @@ const TOURS={
     {alvo:'.read-tools',t:'Ferramentas de leitura',x:'Ouvir lê o resumo em voz alta. Aa muda o tamanho e o tipo da letra. Marcações mostra os trechos que você destacou.'},
     {alvo:'.paper',t:'Destaque e comente',x:'Selecione um trecho do texto (toque e segure numa palavra) para destacar, sublinhar ou escrever um comentário. Fica salvo só no seu celular.'},
     {alvo:'#copyBtn',t:'Copiou no caderno? Marque aqui',x:'Assim você acompanha o seu progresso. Lembre: quem confere de verdade é o professor, no seu caderno.'},
+    {alvo:'.revcard',t:'Revisão rápida: é opcional',x:'Perguntas sobre o resumo, só para reforçar o aprendizado. Não vale nota: faça se quiser, quantas vezes quiser. O app corrige e explica cada resposta.',opcional:true},
     {alvo:'#actBox',t:'Atividade de fixação',x:'Esta atividade vale ponto. Faça com atenção, envie uma vez só e depois marque “Já enviei”.',opcional:true}
+  ],
+  aprofundamento:[
+    {alvo:'.paper',t:'Aula de aprofundamento',x:'Uma aula extra que vale ponto e ajuda a melhorar a sua média (recuperação paralela). Leia com atenção: ela é a base das atividades desta aula. Ouvir, Aa e as marcações funcionam aqui também.'},
+    {alvo:'#copyBtn',t:'Terminou de estudar? Marque aqui',x:'Assim você acompanha o que já estudou. Fica salvo só no seu celular.'},
+    {alvo:'.avcard',t:'Atividade avaliativa: vale nota',x:'Antes de começar, leia a aula. Informe a sua turma e o seu nome completo, como está na chamada. São 10 questões sorteadas, você faz uma única vez e, no fim, aparece só a sua nota.',opcional:true},
+    {alvo:'#actBox',t:'Atividade da aula',x:'Esta atividade vale ponto na recuperação paralela. Respeite o prazo e, quando terminar, marque “Já fiz esta atividade”.',opcional:true},
+    {alvo:'.duvbtn',t:'Ficou com dúvida?',x:'Pergunte ao professor sobre esta aula. A resposta vem na aula ou em “Dúvidas respondidas”.',opcional:true}
+  ],
+  atividades:[
+    {alvo:'.atv-top',t:'Atividades de fixação',x:'As atividades da unidade em andamento. Elas valem nota. A barra mostra quantas você já enviou.'},
+    {alvo:'.atv-regra',t:'Como funciona',x:'Responda com atenção e uma única vez: vale a resposta mais antiga. Depois de enviar o formulário, volte e toque em “Já enviei”.',opcional:true},
+    {alvo:'.tt-top',t:'Aulas de aprofundamento',x:'Aulas extras com atividades que valem ponto na recuperação paralela, inclusive as atividades avaliativas.',opcional:true}
+  ],
+  calendario:[
+    {alvo:'.grid7',t:'O calendário da sua turma',x:'Os dias com marquinha colorida têm entrega, prazo ou avaliação. Toque num dia para ver o que está marcado.'},
+    {alvo:'.legend',t:'As cores',x:'Cada cor indica um tipo: entrega do caderno, atividade de fixação, avaliação e aula de aprofundamento.',opcional:true},
+    {alvo:'.evlist',t:'O que está marcado',x:'Aqui aparecem as datas do dia escolhido e as próximas datas. Ative os avisos na página da turma para receber lembretes na véspera e no dia.',opcional:true}
   ]
 };
 let TOUR=null;
@@ -2151,7 +2169,9 @@ function tourFechar(){TOUR=null;clearInterval(tourIv);const t=document.getElemen
 let tourForcado=false;
 function tourQual(){
   if((PROF()&&!tourForcado)||document.body.classList.contains('foco'))return null;
-  if(S.cap)return tourFeito('leitura')?null:'leitura';
+  if(S.cap){const c=capOf(S.cap),k=c&&c.tema?'aprofundamento':'leitura';return tourFeito(k)?null:k}
+  if(S.tab==='atividades'&&S.turma)return tourFeito('atividades')?null:'atividades';
+  if(S.tab==='calendario'&&S.turma)return tourFeito('calendario')?null:'calendario';
   if(S.tab==='home'){if(!tourFeito('inicio')&&(tourForcado||(!MINHA&&!COMP)))return 'inicio';return null}
   if(S.tab==='turma'&&S.turma){if(!S.uAberta)return tourFeito('unidade')?null:'unidade';return tourFeito('turma')?null:'turma'}
   return null;
@@ -2280,7 +2300,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.5.1',APP_DATA='2026-10-23';
+const APP_VERSAO='1.5.2',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
