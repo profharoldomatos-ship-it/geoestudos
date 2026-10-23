@@ -1796,7 +1796,7 @@ function installHelp(){
     <div class="ih-pan" data-pan="and"${ios?' hidden':''}>
       ${deferredPrompt&&!ios?'<button class="btn btn-primary" id="ihAgora">Instalar o GeoEstudos agora</button>':''}
       <ol class="steps"><li>Abra o endereço do app no <b>Chrome</b>.</li><li>Toque em <b>Instalar app</b>, se aparecer. Se não aparecer, toque nos <b>três pontinhos ⋮</b> (canto de cima) e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</li><li>Abra o GeoEstudos <b>pelo ícone</b> que aparece na tela do celular.</li></ol>
-      <p class="ih-nav"><b>Não tem o Chrome?</b> Ele é gratuito: <a href="${PLAY_CHROME}" target="_blank" rel="noopener">instale pela Play Store</a> e volte a este link.</p>
+      <p class="ih-nav"><b>Não tem o Chrome?</b> Ele é gratuito: <a href="${PLAY_CHROME}" target="_blank" rel="noopener">instale pela Play Store</a> e volte a este link. <b>Mantenha o Chrome no celular:</b> o GeoEstudos usa o Chrome para funcionar e receber os avisos.</p>
       <p class="ih-nota"><b>Outros navegadores:</b> Samsung Internet, Edge e Firefox também instalam (no menu, procure <b>Instalar</b> ou <b>Adicionar à tela inicial</b>). Em alguns, como Opera ou o navegador da Xiaomi, pode ficar só um atalho, e os avisos no celular podem não funcionar.</p>
     </div>
     <div class="ih-pan" data-pan="ios"${ios?'':' hidden'}>
@@ -2098,7 +2098,7 @@ function vSobre(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.4.0',APP_DATA='2026-10-23';
+const APP_VERSAO='1.4.1',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
