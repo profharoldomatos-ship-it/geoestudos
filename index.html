@@ -104,8 +104,8 @@ body.m-escuro .sec-pen{--sc:var(--pen);--sc-on:var(--on-pen)} body.m-escuro .sec
 .home-head .eyebrow{color:inherit;opacity:.85}
 .home-t{font-size:1.85rem}
 .hh-tit{position:relative;display:flex;align-items:center;column-gap:10px;container-type:inline-size;min-width:0}
-.hh-tit .home-t{font-size:clamp(1.45rem,8.7cqi,1.85rem);white-space:nowrap}
-.hh-bv{display:block;white-space:nowrap;border-left:1.5px solid currentColor;padding:1px 0 1px 10px;line-height:1.2;font-size:clamp(8px,2.9cqi,12.5px);font-weight:400;font-style:italic;letter-spacing:0;color:inherit;opacity:.8;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.hh-tit .home-t{font-size:clamp(1.3rem,7.8cqi,1.85rem);white-space:nowrap}
+.hh-bv{display:block;white-space:nowrap;border-left:1.5px solid currentColor;padding:1px 0 1px 10px;line-height:1.2;font-size:clamp(9px,3.3cqi,12.5px);font-weight:400;font-style:italic;letter-spacing:0;color:inherit;opacity:.8;min-width:0;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:339px){.hh-tit{flex-direction:column;align-items:flex-start;row-gap:2px}.hh-tit .home-t{font-size:1.6rem}.hh-bv{border-left:0;padding:0;font-size:.72rem}}
 .fold{padding:0;overflow:hidden}
 .fold summary{list-style:none;cursor:pointer;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:1.05rem}
@@ -1914,7 +1914,7 @@ function vSobre(){
     <p class="sb-lead">O GeoEstudos é um <b>recurso pedagógico</b> das aulas de Geografia. Ele <b>não usa câmera, microfone nem localização</b> e <b>todo o conteúdo pode ser usado sem fornecer dados pessoais</b>. Toque em cada tema abaixo para ler mais.</p>
     <div class="sbsecs">
     ${bloco('pen','livro','Quem fez o GeoEstudos','Autoria e início do projeto',`
-      <p>O GeoEstudos foi desenvolvido pelo <b>Prof. Haroldo Matos</b>, professor de Geografia dos anos finais do Ensino Fundamental da Rede Municipal de São Luís (MA), com o auxílio do <b>Claude</b>, assistente de inteligência artificial criado pela empresa Anthropic, que apoiou a programação e o design do aplicativo.</p>
+      <p>O GeoEstudos foi desenvolvido pelo <b>Prof. Haroldo Matos</b>, professor de Geografia dos anos finais do Ensino Fundamental na <b>Unidade Integrada Professor Carlos Cunha</b> (UI Prof. Carlos Cunha), da Rede Municipal de São Luís (MA), com o auxílio do <b>Claude</b>, assistente de inteligência artificial criado pela empresa Anthropic, que apoiou a programação e o design do aplicativo.</p>
       <p>O desenvolvimento começou em <b>outubro de 2026</b>.</p>
       <p>O GeoEstudos é uma <b>iniciativa exclusiva do Prof. Haroldo Matos</b>, o que não obriga a Rede Municipal de São Luís a disseminar seu uso mais ampliado.</p>
       <p>Os conteúdos e as atividades são de responsabilidade do professor. O aplicativo <b>não envia dados dos estudantes</b> ao Claude nem a qualquer outra inteligência artificial.</p>`)}
@@ -1996,7 +1996,7 @@ function vSobre(){
     ${bloco('duv','duv','O que só é enviado se você escolher','Avisos, caixa de dúvidas e formulários',`
       <ul class="sb-list">
       ${ok('Avisos no celular (opcional)','Ao ativar os avisos, o celular gera um <b>endereço técnico de notificação</b>, guardado junto com o número da turma para que os avisos cheguem. Esse endereço <b>não contém nome nem identifica a pessoa</b>. Ao desativar os avisos no app, ele é apagado.')}
-      ${ok('Atividades avaliativas','Para fazer uma atividade que vale nota, o estudante informa a <b>turma e o nome completo</b>. O nome é conferido com a lista da turma, que fica <b>só na conta profissional do professor</b> e nunca vai para o app. As respostas são corrigidas pelo robô do professor, e a nota fica registrada numa planilha que <b>só o professor vê</b>. O gabarito nunca é enviado ao celular.')}
+      ${ok('Atividades avaliativas','Para fazer uma atividade que vale nota, o estudante informa a <b>turma e o nome completo</b>. O nome é conferido com a lista da turma na UI Prof. Carlos Cunha, que fica <b>só na conta profissional do professor</b> e nunca vai para o app. As respostas são corrigidas pelo robô do professor, e a nota fica registrada numa planilha que <b>só o professor vê</b>. O gabarito nunca é enviado ao celular.')}
       ${ok('Caixa de dúvidas (opcional)','Quem envia uma dúvida escreve o <b>nome, a turma e a pergunta</b>. Essas informações são lidas <b>somente pelo professor</b>, ficam guardadas na conta profissional do professor no Google e servem para responder à dúvida. A única exceção são <b>mensagens desrespeitosas</b>: elas serão levadas à coordenação da escola e ao conhecimento dos responsáveis. Quando uma resposta é publicada no app, aparece <b>só a pergunta, sem o nome</b>.')}
       ${ok('Atividades em formulário','As atividades de fixação abrem no <b>Google Forms</b>, fora do app. Lá vale o que cada formulário pede e as regras do Google.')}
       </ul>`)}
@@ -2026,7 +2026,7 @@ function vSobre(){
     ${sec('Fale com o professor','pen','duv')}
     <div class="card sb-contato">
       <p style="margin:0">Estudantes, pais e responsáveis podem tirar dúvidas, fazer sugestões ou pedir informações sobre o app e sobre os dados:</p>
-      <p style="margin:0"><b>Prof. Haroldo Matos</b> · Geografia · Anos finais do Ensino Fundamental<br>Rede Municipal de Ensino de São Luís (MA)</p>
+      <p style="margin:0"><b>Prof. Haroldo Matos</b> · Geografia · Anos finais do Ensino Fundamental<br>UI Prof. Carlos Cunha · Rede Municipal de Ensino de São Luís (MA)</p>
       <a class="btn btn-primary" href="mailto:${esc(EMAIL)}?subject=${encodeURIComponent('GeoEstudos · contato')}">✉ ${esc(EMAIL)}</a>
       <p class="meta" style="margin:0">Também é possível conversar pessoalmente na escola, com o professor ou com a coordenação pedagógica.</p>
     </div>
@@ -2038,7 +2038,7 @@ function vSobre(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.2.4',APP_DATA='2026-10-23';
+const APP_VERSAO='1.2.5',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2101,7 +2101,7 @@ function irParaDia(id){
 function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
-    <div class="home-head">${GLOBO_HH}<div class="hh-tit"><h1 class="home-t">GeoEstudos</h1><span class="hh-bv">Estudante, seja bem-vinda(o)!</span></div><span class="eyebrow hh-l">Desenvolvido pelo Prof. Me. Haroldo Matos</span><span class="eyebrow hh-l">Geografia · Anos finais do Ensino Fundamental</span></div>
+    <div class="home-head">${GLOBO_HH}<div class="hh-tit"><h1 class="home-t">GeoEstudos</h1><span class="hh-bv">Estudante, seja bem-vinda(o)!</span></div><span class="eyebrow hh-l">Desenvolvido pelo Prof. Me. Haroldo Matos</span><span class="eyebrow hh-l">Geografia · Anos finais do Ensino Fundamental</span><span class="eyebrow hh-l"><span style="white-space:nowrap">UI Prof. Carlos Cunha</span> · <span style="white-space:nowrap">São Luís (MA)</span></span></div>
     ${fixosHtml(null)}
     <details class="fold mini"><summary>Sobre o Prof. Haroldo Matos ${CHEVD}</summary><div class="fold-body">
       <p>Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
@@ -2162,7 +2162,7 @@ function duvidaSheet(sobre){
   if(sobre&&!ops.includes(sobre))ops.unshift(sobre);
   const nomeSalvo=COMP?'':store.get('duvNome','');
   sheet(`<h2>Enviar uma dúvida ao professor</h2>
-    <div class="duv-excl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span><b>Espaço exclusivo para estudantes do Prof. Haroldo.</b> Mensagens de pessoas de fora da escola não chegarão ao professor.</span></div>
+    <div class="duv-excl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span><b>Espaço exclusivo para estudantes do Prof. Haroldo na UI Prof. Carlos Cunha.</b> Mensagens de pessoas de fora da escola não chegarão ao professor.</span></div>
     <p class="meta" style="margin:0">Esta caixa é para <b>dúvidas sobre o conteúdo</b> das aulas. O professor lê todas as mensagens.</p>
     <p class="duv-lim">Cada estudante pode enviar <b>${duvLim()===1?'1 dúvida':duvLim()+' dúvidas'} por dia</b>. Capriche na pergunta!</p>
     <div class="duv-regra"><b>Combinado de respeito</b><span>Escreva como se estivesse falando com o professor na sala de aula: com educação, sem palavrões, ofensas ou brincadeiras. Mensagens desrespeitosas não são respondidas e <b>serão levadas à coordenação da escola e ao conhecimento dos responsáveis</b>.</span></div>
