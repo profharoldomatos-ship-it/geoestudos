@@ -614,6 +614,27 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .bv-passos li{counter-increment:b;display:flex;gap:10px;align-items:flex-start;line-height:1.45}
 .bv-passos li::before{content:counter(b);flex:none;width:24px;height:24px;border-radius:50%;background:var(--pen);color:var(--on-pen);display:grid;place-items:center;font-weight:700;font-size:.82rem}
 .bv-ic{display:inline-flex;vertical-align:-4px;border:1px solid var(--line);border-radius:6px;padding:1px 4px;background:var(--surface-2)}
+/* Tour guiado (primeiro uso) */
+#tour{position:fixed;inset:0;z-index:9000;pointer-events:none}
+#tour .tr-catch{position:fixed;inset:0;pointer-events:auto;background:transparent}
+#tour .tr-hole{position:fixed;border-radius:14px;box-shadow:0 0 0 200vmax rgba(8,18,44,.66);outline:3px solid var(--hl);outline-offset:2px;transition:top .25s,left .25s,width .25s,height .25s;pointer-events:none}
+#tour .tr-hole.zero{outline:0;width:0!important;height:0!important;left:50%!important;top:50%!important}
+#tour .tr-card{position:fixed;left:16px;right:16px;max-width:430px;margin:0 auto;background:var(--surface);color:var(--ink);border-radius:16px;padding:14px 16px 12px;box-shadow:0 12px 34px rgba(0,0,0,.35);pointer-events:auto;display:flex;flex-direction:column;gap:8px;border-top:5px solid var(--pen);animation:trIn .25s ease-out}
+#tour .tr-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#tour .tr-top .eyebrow{color:var(--pen);font-weight:800}
+#tour .tr-pular{background:none;border:0;font:inherit;font-size:.82rem;color:var(--muted);text-decoration:underline;cursor:pointer;padding:4px}
+#tour .tr-t{margin:0;font-family:var(--display);font-size:1.12rem;line-height:1.25}
+#tour .tr-tx{margin:0;font-size:.95rem;line-height:1.5}
+#tour .tr-acao{margin:0;font-size:.88rem;font-weight:700;color:var(--pen);display:flex;gap:6px;align-items:center}
+#tour .tr-bts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:2px}
+#tour .tr-bts .btn{min-height:40px;padding:8px 16px}
+#tour .tr-dots{display:flex;gap:5px;align-items:center;margin-right:auto}
+#tour .tr-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}#tour .tr-dots i.on{background:var(--pen)}
+@keyframes trIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.guia-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
+.guia-btn .gb-ic{flex:none;width:38px;height:38px;border-radius:50%;background:var(--pen-soft);color:var(--pen);display:grid;place-items:center}
+.guia-btn b{display:block;font-family:var(--display)}.guia-btn .meta{font-size:.85rem}
+.guia .g-passos{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px;line-height:1.5}
 .fora{margin:10px 0 0;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:.9rem;line-height:1.45;color:var(--ink)}
 .fora b.ft{font-size:.95rem}
 .fora .fora-b{display:flex;gap:8px;flex-wrap:wrap}
@@ -2095,10 +2116,170 @@ function vSobre(){
     <button class="prof-entrar" id="profEntrar">${PROF()?'Painel do professor':'Área do professor'}</button>
   </section>`;
 }
+/* ================= Tour guiado: aparece no primeiro uso ================= */
+const TOURS={
+  inicio:[
+    {centro:true,t:'Olá! Bem-vinda(o) ao GeoEstudos',x:'Em menos de um minuto, vou mostrar como usar o app. Você pode pular quando quiser.',ok:'Começar'},
+    {alvo:'.yfolds',t:'1. Escolha o seu ano e a sua turma',x:'Toque no seu ano (7º, 8º ou 9º) e depois no número da sua turma.',acao:'Toque na sua turma para continuar',espera:()=>S.tab==='turma'&&!!S.turma}
+  ],
+  unidade:[
+    {alvo:'.ucard.at',t:'2. A unidade em andamento',x:'Esta é a unidade que a turma está estudando agora. As outras abrem e fecham conforme o calendário da escola.',acao:'Toque na unidade para entrar',espera:()=>S.tab==='turma'&&S.uAberta}
+  ],
+  turma:[
+    {alvo:'.card.hello',t:'3. A página da sua turma',x:'Aqui você acompanha quantos resumos já copiou no caderno e quantas atividades já enviou nesta unidade.'},
+    {alvo:'.pushhero, .pushcard, [data-push]',t:'Avisos no celular',x:'Ative os avisos para receber lembretes das entregas e as novidades da sua turma.',opcional:true},
+    {alvo:'[data-sfold="resumos"] > summary',t:'Resumos',x:'Os resumos de cada capítulo, para ler e copiar no caderno. Toque para abrir a lista.'},
+    {alvo:'[data-sfold="temas"] > summary',t:'Aulas de aprofundamento',x:'Aulas extras que valem ponto e ajudam a melhorar a sua média.',opcional:true},
+    {alvo:'[data-sfold="datas"] > summary',t:'Próximas datas',x:'Entregas do caderno, prazos das atividades e avaliações da sua turma.'},
+    {alvo:'[data-sfold="duvidas"] > summary',t:'Dúvidas',x:'Ficou com dúvida sobre o conteúdo? Pergunte ao professor por aqui.',opcional:true},
+    {alvo:'.tabs',t:'A barra de baixo',x:'Use a barra para ir, a qualquer momento, ao Início, à sua Turma, aos Resumos, às Atividades e ao Calendário.',fixo:true},
+    {centro:true,t:'Pronto!',x:'Quando você abrir um resumo pela primeira vez, mostro as ferramentas de leitura. O guia completo fica na página inicial, em “Guia do estudante”.',ok:'Começar a estudar'}
+  ],
+  leitura:[
+    {alvo:'.read-tools',t:'Ferramentas de leitura',x:'Ouvir lê o resumo em voz alta. Aa muda o tamanho e o tipo da letra. Marcações mostra os trechos que você destacou.'},
+    {alvo:'.paper',t:'Destaque e comente',x:'Selecione um trecho do texto (toque e segure numa palavra) para destacar, sublinhar ou escrever um comentário. Fica salvo só no seu celular.'},
+    {alvo:'#copyBtn',t:'Copiou no caderno? Marque aqui',x:'Assim você acompanha o seu progresso. Lembre: quem confere de verdade é o professor, no seu caderno.'},
+    {alvo:'#actBox',t:'Atividade de fixação',x:'Esta atividade vale ponto. Faça com atenção, envie uma vez só e depois marque “Já enviei”.',opcional:true}
+  ]
+};
+let TOUR=null;
+const tourFeito=id=>!!(store.get('tour',{})||{})[id];
+function tourMarcar(id){const m=store.get('tour',{})||{};m[id]=1;store.set('tour',m)}
+function tourPularTudo(){const m={};Object.keys(TOURS).forEach(k=>m[k]=1);store.set('tour',m);tourFechar()}
+let tourIv=null;
+function tourFechar(){TOUR=null;clearInterval(tourIv);const t=document.getElementById('tour');if(t)t.remove();removeEventListener('resize',tourPos);removeEventListener('scroll',tourPos,true)}
+function tourQual(){
+  if(PROF()||document.body.classList.contains('foco'))return null;
+  if(S.cap)return tourFeito('leitura')?null:'leitura';
+  if(S.tab==='home'){if(!tourFeito('inicio')&&!MINHA&&!COMP)return 'inicio';return null}
+  if(S.tab==='turma'&&S.turma){if(!S.uAberta)return tourFeito('unidade')?null:'unidade';return tourFeito('turma')?null:'turma'}
+  return null;
+}
+let tourT=null,tourTent=0;
+function tourChecar(){
+  clearTimeout(tourT);
+  tourT=setTimeout(()=>{
+    if(TOUR){tourAvancarSeEspera();return}
+    const id=tourQual();if(!id){tourTent=0;return}
+    if(document.querySelector('.overlay:not([hidden]),#abertura:not([hidden]),.qz-o:not([hidden])')){if(++tourTent<40)tourChecar();return}
+    tourTent=0;tourAbrir(id);
+  },TOUR?120:900);
+}
+function tourAbrir(id){
+  const passos=TOURS[id].filter(p=>p.centro||!p.opcional||document.querySelector(p.alvo));
+  if(!passos.length){tourMarcar(id);return}
+  TOUR={id,passos,i:0};
+  if(id==='unidade')tourMarcar('inicio');
+  let el=document.getElementById('tour');if(!el){el=document.createElement('div');el.id='tour';document.body.appendChild(el)}
+  addEventListener('resize',tourPos);addEventListener('scroll',tourPos,true);
+  tourMostrar();
+}
+function tourAlvo(p){if(!p||p.centro)return null;return [...document.querySelectorAll(p.alvo)].find(e=>e.offsetParent!==null||getComputedStyle(e).position==='fixed')||null}
+function tourMostrar(){
+  if(!TOUR)return;
+  const p=TOUR.passos[TOUR.i],el=document.getElementById('tour');
+  let a=tourAlvo(p);
+  if(!p.centro&&!a){ // alvo sumiu: pula o passo
+    if(TOUR.i<TOUR.passos.length-1){TOUR.i++;return tourMostrar()}return tourFim()}
+  const tot=TOUR.passos.length,ult=TOUR.i===tot-1;
+  el.innerHTML=`${p.espera?'':'<div class="tr-catch"></div>'}<div class="tr-hole${a?'':' zero'}"></div>
+    <div class="tr-card" role="dialog" aria-live="polite" aria-label="Guia do app">
+      <div class="tr-top"><span class="eyebrow">Guia do app</span><button class="tr-pular" data-tr="pular">Pular o guia</button></div>
+      <p class="tr-t">${p.t}</p><p class="tr-tx">${p.x}</p>
+      ${p.acao?`<p class="tr-acao"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>${p.acao}</p>`:''}
+      <div class="tr-bts">${tot>1?`<span class="tr-dots" aria-hidden="true">${TOUR.passos.map((_,k)=>`<i class="${k===TOUR.i?'on':''}"></i>`).join('')}</span>`:''}
+        ${TOUR.i>0&&!p.espera?'<button class="btn btn-ghost" data-tr="voltar">Voltar</button>':''}
+        ${p.espera?'':`<button class="btn btn-primary" data-tr="prox">${p.ok||(ult?'Concluir':'Próximo')}</button>`}</div>
+    </div>`;
+  el.querySelectorAll('[data-tr]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();const k=b.dataset.tr;
+    if(k==='pular')return tourPularTudo();
+    if(k==='voltar'){TOUR.i--;return tourMostrar()}
+    if(TOUR.i<TOUR.passos.length-1){TOUR.i++;tourMostrar()}else tourFim()});
+  if(a&&!p.fixo){const r=a.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight-260){const alvoY=r.height>innerHeight*.45?r.top+scrollY-80:r.top+scrollY-Math.max(80,(innerHeight-260-r.height)/2);scrollTo({top:Math.max(0,alvoY),behavior:'auto'})}}
+  tourPos();setTimeout(tourPos,380);clearInterval(tourIv);if(p.espera)tourIv=setInterval(tourPos,300);
+  const bt=el.querySelector('[data-tr="prox"]');if(bt)bt.focus({preventScroll:true});
+}
+function tourPos(){
+  if(!TOUR)return;const el=document.getElementById('tour');if(!el)return;
+  const p=TOUR.passos[TOUR.i],a=tourAlvo(p),h=el.querySelector('.tr-hole'),c=el.querySelector('.tr-card');if(!h||!c)return;
+  if(!a){c.style.top='50%';c.style.bottom='';c.style.transform='translateY(-50%)';return}
+  const r=a.getBoundingClientRect(),pad=6;
+  h.style.left=(r.left-pad)+'px';h.style.top=(r.top-pad)+'px';h.style.width=(r.width+pad*2)+'px';h.style.height=(r.height+pad*2)+'px';
+  c.style.transform='';const ch=c.offsetHeight,vh=innerHeight;
+  if(r.bottom+pad+12+ch<vh-8){c.style.top=(r.bottom+pad+12)+'px';c.style.bottom=''}
+  else if(r.top-pad-12-ch>8){c.style.top='';c.style.bottom=(vh-r.top+pad+12)+'px'}
+  else{c.style.top='';c.style.bottom='12px'}
+}
+function tourAvancarSeEspera(){
+  if(!TOUR)return;const p=TOUR.passos[TOUR.i];
+  if(p.espera&&p.espera()){const id=TOUR.id;tourMarcar(id);tourFechar();tourChecar();return}
+  if(p.espera&&TOUR.id==='inicio'&&S.tab!=='home'){tourFechar();return}
+  tourMostrar();
+}
+function tourFim(){const id=TOUR&&TOUR.id;if(id)tourMarcar(id);tourFechar()}
+function tourRefazer(){store.set('tour',{});S.cap=null;go('home');setTimeout(()=>{if(!MINHA&&!COMP)tourChecar();else{S.turma=MINHA||S.turma;S.uAberta=false;go('turma')}},300)}
+
+/* Guia do estudante (página fixa) */
+const GUIAIC='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>';
+const guiaBtn=()=>`<button class="guia-btn" data-go="guia"><span class="gb-ic">${GUIAIC}</span><span><b>Guia do estudante</b><span class="meta">Como usar o GeoEstudos, passo a passo</span></span>${CHEVR}</button>`;
+function vGuia(){
+  const bloco=(tipo,ic,titulo,sub,corpo)=>`<details class="sbsec sec-${tipo}"><summary><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span><span class="sec-tx"><b>${titulo}</b><span class="sec-sub">${sub}</span></span>${CHEVD}</summary><div class="sbsec-body">${corpo}</div></details>`;
+  const ol=a=>`<ol class="g-passos">${a.map(x=>`<li>${x}</li>`).join('')}</ol>`;
+  return `<section class="section sobre guia">
+    <div class="home-head">${GLOBO_HH}<span class="eyebrow">GeoEstudos</span><h1 class="home-t">Guia do estudante</h1></div>
+    <p class="sb-lead">Tudo o que você pode fazer no GeoEstudos, explicado passo a passo. Toque em cada tema para ler.</p>
+    <button class="btn btn-primary" id="tourDeNovo" style="align-self:flex-start">Ver o tour guiado de novo</button>
+    <div class="sbsecs">
+    ${bloco('pen','globo','Primeiros passos','Ano, turma e unidade',ol([
+      'Na página inicial, toque no seu <b>ano</b> e depois na sua <b>turma</b>.',
+      'O app pergunta se você é daquela turma. Toque em <b>“Sim, sou da turma”</b> para o app abrir sempre nela e mostrar os avisos dela.',
+      'Se o celular é usado por mais de um estudante (irmãos, colegas), escolha <b>“Celular compartilhado”</b>.',
+      'Depois, escolha a <b>unidade</b>. Só a unidade em andamento fica aberta; as outras abrem e fecham conforme o calendário da escola.',
+      'Para mudar de turma, volte à página inicial (toque no logo GeoEstudos, no topo).']))}
+    ${bloco('ano','livro','Resumos','Ler, ouvir, destacar e copiar no caderno',ol([
+      'Abra a sua turma e toque em <b>Resumos</b>. Escolha o capítulo.',
+      '<b>Ouvir</b> lê o resumo em voz alta. <b>Aa</b> muda o tamanho e o tipo da letra, inclusive uma letra própria para dislexia.',
+      'Para <b>destacar, sublinhar ou comentar</b> um trecho, toque e segure numa palavra e ajuste a seleção. <b>Marcações</b> mostra tudo o que você marcou.',
+      'O botão de <b>tela cheia</b> esconde o resto do app para você se concentrar na leitura.',
+      'Copie o resumo no caderno e toque em <b>“Já copiei este resumo no caderno”</b>.',
+      'Há também o <b>PDF</b> do resumo, para imprimir ou guardar.']))}
+    ${bloco('ano','atv','Revisão rápida','Opcional, não vale nota',ol([
+      'No fim de alguns resumos há a <b>Revisão rápida</b>: perguntas sorteadas sobre o capítulo.',
+      'O app corrige na hora e explica cada resposta. Faça quantas vezes quiser.']))}
+    ${bloco('ano','atv','Atividades','Fixação, aprofundamento e atividade avaliativa',ol([
+      '<b>Atividade de fixação:</b> vale ponto. Toque em <b>Fazer a atividade</b>, responda com atenção, envie uma vez só e volte para marcar <b>“Já enviei”</b>.',
+      '<b>Aulas de aprofundamento:</b> aulas extras que valem ponto e ajudam a melhorar a média (recuperação paralela).',
+      '<b>Atividade avaliativa:</b> informe a turma e o <b>nome completo, como está na chamada</b>. São 10 questões sorteadas, e você faz uma única vez. No fim aparece só a sua nota.',
+      'Se a internet cair durante a atividade avaliativa, as respostas ficam guardadas e o app envia quando a conexão voltar.']))}
+    ${bloco('ano','cal','Calendário e avisos','Prazos, lembretes e mural',ol([
+      'Em <b>Calendário</b> ficam as entregas do caderno, os prazos das atividades e as avaliações da turma.',
+      'Na página da turma, toque em <b>Ativar avisos</b>: você recebe lembretes na véspera e no dia de cada entrega, e as novidades da turma.',
+      'No iPhone, os avisos só funcionam com o app instalado e aberto <b>pelo ícone</b>.',
+      'O <b>Mural de avisos</b> traz recados do professor para a sua turma.']))}
+    ${bloco('duv','duv','Dúvidas','Pergunte ao professor',ol([
+      'Na página da turma ou no fim de um resumo, toque em <b>Ficou com dúvida?</b>',
+      'Escreva com educação, como se estivesse na sala de aula. Há um limite de dúvidas por dia.',
+      'As respostas aparecem em <b>Dúvidas respondidas</b>, sem o nome de quem perguntou.']))}
+    ${bloco('pen','globo','Conteúdo Geográfico do Dia','Curiosidades na página inicial',ol([
+      'De vez em quando, o professor posta um vídeo, uma imagem ou um texto curto para despertar a sua curiosidade.',
+      'Quando sai conteúdo novo, você recebe um aviso. Os anteriores ficam em <b>Conteúdos anteriores</b>.']))}
+    ${bloco('pen','sino','Instalar e usar sem internet','Ícone, rapidez e avisos',ol([
+      'Na página inicial, toque em <b>Instale o GeoEstudos no celular</b> e siga os passos do seu aparelho (Android ou iPhone).',
+      'No Android, use o <b>Chrome</b> e mantenha-o no celular. No iPhone, use o <b>Safari</b>.',
+      'Se abriu pelo Instagram, toque em <b>Abrir no Chrome</b> (ou <b>Abrir no Safari</b>) no aviso amarelo do topo.',
+      'Depois de aberto uma vez, o que você já viu continua disponível <b>sem internet</b>.']))}
+    ${bloco('nov','atv','O que fica no seu celular','Marcações e progresso',ol([
+      'Seus destaques, comentários e marcações de “copiado” e “enviado” ficam <b>só no seu celular</b>.',
+      'Se apagar o app ou limpar os dados do navegador, essas marcações se perdem, mas os resumos continuam lá.',
+      'Quem confere o que você fez é o professor, <b>no seu caderno</b>.']))}
+    </div>
+  </section>`;
+}
+
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.4.1',APP_DATA='2026-10-23';
+const APP_VERSAO='1.5.0',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2178,6 +2359,7 @@ function vHome(){
       <div class="yf-body"><div class="choice">${y.turmas.map(t=>`<button data-turma="${t}" aria-pressed="${MINHA===t}"><span>Turma</span>${t}${MINHA===t?'<small>Minha turma</small>':''}</button>`).join('')}</div></div></details>`}).join('')}</div>`:semDados()}
     ${celularCard()}
     ${diaHome()}
+    ${guiaBtn()}
     ${installCard()}
   </section>`;
 }
@@ -2293,6 +2475,7 @@ function vTurma(){
     ${muralFold()}
     ${duvidasSecao()}
     </div>
+    ${guiaBtn()}
     <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
   </section>`;
 }
@@ -2952,19 +3135,20 @@ function render(){
   if(adjusting)cancelAdjust();
   hideBar();
   if(S.tab==='prof'&&!PROF())S.tab='home';
-  if(S.tab!=='sobre'&&S.tab!=='prof'&&(S.tab!=='home'||S.cap)&&(!DATA||!S.turma||!YEARS[anoT()])){S.tab='home';S.cap=null}
+  if(S.tab!=='sobre'&&S.tab!=='prof'&&S.tab!=='guia'&&(S.tab!=='home'||S.cap)&&(!DATA||!S.turma||!YEARS[anoT()])){S.tab='home';S.cap=null}
   document.querySelector('.tabs').hidden=!S.turma||!DATA||(S.tab==='home'&&!S.cap&&!S.turma);
   const tl=document.querySelector('[data-tab=turma] .tl');if(tl)tl.textContent=S.turma?'Turma '+S.turma:'Turma';
   const dot=document.querySelector('[data-tab=turma]');if(dot)dot.classList.toggle('has-new',!!(S.turma&&DATA&&(avisosNovos().length||muralNaoLidos(S.turma))));
   document.body.classList.toggle('lendo',!!S.cap);
   if(!S.cap&&document.body.classList.contains('foco'))focoSair();
   document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
-  $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre,prof:vProf}[S.tab]();
+  $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre,prof:vProf,guia:vGuia}[S.tab]();
   if(S.tab==='home'&&!S.cap){const d0=diaLista()[0],el=document.getElementById('dia');if(d0&&el&&el.open&&!diaVistos().includes(d0.id))setTimeout(()=>diaMarcar(d0.id),1500)}
   if(PROF())$('#view').insertAdjacentHTML('afterbegin',profBarra());
   if(MINHA&&S.turma&&S.turma!==MINHA&&S.tab!=='home'&&S.tab!=='turma')$('#view').insertAdjacentHTML('afterbegin',`<div class="outra mini"><span>Vendo a <b>Turma ${esc(S.turma)}</b> · sua turma é a ${esc(MINHA)}</span><button class="link" data-turma="${esc(MINHA)}">Voltar</button></div>`);
   if(S.cap){loadAnn();paintResumo()}
   clearTimeout(popT);popT=setTimeout(checarPopups,700);
+  tourChecar();
   document.body.classList.toggle('fora-inicio',S.tab!=='home'||!!S.cap);{const fv=document.getElementById('appVersao');if(fv&&!fv.textContent)fv.textContent=versaoTexto()}const pf=document.querySelector('.foot-sobre-w');if(pf)pf.hidden=S.tab==='sobre'&&!S.cap;
   document.querySelectorAll('.tab').forEach(b=>{b.removeAttribute('aria-current');if(b.dataset.tab===S.tab)b.setAttribute('aria-current','page')});
 }
@@ -3106,6 +3290,7 @@ document.addEventListener('click',ev=>{
     if(gain)cheer('atividade',String(n)[0]==='t'?`Atividade da aula de aprofundamento ${String(n).slice(1)} registrada.`:`Atividade do Capítulo ${n} registrada como enviada.`);return}
   const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;S.uAberta=false;store.set('turma',S.turma);
     go('turma');if(!MINHA&&!COMP)perguntarTurma(S.turma);return}
+  if(t.closest('#tourDeNovo'))return tourRefazer();
   if(t.closest('[data-fora]'))return abrirFora();
   if(t.closest('[data-copiarlink]')){const u=URL_APP();try{navigator.clipboard.writeText(u).then(()=>toast('Link copiado. Cole no navegador.'),()=>toast(u))}catch(e){toast(u)}return}
   if(t.closest('#pushTurmas'))return turmasSheet();
