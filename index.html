@@ -908,6 +908,17 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .pf-chips .pf-tt{color:var(--muted)}
 .pf-rot{display:flex;flex-direction:column;gap:8px}
 .pf-r ol{margin:0 0 8px;padding-left:1.2em;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+
+/* Tela inteira no leitor */
+.foco-btn span{font-size:.84rem}
+body.foco .top,body.foco .tabs,body.foco .foot,body.foco .profbar,body.foco .girar,body.foco .reader-bar,body.foco .outra.mini,body.foco .tip,body.foco .fixo{display:none!important}
+body.foco .app{padding-top:max(8px,env(safe-area-inset-top,0px));padding-bottom:40px}
+body.foco .read-tools{position:sticky;top:0;z-index:6;background:var(--bg);padding:8px 52px 8px 0;margin-bottom:0}
+body.foco #apresBtn{display:none}
+@media (max-width:400px){body.foco .read-tools{gap:6px;padding-right:48px}body.foco .read-tools .tool{padding:8px 8px}body.foco .foco-sair{width:40px;height:40px;right:calc(8px + env(safe-area-inset-right,0px))}}
+body.foco .markbar{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.foco-sair{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));z-index:8;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+@media (min-width:760px){body.foco .app{max-width:min(94vw,900px)}}
 </style>
 </head>
 <body>
@@ -2017,7 +2028,7 @@ function vCap(n){
   if(!c||!c.resumo){S.cap=null;return vResumos()}
   const pAt=prazoDe(n,'atividade'),pCad=prazoDe(n,'caderno');
   return `<article class="section">
-    <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button></div>
+    <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button><button class="tool foco-btn" id="focoBtn" aria-label="Ler em tela inteira">${FOCOIC}<span>Tela inteira</span></button></div>
     ${girarDica()}
     <div><span class="ypill">${y.label} · Unidade ${c.u} · Capítulo ${n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo">Resumo</span> ${c.atividade?(isSent(n)?`<button class="qact ok" data-jump="1">${CHECK}Atividade enviada</button>`:`<button class="qact" data-jump="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg>Atividade de fixação · vale nota</button>`):''}
     ${pCad?`<div class="prazo">Entrega do caderno: <b>${dm(pCad)}</b> · ${quando(pCad).toLowerCase()}</div>`:''}</div>
@@ -2064,7 +2075,7 @@ addEventListener('orientationchange',()=>{if(S.cap)store.set('girouDica',(store.
 function vTema(n,c){
   const y=Y(),done=isCopied(n),sent=isSent(n),pr=prazoDe(n,'tema');
   return `<article class="section">
-    <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button></div>
+    <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button><button class="tool foco-btn" id="focoBtn" aria-label="Ler em tela inteira">${FOCOIC}<span>Tela inteira</span></button></div>
     ${girarDica()}
     <div><span class="ypill">${y.label} · Unidade ${c.u} · Aula de aprofundamento ${c.n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo tt-lbl">Aula extra</span> <button class="qact tt-q${sent?' ok':''}" data-jump="1">${sent?CHECK+'Atividade feita':'Vale ponto · recuperação paralela'}</button>
     ${pr?`<div class="prazo">Prazo da atividade: <b>${dm(pr)}</b> · ${quando(pr).toLowerCase()}</div>`:''}</div>
@@ -2253,7 +2264,7 @@ function avGuardar(){if(!AV||!AV.st)return;AV.st.i=AV.i;const x=avAnd();x[AV.a.d
 function avRender(){
   const o=document.querySelector('.avl-o');if(!o||!AV)return;
   const {a,c,st}=AV,y=Y();
-  const topo=`<div class="qz-top"><span class="rev-ic avl-ic2">${AVIC}</span><span class="qz-tt"><b>Atividade avaliativa</b><span class="meta">${c.tema?'Aula de aprofundamento':'Cap.'} ${c.n} · ${esc(c.titulo)}</span></span><button class="qz-x" data-av="sair" aria-label="Sair da atividade">${XIC}</button></div>`;
+  const topo=`<div class="qz-top"><span class="rev-ic avl-ic2">${AVIC}</span><span class="qz-tt"><b>Atividade avaliativa</b><span class="meta">${c.tema?'Aula de aprofundamento':'Cap.'} ${c.n} · ${esc(c.titulo)}</span></span>${document.fullscreenEnabled?`<button class="qz-x" data-av="tela" aria-label="Tela inteira">${FOCOIC}</button>`:''}<button class="qz-x" data-av="sair" aria-label="Sair da atividade">${XIC}</button></div>`;
   let corpo='',dots='';
   if(AV.etapa==='ident'){
     const ts=y.turmas||[],tur=ts.includes(S.turma)?S.turma:ts.includes(MINHA)?MINHA:'';
@@ -2313,6 +2324,7 @@ async function avClique(e){
   if(iq&&st){AV.i=+iq.dataset.avQ;AV.etapa='q';AV.conf=false;avGuardar();avRender();return}
   if(!b)return;const a=b.dataset.av;
   if(a==='sair')return avFechar();
+  if(a==='tela')return telaCheiaAlternar();
   if(a==='prox'){AV.i++;avGuardar();return avRender()}
   if(a==='ant'){AV.i=Math.max(0,AV.i-1);avGuardar();return avRender()}
   if(a==='revisar'){AV.etapa='rev';AV.conf=false;AV.erro='';return avRender()}
@@ -2365,6 +2377,24 @@ async function avReenviar(){
   avTentando=false;if(mud&&!AV)render();
 }
 addEventListener('online',avReenviar);
+
+
+/* Tela inteira no leitor: esconde o topo, as abas e o rodapé; marcações, Ouvir e Aa continuam funcionando */
+const FOCOIC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+const FOCOSAIIC='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+let focoFS=false;
+function focoEntrar(){
+  document.body.classList.add('foco');
+  if(!document.getElementById('focoSair')){const b=document.createElement('button');b.id='focoSair';b.className='foco-sair';b.setAttribute('aria-label','Sair da tela inteira');b.innerHTML=FOCOSAIIC;b.onclick=focoSair;document.body.appendChild(b)}
+  try{const el=document.documentElement;if(el.requestFullscreen&&!document.fullscreenElement){el.requestFullscreen({navigationUI:'hide'}).then(()=>{focoFS=true}).catch(()=>{})}}catch(e){}
+}
+function focoSair(){
+  document.body.classList.remove('foco');document.getElementById('focoSair')?.remove();
+  try{if(document.fullscreenElement&&focoFS)document.exitFullscreen()}catch(e){}
+  focoFS=false;
+}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&focoFS){focoFS=false;if(document.body.classList.contains('foco'))focoSair()}});
+function telaCheiaAlternar(){try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(()=>toast('Este aparelho não permite tela inteira aqui.'))}catch(e){toast('Este aparelho não permite tela inteira aqui.')}}
 
 /* Modo apresentação: o resumo em tela cheia, seção por seção, para TV, projetor ou data show */
 const APRIC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>';
@@ -2606,6 +2636,7 @@ function render(){
   const tl=document.querySelector('[data-tab=turma] .tl');if(tl)tl.textContent=S.turma?'Turma '+S.turma:'Turma';
   const dot=document.querySelector('[data-tab=turma]');if(dot)dot.classList.toggle('has-new',!!(S.turma&&DATA&&(avisosNovos().length||muralNaoLidos(S.turma))));
   document.body.classList.toggle('lendo',!!S.cap);
+  if(!S.cap&&document.body.classList.contains('foco'))focoSair();
   document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
   $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre,prof:vProf}[S.tab]();
   if(PROF())$('#view').insertAdjacentHTML('afterbegin',profBarra());
@@ -2652,7 +2683,7 @@ function navEmpilhar(){
 }
 function navFecharJanela(){
   const os=[...document.querySelectorAll('.overlay')].filter(o=>!o.hidden);
-  const o=os[os.length-1];if(!o)return false;
+  const o=os[os.length-1];if(!o){if(document.body.classList.contains('foco')){focoSair();return true}return false}
   if(o.classList.contains('ap'))fecharApres();
   else if(o.classList.contains('avl-o'))avFechar();
   else if(o.classList.contains('qz-o'))fecharRevisao();
@@ -2726,6 +2757,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#shareApp'))return shareApp();
   if(t.closest('#readBtn'))return readSheet();
   if(t.closest('#apresBtn'))return abrirApres();
+  if(t.closest('#focoBtn'))return document.body.classList.contains('foco')?focoSair():focoEntrar();
   {const av=t.closest('[data-av]');if(av&&!t.closest('.avl-o')){if(av.dataset.av==='abrir')return avAbrir(capId(av.dataset.avcap));if(av.dataset.av==='reenviar'){avReenviar().then(()=>render());return}}}
   if(t.closest('#listBtn'))return listSheet();
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
