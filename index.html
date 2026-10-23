@@ -718,21 +718,27 @@ body.m-escuro .privbtn{background:#2F5BC4;box-shadow:0 0 0 1.5px #9DB8FF,0 6px 1
 .pushon{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.84rem;color:var(--muted);padding:0 4px}
 .pushon .link{font-size:.84rem;flex:none}
 /* App real: agenda, avisos, instalação, carregamento */
-.dia{position:relative;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--pen);border-radius:var(--r);padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 10px rgba(29,63,143,.07)}
-.dia-h{display:flex;align-items:center;gap:10px}
-.dia-ic{flex:none;width:38px;height:38px;border-radius:50%;background:var(--pen);color:var(--on-pen);display:grid;place-items:center}
+.dia{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(29,63,143,.10)}
+.dia-h{position:relative;overflow:hidden;display:flex;align-items:center;gap:11px;background:var(--pen);color:var(--on-pen);padding:13px 14px 13px 14px;min-height:64px}
+.dia-h .dia-deco{position:absolute;right:-18px;top:50%;transform:translateY(-50%);width:120px;height:120px;opacity:.18;pointer-events:none}
+.dia-h>span{position:relative}
+.dia-ic{flex:none;width:38px;height:38px;border-radius:50%;background:var(--on-pen);color:var(--pen);display:grid;place-items:center}
 .dia-ic svg{width:28px;height:28px}
-.dia-h .eyebrow{display:block;color:var(--pen);font-weight:800;letter-spacing:.03em;font-size:.7rem;line-height:1.3}
-.dia-q{display:block;font-size:.84rem;color:var(--muted)}
-.dia-novo{margin-left:auto;background:var(--hl);color:var(--m-ink,#1E2430);font-weight:800;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 9px}
-.dia-t{margin:2px 0 0;font-size:1.22rem;line-height:1.25}
-.dia .media{margin:6px 0}
+.dia-h .eyebrow{display:block;color:inherit;font-weight:800;letter-spacing:.04em;font-size:.72rem;line-height:1.3}
+.dia-h .dia-q{display:block;font-size:.84rem;color:inherit;opacity:.85}
+.dia-novo{position:relative;margin-left:auto;background:var(--hl);color:#1E2430;font-weight:800;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 9px}
+.dia-b{padding:13px 16px 16px;display:flex;flex-direction:column;gap:8px}
+.dia-t{margin:0;font-size:1.22rem;line-height:1.25}
+.dia .media{margin:4px 0}
 .dia-tx p{margin:0 0 8px;line-height:1.55}.dia-tx p:last-child{margin:0}
 .dia-tx a{color:var(--pen);font-weight:700}
 .dia-fonte{margin:0;font-size:.82rem;color:var(--muted)}
 .dia-fonte a{color:inherit}
 .dia-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
-.dia-vazio{border-style:dashed;border-top-style:solid}
+.dia-vazio .dia-b{flex-direction:row;align-items:center;gap:14px}
+.dia-vazio .dia-ilu{flex:none;width:64px;height:64px;color:var(--pen);opacity:.9}
+.dia-vazio p{margin:0;line-height:1.5;font-size:.95rem}
+.dia-vazio .dia-em{display:block;font-family:var(--title,inherit);font-weight:800;font-size:1.05rem;color:var(--pen);margin-bottom:2px}
 .dia-teaser{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--pen-soft);color:var(--ink);border:1px solid var(--line);border-left:5px solid var(--pen);border-radius:var(--r);padding:10px 12px;font:inherit;cursor:pointer}
 .dia-teaser .dia-ic{width:32px;height:32px}.dia-teaser .dia-ic svg{width:23px;height:23px}
 .dia-teaser b{display:block;line-height:1.25}
@@ -740,7 +746,7 @@ body.m-escuro .privbtn{background:#2F5BC4;box-shadow:0 0 0 1.5px #9DB8FF,0 6px 1
 .dia-lista{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
 .dia-li{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;color:var(--ink);cursor:pointer}
 .dia-li .meta{font-size:.8rem}
-.sheet .dia{border:0;box-shadow:none;padding:0;border-top:0}
+.sheet .dia{box-shadow:none}
 .banner{background:var(--hl-soft);color:var(--ink);border-left:5px solid var(--hl);border-radius:6px var(--r) var(--r) 6px;padding:10px 12px;font-weight:700;font-size:.95rem}
 .install{display:flex;gap:12px;align-items:center;text-align:left;width:100%;border:1.5px dashed var(--pen);background:var(--pen-soft)}
 .inst-ic{flex:none;width:40px;height:40px;border-radius:12px;background:var(--pen);color:var(--on-pen);display:grid;place-items:center}
@@ -1899,6 +1905,9 @@ function vSobre(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 const diaLista=()=>(DATA&&DATA.dia)||[];
+const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
+const diaCab=(sub,novo)=>`<header class="dia-h">${DIA_DECO}<span class="dia-ic">${DIA_IC}</span><span><span class="eyebrow">Conteúdo Geográfico do Dia</span><span class="dia-q">${sub}</span></span>${novo?'<span class="dia-novo">Novo</span>':''}</header>`;
+const DIA_ILU='<svg class="dia-ilu" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="27" cy="27" r="17"/><path d="M10 27h34M27 10c-6 6-6 28 0 34M27 10c6 6 6 28 0 34"/><path d="M39.5 39.5L54 54"/><path d="M50 8l1.6 3.4L55 13l-3.4 1.6L50 18l-1.6-3.4L45 13l3.4-1.6z" fill="currentColor" stroke="none"/></svg>';
 function diaQuando(iso){
   if(iso===HOJE)return 'Postado hoje';
   const d=new Date(iso+'T12:00:00'),ont=new Date(TODAY);ont.setDate(ont.getDate()-1);
@@ -1917,14 +1926,15 @@ function diaMarcar(id){const v=diaVistos();if(!v.includes(id)){v.push(id);store.
 const diaNovo=()=>{const d=diaLista()[0];return d&&!diaVistos().includes(d.id)?d:null};
 function diaHome(){
   const l=diaLista();
-  if(!l.length)return PROF()?`<article class="dia dia-vazio" id="dia"><header class="dia-h"><span class="dia-ic">${DIA_IC}</span><span><span class="eyebrow">Conteúdo Geográfico do Dia</span><span class="dia-q">Nada postado ainda. Esta caixa só aparece para os alunos depois da primeira postagem.</span></span></header>${profEdit([['Postar na planilha',profP().dia||profP().config]])}</article>`:'';
+  if(!l.length)return `<article class="dia dia-vazio" id="dia">${diaCab('Em breve',false)}
+    <div class="dia-b">${DIA_ILU}<p><span class="dia-em">Prepare o seu olhar geográfico!</span>Aqui o Prof. Haroldo vai postar vídeos, imagens e curiosidades sobre o mundo e sobre o lugar onde a gente vive. Quando sair conteúdo novo, você recebe um aviso no celular.</p></div>
+    ${PROF()?`<div style="padding:0 16px 14px">${profEdit([['Fazer a primeira postagem na planilha',profP().dia||profP().config]])}</div>`:''}</article>`;
   const d=l[0],novo=!diaVistos().includes(d.id);
-  return `<article class="dia" id="dia" data-diaid="${esc(d.id)}" aria-labelledby="diaT">
-    <header class="dia-h"><span class="dia-ic">${DIA_IC}</span><span><span class="eyebrow">Conteúdo Geográfico do Dia</span><span class="dia-q">${diaQuando(d.data)}</span></span>${novo?'<span class="dia-novo">Novo</span>':''}</header>
-    <h2 class="dia-t" id="diaT">${esc(d.titulo)}</h2>
+  return `<article class="dia" id="dia" data-diaid="${esc(d.id)}" aria-labelledby="diaT">${diaCab(diaQuando(d.data),novo)}
+    <div class="dia-b"><h2 class="dia-t" id="diaT">${esc(d.titulo)}</h2>
     ${diaCorpo(d)}
     ${l.length>1?`<div class="dia-acts"><button class="btn btn-ghost" id="diaAnt">Conteúdos anteriores (${l.length-1})</button></div>`:''}
-    ${profEdit([['Postar ou editar na planilha',profP().dia||profP().config]])}
+    ${profEdit([['Postar ou editar na planilha',profP().dia||profP().config]])}</div>
   </article>`;
 }
 function diaTeaser(){
@@ -1934,8 +1944,7 @@ function diaTeaser(){
 function diaAbrir(id){
   const l=diaLista(),d=l.find(x=>x.id===id);if(!d)return diaArquivo();
   diaMarcar(d.id);
-  sheet(`<article class="dia"><header class="dia-h"><span class="dia-ic">${DIA_IC}</span><span><span class="eyebrow">Conteúdo Geográfico do Dia</span><span class="dia-q">${diaQuando(d.data)}</span></span></header>
-    <h2 class="dia-t">${esc(d.titulo)}</h2>${diaCorpo(d)}</article>
+  sheet(`<article class="dia">${diaCab(diaQuando(d.data),false)}<div class="dia-b"><h2 class="dia-t">${esc(d.titulo)}</h2>${diaCorpo(d)}</div></article>
     <div style="display:flex;gap:10px;flex-wrap:wrap">${l.length>1?'<button class="btn btn-ghost" id="diaLista">Ver todos os conteúdos</button>':''}<button class="btn btn-primary" data-close>Fechar</button></div>`,
   (o,close)=>{const b=o.querySelector('#diaLista');if(b)b.onclick=()=>{close();diaArquivo()}});
 }
