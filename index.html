@@ -861,6 +861,21 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .avl-nota b{font-family:var(--display);font-size:3.6rem;line-height:1.05;color:color-mix(in srgb,var(--year) 72%,var(--ink))}
 .avl-nota span{font-weight:700;color:var(--muted)}
 .sb-tct{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:4px}
+.ulist{display:flex;flex-direction:column;gap:10px}
+.ucard{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:12px 14px;width:100%;color:var(--ink)}
+.ucard .ucn{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:1.35rem;background:var(--surface-2);color:var(--muted)}
+.ucard .uct{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ucard .uct b{font-size:1.02rem;line-height:1.25}
+.ucard .ust{display:inline-flex;gap:5px;align-items:center;font-size:.82rem;font-weight:700;color:var(--muted)}
+.ucard .ust svg{width:14px;height:14px}
+.ucard.at{border-color:var(--year);background:color-mix(in srgb,var(--year) 9%,var(--surface))}
+.ucard.at .ucn{background:var(--year);color:#fff}
+.ucard.at .ust{color:color-mix(in srgb,var(--year) 72%,var(--ink))}
+.ucard.off{opacity:.62;cursor:default}
+.u-voltar{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;color:var(--pen);font-weight:700;padding:4px 0}
+.uchips button.lock{opacity:.45}
+.fechada{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.fechada>svg{width:28px;height:28px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -911,7 +926,8 @@ function aplicarDados(){
   YEARS={};TURMAS=[];T2A={};if(!DATA||!DATA.anos)return;
   for(const a of DATA.anos){
     const units={};a.unidades.forEach(u=>units[u.n]=u);
-    YEARS[a.ano]={ano:a.ano,label:a.nome,color:COR[a.ano]||'var(--pen)',atual:a.atual,unit:(units[a.atual]||{}).titulo||'',livro:a.livro,units,list:a.unidades,turmas:a.turmas};
+    const com=a.unidades.filter(u=>u.inicio&&u.inicio<=HOJE).sort((p,q)=>p.inicio<q.inicio?1:-1),at=com.length?com[0].n:a.atual;
+    YEARS[a.ano]={ano:a.ano,label:a.nome,color:COR[a.ano]||'var(--pen)',atual:at,unit:(units[at]||{}).titulo||'',livro:a.livro,units,list:a.unidades,turmas:a.turmas};
     a.turmas.forEach(t=>{TURMAS.push(t);T2A[t]=a.ano});
   }
   if(DATA.app&&DATA.app.email)EMAIL=DATA.app.email;
@@ -928,7 +944,7 @@ const S={fonte:store.get('fonte','padrao'),unit:null,tab:'home',turma:COMP?null:
    Fica só enquanto a aba/app estiver aberto: abrir o app do zero continua começando no Início. */
 const LUGAR0=(()=>{try{return JSON.parse(sessionStorage.getItem('geo:lugar')||'null')}catch(e){return null}})();
 let lugarPronto=false;
-function salvarLugar(){if(!lugarPronto)return;try{sessionStorage.setItem('geo:lugar',JSON.stringify({tab:S.tab,cap:S.cap,turma:S.turma,unit:S.unit,y:Math.round(scrollY),t:Date.now()}))}catch(e){}}
+function salvarLugar(){if(!lugarPronto)return;try{sessionStorage.setItem('geo:lugar',JSON.stringify({tab:S.tab,cap:S.cap,turma:S.turma,unit:S.unit,ua:!!S.uAberta,y:Math.round(scrollY),t:Date.now()}))}catch(e){}}
 {let tl=0;addEventListener('scroll',()=>{clearTimeout(tl);tl=setTimeout(salvarLugar,300)},{passive:true});addEventListener('pagehide',salvarLugar);document.addEventListener('visibilitychange',()=>{if(document.hidden)salvarLugar()})}
 if(DATA&&MINHA&&!TURMAS.includes(MINHA)){MINHA=null;store.set('minha',null)}
 if(DATA&&S.turma&&!TURMAS.includes(S.turma))S.turma=null;
@@ -940,6 +956,11 @@ function capOf(n,y){y=y||Y();const tt=String(n)[0]==='t',k=tt?+String(n).slice(1
 const capId=v=>/^t\d+$/.test(String(v))?String(v):+v;
 const temasDe=(y,u)=>((y.units||{})[u]||{temas:[]}).temas||[];
 const pubs=y=>capsDe(y,y.atual).filter(c=>c.resumo);
+/* Unidades: só a unidade em andamento fica aberta para os alunos (o modo professor abre todas) */
+const PROF=()=>!!store.get('prof',false);
+const liberada=(n,y)=>{y=y||Y();return PROF()||+n===+y.atual};
+const LOCKIC='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const msgFechada=n=>`A Unidade ${n} está fechada. Só a unidade em andamento fica disponível.`;
 const agendaT=()=>(((DATA&&DATA.agenda)||{})[S.turma]||[]).slice().sort((x,y)=>(x.data+(x.hora||'')).localeCompare(y.data+(y.hora||''))||(x.cap||0)-(y.cap||0));
 
 const $=s=>document.querySelector(s);
@@ -1427,7 +1448,7 @@ function salvarProgresso(){
 }
 function continuarCard(){
   const u=(store.get('ultimo',{})||{})[anoT()];if(!u)return '';
-  const c=capOf(u.cap);if(!c||!c.resumo)return '';
+  const c=capOf(u.cap);if(!c||!c.resumo||!liberada(c.u))return '';
   if(u.pct>=97)return '';
   const dias=Math.floor((Date.now()-u.t)/864e5),quando=dias<=0?'hoje':dias===1?'ontem':'há '+dias+' dias';
   return `<button class="card contbtn" data-continuar="1"><span class="cont-ic" aria-hidden="true">${SECIC.livro}</span><span class="cont-tx"><span class="eyebrow">Continuar de onde parei</span><b>${c.tema?'Aprofundamento '+c.n:'Cap. '+c.n} · ${esc(c.titulo)}</b><span class="cont-bar" aria-hidden="true"><i style="width:${u.pct}%"></i></span><span class="meta">${u.pct}% lido · ${quando}</span></span>${CHEVR}</button>`;
@@ -1443,7 +1464,7 @@ function indiceDe(c){
 }
 function buscar(q){
   const y=Y(),termo=semAc(q.trim());if(termo.length<2)return [];
-  const itens=y.list.flatMap(u=>[...u.caps.filter(c=>c.resumo).map(c=>capOf(c.n)),...(u.temas||[]).filter(t=>t.resumo).map(t=>capOf('t'+t.n))]);
+  const itens=y.list.filter(u=>liberada(u.n,y)).flatMap(u=>[...u.caps.filter(c=>c.resumo).map(c=>capOf(c.n)),...(u.temas||[]).filter(t=>t.resumo).map(t=>capOf('t'+t.n))]);
   const res=[];
   for(const c of itens){
     const hits=indiceDe(c).filter(x=>x.n.includes(termo));
@@ -1798,7 +1819,7 @@ function vHome(){
 
 function unitChips(active){
   const y=Y();
-  return `<nav class="uchips" aria-label="Unidades" style="grid-template-columns:repeat(${Math.max(4,y.list.length)},minmax(0,1fr))">${y.list.map(u=>`<button data-unit="${u.n}"${u.n===active?' aria-current="true"':''}${u.n===y.atual?' class="cur"':''}><span>Unidade</span><b>${u.n}</b>${u.n===y.atual?'<small>atual</small>':''}</button>`).join('')}</nav>`;
+  return `<nav class="uchips" aria-label="Unidades" style="grid-template-columns:repeat(${Math.max(4,y.list.length)},minmax(0,1fr))">${y.list.map(u=>`<button data-unit="${u.n}"${liberada(u.n,y)?'':' class="lock" aria-disabled="true"'}${u.n===active?' aria-current="true"':''}${u.n===y.atual?' class="cur"':''}><span>Unidade</span><b>${u.n}</b>${u.n===y.atual?'<small>atual</small>':''}</button>`).join('')}</nav>`;
 }
 function capBtn(c){
   if(!c.resumo)return `<div class="capitem off"><div class="capbtn"><span class="cn">${c.n}</span><span class="ct"><span class="eyebrow">Capítulo ${c.n}</span><b>${esc(c.titulo)}</b><span class="meta">Resumo ainda não publicado</span></span></div></div>`;
@@ -1876,17 +1897,18 @@ function avisosHtml(){
   return `<div class="avisos">${sec('Novidades','nov','sino','<button class="meta link" id="avisosOk">Marcar como vistas</button>')}${av.slice(0,5).map(a=>`<div class="aviso"><span class="av-ic" aria-hidden="true">${a.tipo==='resumo'?'✎':a.tipo==='duvida'?'?':'◷'}</span><span style="min-width:0"><b>${esc(a.titulo)}</b><br><span>${esc(a.texto)}</span></span>${a.cap&&capOf(a.cap)&&capOf(a.cap).resumo?`<button class="av-go" data-cap="${a.cap}" data-aviso="${a.id}" aria-label="Abrir">${CHEVR}</button>`:''}</div>`).join('')}</div>`;
 }
 function vTurma(){
-  const y=Y(),pub=pubs(y),total=pub.length,done=pub.filter(c=>isCopied(c.n)).length,acts=capsDe(y,y.atual).filter(c=>c.atividade),sent=acts.filter(c=>isSent(c.n)).length;
+  if(!S.uAberta)return vEscolhaUnidade();
+  const y=Y(),ua=(S.unit&&liberada(S.unit,y))?+S.unit:y.atual,uo=y.units[ua]||{titulo:''},pub=capsDe(y,ua).filter(c=>c.resumo),total=pub.length,done=pub.filter(c=>isCopied(c.n)).length,acts=capsDe(y,ua).filter(c=>c.atividade),sent=acts.filter(c=>isSent(c.n)).length;
   const pct=(a,b)=>b?Math.round(a/b*100):0,prox=proximos(3);
   return `<section class="section">
     ${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}
     ${MINHA&&S.turma!==MINHA?`<div class="outra"><span>Você está vendo a <b>Turma ${esc(S.turma)}</b>. Sua turma é a <b>${esc(MINHA)}</b>.</span><div class="outra-b"><button class="btn btn-primary" data-turma="${esc(MINHA)}">Voltar para a ${esc(MINHA)}</button><button class="link" id="mudarMinha">Esta é a minha turma</button></div></div>`:''}
     ${fixosHtml(S.turma)}
-    ${unitChips(y.atual)}
+    <button class="u-voltar" data-uescolha><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Unidades</button>
     <div class="card hello">${GLOBO_HH}
       <span class="eyebrow">Turma ${esc(S.turma)} · ${y.label}${S.turma===MINHA?' · minha turma':''}</span>
-      <h1>Unidade ${y.atual}</h1>
-      <div style="margin-top:2px;font-size:.98rem">${esc(y.unit)}</div>
+      <h1>Unidade ${ua}</h1>
+      <div style="margin-top:2px;font-size:.98rem">${esc(uo.titulo||'')}</div>
       <div class="bar" role="img" aria-label="${done} de ${total} resumos copiados"><i style="width:${pct(done,total)}%"></i></div>
       <div style="font-size:.86rem">${done} de ${total} resumos copiados no caderno</div>
       ${acts.length?`<div class="bar" role="img" aria-label="${sent} de ${acts.length} atividades enviadas" style="margin-top:10px"><i style="width:${pct(sent,acts.length)}%;background:#fff"></i></div>
@@ -1896,10 +1918,10 @@ function vTurma(){
     ${pushCard()}
     ${avisosHtml()}
     <div class="sfolds">
-    ${secFold('resumos','Resumos da Unidade '+y.atual,'ano','livro',total?`${total} ${total===1?'resumo':'resumos'} · ${done} ${done===1?'copiado':'copiados'} no caderno`:'Nenhum resumo publicado ainda',
-      `<div class="capgrid">${capsDe(y,y.atual).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
-    ${temasDe(y,y.atual).length?secFold('temas','Aulas de aprofundamento','ano','globo',`${temasDe(y,y.atual).length} ${temasDe(y,y.atual).length===1?'aula extra':'aulas extras'} · valem ponto`,
-      `<div class="capgrid">${temasDe(y,y.atual).map(temaBtn).join('')}</div>`):''}
+    ${secFold('resumos','Resumos da Unidade '+ua,'ano','livro',total?`${total} ${total===1?'resumo':'resumos'} · ${done} ${done===1?'copiado':'copiados'} no caderno`:'Nenhum resumo publicado ainda',
+      `<div class="capgrid">${capsDe(y,ua).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
+    ${temasDe(y,ua).length?secFold('temas','Aulas de aprofundamento','ano','globo',`${temasDe(y,ua).length} ${temasDe(y,ua).length===1?'aula extra':'aulas extras'} · valem ponto`,
+      `<div class="capgrid">${temasDe(y,ua).map(temaBtn).join('')}</div>`):''}
     ${secFold('datas','Próximas datas','ano','cal',prox.length?`Próxima: ${dm(prox[0].data)} · ${esc(prox[0].titulo)}`:'Nenhuma data marcada',
       `${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}<button class="btn btn-ghost sf-mais" data-go="calendario">${SECIC.cal}Abrir o calendário completo</button>`)}
     ${muralFold()}
@@ -1909,8 +1931,28 @@ function vTurma(){
   </section>`;
 }
 
+function bannersTurma(){
+  return `${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}${fixosHtml(S.turma)}`;
+}
+function vEscolhaUnidade(){
+  const y=Y();
+  return `<section class="section">
+    ${bannersTurma()}
+    <div><span class="ypill">${y.label} · Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Escolha a unidade</h1>
+      <p class="meta" style="margin:4px 0 0">${PROF()?'<b>Modo professor:</b> todas as unidades estão abertas neste aparelho.':'Só a unidade em andamento fica aberta. As outras abrem e fecham conforme o calendário da rede.'}</p></div>
+    <div class="ulist">${y.list.map(u=>uCard(u,y)).join('')}</div>
+    ${pushCard()}
+    <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
+  </section>`;
+}
+function uCard(u,y){
+  const at=+u.n===+y.atual,ok=liberada(u.n,y),fut=u.inicio?u.inicio>HOJE:u.n>y.atual;
+  const per=u.inicio?`${dm(u.inicio)}${u.fim?' a '+dm(u.fim):''}`:'';
+  const st=at?'Em andamento':fut?(u.inicio?'Abre em '+dm(u.inicio):'Ainda não começou'):'Encerrada';
+  return `<button class="ucard${at?' at':''}${ok?'':' off'}" data-uabrir="${u.n}"${ok?'':' aria-disabled="true"'} aria-label="Unidade ${u.n}: ${esc(u.titulo||'')}. ${st}${ok?'':'. Fechada'}"><span class="ucn">${u.n}</span><span class="uct"><span class="eyebrow">Unidade ${u.n}${per?' · '+per:''}</span><b>${esc(u.titulo||'')}</b><span class="ust">${ok?'':LOCKIC}${st}</span></span>${ok?CHEVR:''}</button>`;
+}
 function vResumos(){
-  const y=Y(),u=S.unit||y.atual,un=y.units[u]||{titulo:'',caps:[]};
+  const y=Y(),u=(S.unit&&liberada(S.unit,y))?+S.unit:y.atual,un=y.units[u]||{titulo:'',caps:[]};
   const livro=y.livro?`<a class="card" href="${esc(y.livro)}" target="_blank" rel="noopener" style="text-decoration:none;color:var(--ink);display:flex;gap:12px;align-items:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="color:var(--pen);flex:none"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg><span><b>Livro didático · Geografia ${y.label}</b><br><span class="meta">PDF no Google Drive</span></span></a>`:'';
   const est=u===y.atual?'em estudo agora':u<y.atual?'já estudada':'próxima unidade';
   const temPub=un.caps.some(c=>c.resumo);
@@ -1928,8 +1970,14 @@ function vResumos(){
     ${livro}</section>`;
 }
 
+function vFechada(c){
+  const y=Y();
+  return `<section class="section"><div class="card fechada">${LOCKIC}<b>Esta unidade está fechada</b><p class="meta" style="margin:0">${c.tema?'A aula de aprofundamento':'O capítulo'} ${c.n} faz parte da Unidade ${c.u}. Só a unidade em andamento fica disponível, conforme o calendário da rede.</p>
+    <button class="btn btn-primary" data-unit="${y.atual}">Ir para a Unidade ${y.atual}</button></div></section>`;
+}
 function vCap(n){
   const y=Y(),c=capOf(n),done=isCopied(n);
+  if(c&&!liberada(c.u,y))return vFechada(c);
   if(c&&c.tema&&c.resumo)return vTema(n,c);
   if(!c||!c.resumo){S.cap=null;return vResumos()}
   const pAt=prazoDe(n,'atividade'),pCad=prazoDe(n,'caderno');
@@ -2356,14 +2404,14 @@ function atvCard(c){
 }
 function vAtividades(){
   const y=Y(),atuais=capsDe(y,y.atual).filter(c=>c.atividade),sent=atuais.filter(c=>isSent(c.n)).length;
-  const outras=y.list.filter(u=>u.n!==y.atual&&u.caps.some(c=>c.atividade)).sort((a,b)=>b.n-a.n);
+  const outras=y.list.filter(u=>u.n!==y.atual&&liberada(u.n,y)&&u.caps.some(c=>c.atividade)).sort((a,b)=>b.n-a.n);
   return `<section class="section">
     <div><span class="ypill">${y.label} · Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Atividades</h1></div>
     <div class="atv-top"><div class="at-row"><span class="at-ic" aria-hidden="true">${SECIC.atv}</span><span class="at-tx"><b>Atividades de fixação</b><span>Unidade ${y.atual} · vale nota</span></span>${atuais.length?`<span class="at-num">${sent}/${atuais.length}</span>`:''}</div>
       ${atuais.length?`<div class="bar" role="img" aria-label="${sent} de ${atuais.length} enviadas"><i style="width:${Math.round(sent/atuais.length*100)}%"></i></div><span class="at-sub">${sent} de ${atuais.length} atividades enviadas</span>`:''}</div>
     <div class="atv-regra"><b>Como funciona</b><span>Responda com atenção e uma única vez: vale a resposta mais antiga. Depois de enviar o formulário, volte aqui e toque em <b>Já enviei</b>.</span></div>
     ${atuais.length?`<div class="atvlist">${atuais.map(atvCard).join('')}</div>`:'<div class="card empty-card"><b>Nenhuma atividade publicada nesta unidade</b><span class="meta">Quando o professor publicar, ela aparece aqui.</span></div>'}
-    ${(()=>{const ts=[...y.list].sort((a,b)=>(b.n===y.atual)-(a.n===y.atual)||b.n-a.n).flatMap(u=>(u.temas||[]).filter(t=>t.resumo||temAtv(t)));
+    ${(()=>{const ts=[...y.list].sort((a,b)=>(b.n===y.atual)-(a.n===y.atual)||b.n-a.n).filter(u=>liberada(u.n,y)).flatMap(u=>(u.temas||[]).filter(t=>t.resumo||temAtv(t)));
       const tf=ts.filter(t=>isSent('t'+t.n)).length;
       return ts.length?`<div class="atv-top tt-top"><div class="at-row"><span class="at-ic" aria-hidden="true">${SECIC.globo}</span><span class="at-tx"><b>Aulas de aprofundamento</b><span>Aulas extras · recuperação paralela · vale ponto</span></span><span class="at-num">${tf}/${ts.length}</span></div></div><div class="atvlist">${ts.map(ttAtvCard).join('')}</div>`:''})()}
     ${outras.length?`<div class="sfolds">${outras.map(u=>{const l=u.caps.filter(c=>c.atividade),e=l.filter(c=>isSent(c.n)).length;return secFold('atv-u'+u.n,'Atividades · Unidade '+u.n,'ano','atv',`${l.length} ${l.length===1?'atividade':'atividades'} · ${e} ${e===1?'enviada':'enviadas'}`,`<div class="atvlist">${l.map(atvCard).join('')}</div>`)}).join('')}</div>`:''}
@@ -2474,7 +2522,9 @@ document.addEventListener('click',ev=>{
   if(pendingRender&&(t.closest('.tab')||t.closest('[data-back]')||t.closest('[data-go]')))pendingRender=false;
   const tab=t.closest('.tab');if(tab){if(tab.dataset.tab==='turma')return abrirTurmas(tab);return go(tab.dataset.tab)}
   const g=t.closest('[data-go]');if(g)return go(g.dataset.go);
-  const un=t.closest('[data-unit]');if(un){S.unit=+un.dataset.unit;return go('resumos')}
+  const un=t.closest('[data-unit]');if(un){if(!liberada(un.dataset.unit))return toast(msgFechada(un.dataset.unit));S.unit=+un.dataset.unit;return go('resumos')}
+  const ua=t.closest('[data-uabrir]');if(ua){if(!liberada(ua.dataset.uabrir))return toast(msgFechada(ua.dataset.uabrir));S.unit=+ua.dataset.uabrir;S.uAberta=true;return go('turma')}
+  if(t.closest('[data-uescolha]')){S.uAberta=false;return go('turma')}
   const ac=t.closest('[data-act]');if(ac){const id=capId(ac.dataset.act),cc=capOf(id);S.unit=cc?cc.u:null;go('resumos',id);const b=$('#actBox');if(b){b.scrollIntoView({block:'start'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
   const jp=t.closest('[data-jump]');if(jp){const b=$('#actBox')||$('.avcard');if(b){b.scrollIntoView({block:'start',behavior:'smooth'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
   const avi=t.closest('[data-aviso]');if(avi)marcarVisto([avi.dataset.aviso]);
@@ -2510,7 +2560,7 @@ document.addEventListener('click',ev=>{
     if(gain){const all=pubs(Y()).every(x=>isCopied(x.n));all&&c.u===Y().atual?cheer('unidade',`Todos os resumos da Unidade ${c.u} copiados no caderno.`):cheer('resumo',`Resumo do Capítulo ${c.n} registrado como copiado.`)}return}
   const sb=t.closest('#sentBtn')||t.closest('[data-sent]');if(sb){const n=sb.dataset.sent?capId(sb.dataset.sent):S.cap,k=key(n);let gain=false;if(S.sent[k])delete S.sent[k];else{S.sent[k]=true;gain=true}store.set('sent',S.sent);const y=scrollY;render();scrollTo(0,y);
     if(gain)cheer('atividade',String(n)[0]==='t'?`Atividade da aula de aprofundamento ${String(n).slice(1)} registrada.`:`Atividade do Capítulo ${n} registrada como enviada.`);return}
-  const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;store.set('turma',S.turma);
+  const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;S.uAberta=false;store.set('turma',S.turma);
     go('turma');if(!MINHA&&!COMP)perguntarTurma(S.turma);return}
   if(t.closest('#pushTurmas'))return turmasSheet();
   if(t.closest('#celComp')){sheet(`<h2>Usar como celular compartilhado?</h2><p style="margin:0">A turma ${esc(MINHA)} deixa de ser fixa. O app passa a abrir na escolha de turmas e a barra volta às cores padrão.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="ccSim">Sim, é compartilhado</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,(o,close)=>{o.querySelector('#ccSim').onclick=()=>{close();COMP=true;MINHA=null;store.set('compartilhado',true);store.set('minha',null);render();explicarCompartilhado(true)}});return}
@@ -2529,7 +2579,7 @@ function abrirDeAviso(o){
   if(!S.turma)return;
   if(o.ir==='mural'){
     if(o.cap){const v=new Set(store.get('avPop',[]));v.add(o.cap);store.set('avPop',[...v].slice(-300))}
-    go('turma');if(o.cap)setTimeout(()=>abrirAviso(o.cap),250);return}
+    S.uAberta=true;S.unit=null;go('turma');if(o.cap)setTimeout(()=>abrirAviso(o.cap),250);return}
   const tab=['turma','resumos','atividades','calendario'].includes(o.ir)?o.ir:'turma';
   const c=o.cap?capOf(capId(o.cap)):null;
   if(c&&c.resumo&&tab==='resumos'){S.unit=c.u;go('resumos',c.id)}else go(tab);
@@ -2539,7 +2589,7 @@ function abrirDeAviso(o){
   if(!location.search&&l&&Date.now()-l.t<6*3600e3&&DATA&&l.tab&&l.tab!=='home'){
     try{
       if(l.turma&&TURMAS.includes(l.turma))S.turma=l.turma;
-      S.unit=l.unit==null?null:l.unit;
+      S.unit=l.unit==null?null:l.unit;S.uAberta=!!l.ua;
       if(l.tab!=='turma'||S.turma){go(l.tab,l.cap!=null?capId(l.cap):null);const y=l.y||0;requestAnimationFrame(()=>setTimeout(()=>scrollTo(0,y),80))}
     }catch(e){}
   }

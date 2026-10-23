@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-22 · aulas de aprofundamento v12';
+const VERSAO_ROBO = '2026-10-22 · períodos das unidades v13';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -146,6 +146,7 @@ function instalar() {
   prepararConfigDuvidas_();
   abaMural_();
   abaAlunos_();
+  prepararAbaPeriodos_();
   const d = atualizar();
   Logger.log('Atualização automática ligada: a cada ' + GEO.MINUTOS + ' minutos, e na hora quando você edita as planilhas ou as ' + agendas + ' agendas.');
   Logger.log(resumoTexto_(d));
@@ -280,7 +281,16 @@ function lerConteudo_() {
   const ss = SpreadsheetApp.openById(GEO.PLANILHA_CONTEUDO);
   const aba = nome => ss.getSheets().filter(s => semAcento_(s.getName()).indexOf(nome) === 0)[0];
   const linhas = s => s ? s.getDataRange().getDisplayValues().slice(1) : [];
-  const c = { livro: {}, unidades: {}, caps: {}, temas: {} };
+  const c = { livro: {}, unidades: {}, caps: {}, temas: {}, periodos: {} };
+  // Períodos das unidades (calendário da SEMED): a unidade ativa é a mais recente que já começou
+  let abaP = aba('periodos');
+  if (!abaP) abaP = prepararAbaPeriodos_(ss);
+  abaP.getDataRange().getValues().slice(1).forEach(l => {
+    const u = parseInt(String(l[0]).replace(/\D+/g, ''), 10);
+    if (!u) return;
+    const ini = dataISO_(l[1]), fim = dataISO_(l[2]);
+    if (ini || fim) c.periodos[u] = { inicio: ini, fim: fim };
+  });
   linhas(aba('anos')).forEach(l => { const a = anoDe_(l[0]); if (a) c.livro[a] = link_(l[1]); });
   linhas(aba('unidades')).forEach(l => {
     const a = anoDe_(l[0]), u = parseInt(l[1], 10);
@@ -300,6 +310,29 @@ function lerConteudo_() {
     };
   });
   return c;
+}
+
+/** Data da planilha (data de verdade ou texto dd/mm/aaaa) em aaaa-mm-dd. */
+function dataISO_(v) {
+  if (v instanceof Date && !isNaN(v)) return Utilities.formatDate(v, GEO.FUSO, 'yyyy-MM-dd');
+  const m = String(v || '').match(/(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{2,4})/);
+  if (!m) return '';
+  let a = parseInt(m[3], 10); if (a < 100) a += 2000;
+  return a + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+}
+function prepararAbaPeriodos_(ss) {
+  ss = ss || SpreadsheetApp.openById(GEO.PLANILHA_CONTEUDO);
+  let sh = ss.getSheets().filter(x => semAcento_(x.getName()).indexOf('periodos') === 0)[0];
+  if (sh) return sh;
+  sh = ss.insertSheet('Períodos das unidades');
+  sh.getRange(1, 1, 1, 4).setValues([['Unidade', 'Início', 'Fim', 'Como funciona']]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F');
+  sh.getRange(2, 1, 4, 1).setValues([[1], [2], [3], [4]]);
+  sh.getRange(2, 2, 4, 2).setNumberFormat('dd/mm/yyyy')
+    .setDataValidation(SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(false).setHelpText('Digite a data no formato dia/mês/ano, ex.: 03/02/2026').build());
+  sh.getRange(2, 4).setValue('Datas do calendário da SEMED (valem para 7º, 8º e 9º anos). No app, só fica aberta a unidade que já começou e é a mais recente; as outras ficam fechadas para os alunos. Sem datas, vale a coluna "Atual" da aba Unidades.').setWrap(true);
+  sh.setColumnWidth(1, 80); sh.setColumnWidth(2, 110); sh.setColumnWidth(3, 110); sh.setColumnWidth(4, 420);
+  sh.setFrozenRows(1);
+  return sh;
 }
 
 /* ------------------------------------------------------------------ */
@@ -663,9 +696,15 @@ function montarAnos_(conf, conteudo, docs, anterior) {
     const lista = Object.keys(unidades).map(Number).sort((a, b) => a - b).map(n => {
       const u = unidades[n];
       const temas = Object.keys(u.temas).map(Number).sort((a, b) => a - b).map(k => u.temas[k]).filter(t => t.resumo || t.atividade || t.atividadeTexto || t.aval);
-      return { n: n, titulo: u.titulo, caps: Object.keys(u.caps).map(Number).sort((a, b) => a - b).map(k => u.caps[k]), temas: temas };
+      const per = (conteudo.periodos || {})[n] || {};
+      return { n: n, titulo: u.titulo, inicio: per.inicio || '', fim: per.fim || '', caps: Object.keys(u.caps).map(Number).sort((a, b) => a - b).map(k => u.caps[k]), temas: temas };
     });
-    let atual = Object.keys(sheetU).map(Number).filter(n => sheetU[n].atual)[0];
+    let atual = 0;
+    // Com datas: a unidade mais recente que já começou. Sem datas: a marcada como "Atual" na aba Unidades.
+    const hojeISO = Utilities.formatDate(new Date(), GEO.FUSO, 'yyyy-MM-dd');
+    const comecadas = lista.filter(u => u.inicio && u.inicio <= hojeISO).sort((a, b) => a.inicio < b.inicio ? 1 : -1);
+    if (comecadas.length) atual = comecadas[0].n;
+    if (!atual) atual = Object.keys(sheetU).map(Number).filter(n => sheetU[n].atual)[0];
     if (!atual) atual = lista.length ? lista[lista.length - 1].n : 1;
     return {
       ano: ano,
