@@ -919,6 +919,40 @@ body.foco #apresBtn{display:none}
 body.foco .markbar{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .foco-sair{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));z-index:8;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 12px rgba(0,0,0,.15)}
 @media (min-width:760px){body.foco .app{max-width:min(94vw,900px)}}
+
+/* Resumos: diagramação com mais contraste */
+.unit-card{border:1.5px solid color-mix(in srgb,var(--year) 45%,var(--line));border-top:0;box-shadow:0 6px 18px -12px rgba(0,0,0,.35)}
+.unit-card .unit-head{background:var(--year);color:#fff;padding:16px 16px 14px;gap:4px}
+.unit-card .unit-head .eyebrow{color:rgba(255,255,255,.88);font-weight:700}
+.unit-card .unit-t{font-size:1.32rem;line-height:1.2;color:#fff}
+.ul-sec{display:flex;align-items:center;gap:8px;padding:10px 14px;background:color-mix(in srgb,var(--year) 11%,var(--surface));border-bottom:1px solid color-mix(in srgb,var(--year) 22%,var(--line));color:color-mix(in srgb,var(--year) 75%,var(--ink))}
+.ul-sec svg{width:18px;height:18px;flex:none}
+.ul-sec b{font-family:var(--display);font-size:.98rem;flex:1}
+.ul-sec span{font-size:.78rem;font-weight:700;opacity:.85}
+.ul-sec.tt-sec{background:color-mix(in srgb,#0F766E 12%,var(--surface));color:color-mix(in srgb,#0F766E 80%,var(--ink));border-top:1px solid color-mix(in srgb,#0F766E 25%,var(--line));border-bottom-color:color-mix(in srgb,#0F766E 25%,var(--line))}
+.unit-card .cap{padding:12px 14px;gap:12px;border-top:1px solid var(--line);background:var(--surface)}
+.unit-card .ul-sec+.cap{border-top:0}
+.unit-card .cap .n{min-width:0;width:46px;height:46px;flex:none;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;background:color-mix(in srgb,var(--year) 14%,var(--surface));color:color-mix(in srgb,var(--year) 80%,var(--ink))}
+.unit-card .cap .n small{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.unit-card .cap .n b{font-family:var(--display);font-size:1.25rem}
+.unit-card .cap .t{display:flex;flex-direction:column;gap:2px}
+.unit-card .cap .t>b{font-family:var(--display);font-weight:700;font-size:1.02rem;line-height:1.25;color:var(--ink)}
+.unit-card .cap .chev,.unit-card .cap>svg{color:var(--year)}
+.unit-card .cap.tt .n{background:color-mix(in srgb,#0F766E 14%,var(--surface));color:#0F5E57}
+.unit-card .cap.off .n{background:var(--surface-2);color:var(--muted)}
+.unit-card .cap.off .t>b{color:var(--muted)}
+.unit-card button.cap:active{background:color-mix(in srgb,var(--year) 8%,var(--surface))}
+.unit-card .offnote{background:var(--surface-2)}
+.livro-card{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--ink);border-left:5px solid var(--year)}
+.livro-card .lv-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;background:color-mix(in srgb,var(--year) 14%,var(--surface));color:color-mix(in srgb,var(--year) 80%,var(--ink))}
+.livro-card>span:nth-child(2){flex:1;min-width:0}
+body.m-escuro .unit-card .cap.tt .n{color:#5EEAD4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .unit-card .cap.tt .n{color:#5EEAD4}}
+
+body.m-escuro .ul-sec,body.m-escuro .unit-card .cap .n,body.m-escuro .livro-card .lv-ic{color:color-mix(in srgb,var(--year) 40%,#fff)}
+body.m-escuro .unit-card .cap .chev,body.m-escuro .unit-card .cap>svg{color:color-mix(in srgb,var(--year) 45%,#fff)}
+body.m-escuro .ul-sec.tt-sec{color:#5EEAD4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body:not(.m-claro):not(.m-sepia) .ul-sec,:root:not([data-theme="light"]) body:not(.m-claro):not(.m-sepia) .unit-card .cap .n,:root:not([data-theme="light"]) body:not(.m-claro):not(.m-sepia) .livro-card .lv-ic{color:color-mix(in srgb,var(--year) 40%,#fff)}:root:not([data-theme="light"]) body:not(.m-claro):not(.m-sepia) .ul-sec.tt-sec{color:#5EEAD4}}
 </style>
 </head>
 <body>
@@ -1734,8 +1768,8 @@ const sec=(titulo,tipo,ic,extra,sub)=>`<div class="sec sec-${tipo}"><span class=
 
 /* Telas */
 function capRow(c){
-  if(!c.resumo)return `<div class="cap off"><span class="n">Cap. ${c.n}</span><span class="t">${esc(c.titulo)}<br><span class="meta">Resumo ainda não publicado no app</span></span></div>`;
-  const done=isCopied(c.n);return `<button class="cap" data-cap="${c.n}"><span class="n">Cap. ${c.n}</span><span class="t">${esc(c.titulo)}${done?`<br><span class="done">${CHECK} Copiado no caderno</span>`:''}</span>${CHEVR}</button>`;
+  if(!c.resumo)return `<div class="cap off"><span class="n"><small>Cap.</small><b>${c.n}</b></span><span class="t"><b>${esc(c.titulo)}</b><span class="meta">Resumo ainda não publicado</span></span></div>`;
+  const done=isCopied(c.n);return `<button class="cap" data-cap="${c.n}"><span class="n"><small>Cap.</small><b>${c.n}</b></span><span class="t"><b>${esc(c.titulo)}</b>${done?`<span class="done">${CHECK} Copiado no caderno</span>`:''}</span>${CHEVR}</button>`;
 }
 
 function semDados(){
@@ -1999,7 +2033,7 @@ function uCard(u,y){
 }
 function vResumos(){
   const y=Y(),u=(S.unit&&liberada(S.unit,y))?+S.unit:y.atual,un=y.units[u]||{titulo:'',caps:[]};
-  const livro=y.livro?`<a class="card" href="${esc(y.livro)}" target="_blank" rel="noopener" style="text-decoration:none;color:var(--ink);display:flex;gap:12px;align-items:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="color:var(--pen);flex:none"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg><span><b>Livro didático · Geografia ${y.label}</b><br><span class="meta">PDF no Google Drive</span></span></a>`:'';
+  const livro=y.livro?`<a class="card livro-card" href="${esc(y.livro)}" target="_blank" rel="noopener"><span class="lv-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg></span><span><b>Livro didático · Geografia ${y.label}</b><br><span class="meta">Teláris Essencial · PDF no Google Drive</span></span>${CHEVR}</a>`:'';
   const est=u===y.atual?'em estudo agora':u<y.atual?'já estudada':'próxima unidade';
   const temPub=un.caps.some(c=>c.resumo);
   return `<section class="section"><div><span class="ypill">${y.label} · Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Resumos</h1></div>
@@ -2008,8 +2042,9 @@ function vResumos(){
     ${unitChips(u)}
     <div class="card unit-card">
       <div class="unit-head"><span class="eyebrow">Unidade ${u} · ${est}</span><b class="unit-t">${esc(un.titulo)}</b></div>
+      <div class="ul-sec">${SECIC.livro}<b>Resumos dos capítulos</b><span>${un.caps.filter(c=>c.resumo).length} de ${un.caps.length}</span></div>
       ${un.caps.map(capRow).join('')||'<div class="cap off"><span class="t meta">Nenhum capítulo cadastrado.</span></div>'}
-      ${(un.temas||[]).length?`<div class="tt-head"><span class="eyebrow">Aulas de aprofundamento · valem ponto</span></div>${un.temas.map(temaRow).join('')}`:''}
+      ${(un.temas||[]).length?`<div class="ul-sec tt-sec">${SECIC.globo}<b>Aulas de aprofundamento</b><span>valem ponto</span></div>${un.temas.map(temaRow).join('')}`:''}
       ${temPub?`<div class="offnote">${CHECK} Os resumos ficam guardados no celular para ler sem internet.</div>`:''}
     </div>
     ${temPub?'':`<p class="meta" style="margin:0">Os resumos desta unidade aparecem aqui quando o professor publicá-los.</p>`}
@@ -2059,8 +2094,8 @@ function vCap(n){
 const TTIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/></svg>';
 const temAtv=t=>!!(t.atividade||t.atividadeTexto);
 function temaRow(t){
-  if(!t.resumo)return `<div class="cap off tt"><span class="n">Aula ${t.n}</span><span class="t">${esc(t.titulo)}<br><span class="meta">Aula ainda não publicada no app</span></span></div>`;
-  return `<button class="cap tt" data-cap="t${t.n}"><span class="n">Aula ${t.n}</span><span class="t">${esc(t.titulo)}${isCopied('t'+t.n)?`<br><span class="done">${CHECK} Aula estudada</span>`:''}</span>${CHEVR}</button>`;
+  if(!t.resumo)return `<div class="cap off tt"><span class="n"><small>Aula</small><b>${t.n}</b></span><span class="t"><b>${esc(t.titulo)}</b><span class="meta">Aula ainda não publicada</span></span></div>`;
+  return `<button class="cap tt" data-cap="t${t.n}"><span class="n"><small>Aula</small><b>${t.n}</b></span><span class="t"><b>${esc(t.titulo)}</b>${isCopied('t'+t.n)?`<span class="done">${CHECK} Aula estudada</span>`:''}</span>${CHEVR}</button>`;
 }
 function temaBtn(t){
   const id='t'+t.n,done=isCopied(id),sent=isSent(id);
