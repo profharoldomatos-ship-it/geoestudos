@@ -1,6 +1,6 @@
 /* GeoEstudos: guarda o aplicativo no celular para abrir sem internet.
    Os resumos ficam guardados pelo próprio app (armazenamento do navegador). */
-const VERSAO = 'geo-v75';
+const VERSAO = 'geo-v76';
 const BASE = ['./', 'index.html', 'config.js', 'manifest.webmanifest',
   'qrcode.min.js', 'icones/geoestudos.svg', 'icones/geoestudos-96.png', 'icones/geoestudos-192.png', 'icones/geoestudos-512.png'];
 
@@ -49,7 +49,7 @@ async function mostrarAvisos() {
   try {
     const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'avisos=1&t=' + Date.now(), { cache: 'no-store' });
     const j = await r.json();
-    lista = (j.notificacoes || []).filter(n => turmas.includes(n.turma) && Date.parse(n.quando) > ultimo);
+    lista = (j.notificacoes || []).filter(n => (n.turma === '*' || turmas.includes(n.turma)) && Date.parse(n.quando) > ultimo);
   } catch (e) {}
   if (!lista.length) {
     return self.registration.showNotification('GeoEstudos', { body: 'Há novidades para a sua turma. Toque para ver.', icon, badge, tag: 'geo-geral', data: { turma: turmas[0] || '', ir: 'turma' } });
@@ -57,8 +57,8 @@ async function mostrarAvisos() {
   lista.sort((a, b) => a.quando.localeCompare(b.quando));
   await gravarPush('ultimo', Date.parse(lista[lista.length - 1].quando));
   for (const n of lista.slice(-3)) {
-    const titulo = turmas.length > 1 ? 'Turma ' + n.turma + ' · ' + n.titulo : n.titulo;
-    await self.registration.showNotification(titulo, { body: n.texto, icon, badge, tag: n.id, data: { turma: n.turma, ir: n.tab || 'turma', cap: n.cap || '' } });
+    const titulo = turmas.length > 1 && n.turma !== '*' ? 'Turma ' + n.turma + ' · ' + n.titulo : n.titulo;
+    await self.registration.showNotification(titulo, { body: n.texto, icon, badge, tag: n.id, data: { turma: n.turma === '*' ? '' : n.turma, ir: n.tab || 'turma', cap: n.cap || '' } });
   }
 }
 self.addEventListener('push', e => e.waitUntil(mostrarAvisos()));

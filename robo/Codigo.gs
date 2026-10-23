@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-22 · modo professor v15';
+const VERSAO_ROBO = '2026-10-23 · conteúdo do dia v16';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -153,6 +153,7 @@ function instalar() {
   prepararAbaTemas_();
   prepararConfigDuvidas_();
   abaMural_();
+  abaDia_();
   abaAlunos_();
   prepararAbaPeriodos_();
   prepararConfigProfessor_();
@@ -209,6 +210,8 @@ function atualizar() {
     try { dados.duvidas = lerDuvidasRespondidas_(dados); } catch (err) { Logger.log('Dúvidas: ' + err); dados.duvidas = (anterior && anterior.duvidas) || []; }
     let mural = null;
     try { mural = lerMural_(dados); dados.mural = mural.itens; } catch (err) { Logger.log('Mural: ' + err); dados.mural = (anterior && anterior.mural) || []; }
+    let dia = null;
+    try { dia = lerDia_(); dados.dia = dia.itens; } catch (err) { Logger.log('Conteúdo do Dia: ' + err); dados.dia = (anterior && anterior.dia) || []; }
     dados.avisos = calcularAvisos_(dados, anterior, conf);
     let novas = [];
     try {
@@ -224,6 +227,7 @@ function atualizar() {
       try { enviarAvisos_(novas); } catch (err) { Logger.log('Envio de avisos: ' + err); }
     }
     if (mural) { try { mural.escreverSituacao(); } catch (err) { Logger.log('Mural (situação): ' + err); } }
+    if (dia) { try { dia.escreverSituacao(); } catch (err) { Logger.log('Conteúdo do Dia (situação): ' + err); } }
     return dados;
   } finally {
     lock.releaseLock();
@@ -910,6 +914,7 @@ function resumoTexto_(d) {
   })));
   l.push('Avisos de novidade ativos: ' + (d.avisos || []).length);
   l.push('Mural de avisos: ' + (d.mural || []).length + ' aviso(s) publicado(s)');
+  l.push('Conteúdo Geográfico do Dia: ' + (d.dia || []).length + ' postagem(ns) no ar' + ((d.dia || [])[0] ? ' · a mais recente é de ' + d.dia[0].data.split('-').reverse().join('/') : ''));
   return l.join('\n');
 }
 
@@ -951,6 +956,14 @@ function novasNotificacoes_(dados, anterior, conf) {
     props.setProperty('mural-' + m.id, agora);
   });
 
+  // 1c) Conteúdo Geográfico do Dia: uma notificação para todos os anos e turmas (uma vez só por postagem)
+  const extras = [];
+  (dados.dia || []).forEach(d => {
+    if (props.getProperty('dia-' + d.id)) return;
+    extras.push({ id: 'n-dia-' + d.id, turma: '*', quando: agora, titulo: '🌎 Conteúdo Geográfico do Dia', texto: d.titulo.slice(0, 220), cap: d.id, tab: 'dia' });
+    props.setProperty('dia-' + d.id, agora);
+  });
+
   // 2) Lembretes: na véspera e no dia de cada entrega, atividade ou avaliação
   const fmt = (d, f) => Utilities.formatDate(d, GEO.FUSO, f);
   const agoraD = new Date();
@@ -983,7 +996,7 @@ function novasNotificacoes_(dados, anterior, conf) {
     if (nov.length === 1) out.push({ id: 'n-' + t + '-' + agora, turma: t, quando: agora, titulo: nov[0].titulo, texto: nov[0].texto, cap: nov[0].cap, tab: nov[0].tab });
     else if (nov.length > 1) out.push({ id: 'n-' + t + '-' + agora, turma: t, quando: agora, titulo: nov.length + ' novidades no GeoEstudos', texto: nov.map(i => i.texto).join(' · ').slice(0, 220), cap: null, tab: 'turma' });
   });
-  return out;
+  return out.concat(extras);
 }
 
 function resumoEventos_(evs, hoje) {
@@ -1040,7 +1053,7 @@ function removerInscricoes_(eps) {
 function enviarAvisos_(notifs) {
   const turmas = {};
   notifs.forEach(n => turmas[n.turma] = true);
-  const alvo = lerInscricoes_().filter(s => s.turmas.some(t => turmas[t]));
+  const alvo = lerInscricoes_().filter(s => turmas['*'] || s.turmas.some(t => turmas[t]));
   if (!alvo.length) return;
   const ch = chavesAvisos_();
   const jwts = {};
@@ -1263,6 +1276,113 @@ function lerMural_(dados) {
         return [t];
       });
       sh.getRange(2, 10, out.length, 1).setValues(out);
+    }
+  };
+}
+
+/* ================================================================== */
+/* Conteúdo Geográfico do Dia: aba "Conteúdo do Dia" na planilha de     */
+/* Configurações. Cada linha é uma postagem; a aba é também o inventário */
+/* (data de publicação, situação e quando a notificação saiu).          */
+/* ================================================================== */
+const ABA_DIA = 'Conteúdo do Dia';
+const COLS_DIA = ['Data de publicação', 'Título', 'Texto (breve)', 'Mídia (link)', 'Fonte / crédito', 'Publicar?', 'Situação (o robô preenche)', 'Notificação enviada em', 'Código'];
+const NOTAS_DIA = [
+  'Opcional. Em branco: a postagem entra no ar assim que você marcar "Publicar?" = Sim, e o robô anota a data aqui (inventário). Com uma data futura, fica agendada e entra no ar nesse dia (a partir das 6h).',
+  'Curto e chamativo. Ex.: Por que o Lençóis Maranhenses tem lagoas no meio das dunas?',
+  'Opcional. Um texto breve que acompanha a mídia. Pode ter várias linhas (Ctrl+Enter quebra a linha). Um endereço sozinho numa linha também vira vídeo, imagem ou botão.',
+  'Um endereço (https://...): vídeo do YouTube, imagem, arquivo do Drive (foto, vídeo ou PDF), áudio do Spotify ou qualquer site. Arquivos seus do Drive são compartilhados por link automaticamente.',
+  'Opcional. De onde veio o conteúdo. Ex.: IBGE, NASA Earth Observatory, canal Nerdologia.',
+  'Marque Sim só quando estiver pronto. Enquanto estiver Não ou em branco, é um rascunho e ninguém vê.',
+  'Preenchida pelo robô: mostra se a postagem está no ar, agendada ou se falta alguma coisa.',
+  'Preenchida pelo robô: data e hora em que a notificação foi enviada para todas as turmas.',
+  'Uso interno do robô. Não apague.'
+];
+function abaDia_() {
+  const ss = SpreadsheetApp.openById(GEO.PLANILHA_CONFIG);
+  let sh = ss.getSheetByName(ABA_DIA);
+  if (sh) return sh;
+  sh = ss.insertSheet(ABA_DIA);
+  const n = COLS_DIA.length, linhas = 500;
+  sh.getRange(1, 1, 1, n).setValues([COLS_DIA]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F').setWrap(true).setVerticalAlignment('middle');
+  sh.getRange(1, 1, 1, n).setNotes([NOTAS_DIA]);
+  sh.setFrozenRows(1);
+  sh.setRowHeight(1, 42);
+  [120, 260, 360, 260, 180, 90, 260, 140, 80].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+  sh.getRange(2, 3, linhas, 1).setWrap(true);
+  sh.getRange(2, 1, linhas, n).setVerticalAlignment('top');
+  const data = SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(false).setHelpText('Digite uma data, ex.: 25/10/2026').build();
+  sh.getRange(2, 1, linhas, 1).setDataValidation(data).setNumberFormat('dd/MM/yyyy');
+  sh.getRange(2, 6, linhas, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Sim', 'Não'], true).build());
+  sh.getRange(2, 7, linhas, 2).setFontColor('#5B6472').setFontStyle('italic');
+  sh.getRange(2, 8, linhas, 1).setNumberFormat('dd/MM/yyyy HH:mm');
+  sh.hideColumns(9);
+  return sh;
+}
+/** Arquivo do Drive: descobre se é imagem, vídeo ou PDF e garante o compartilhamento por link. Guarda o resultado. */
+function midiaDia_(url) {
+  if (!url) return { midia: null };
+  if (!/^https?:\/\//i.test(url)) return { midia: null, aviso: '⚠ O link da mídia precisa começar com https://' };
+  const m = /(?:drive|docs)\.google\.com\/.*?(?:\/d\/|[?&]id=)([\w-]{20,})/.exec(url);
+  if (!m) return { midia: { url: url, tipo: /\.(png|jpe?g|gif|webp)(\?|#|$)/i.test(url) ? 'imagem' : 'link' } };
+  const id = m[1], props = PropertiesService.getScriptProperties(), k = 'diaMid-' + id;
+  const salvo = props.getProperty(k);
+  if (salvo) return { midia: JSON.parse(salvo) };
+  let f;
+  try { f = DriveApp.getFileById(id); } catch (e) { return { midia: { url: url, tipo: 'link' }, aviso: '⚠ Não consegui abrir o arquivo do Drive. Confira se ele está compartilhado: "Qualquer pessoa com o link: leitor".' }; }
+  const ac = f.getSharingAccess();
+  if (ac !== DriveApp.Access.ANYONE && ac !== DriveApp.Access.ANYONE_WITH_LINK) {
+    try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }
+    catch (e) { return { midia: { url: url, tipo: 'link' }, aviso: '⚠ O arquivo do Drive não está compartilhado por link e não consegui compartilhar. Compartilhe: "Qualquer pessoa com o link: leitor".' }; }
+  }
+  const mime = f.getMimeType();
+  const r = /^image\//.test(mime) ? { url: 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1600', tipo: 'imagem' }
+    : { url: 'https://drive.google.com/file/d/' + id + '/view', tipo: /^video\//.test(mime) ? 'video' : 'drive' };
+  props.setProperty(k, JSON.stringify(r));
+  return { midia: r };
+}
+function lerDia_() {
+  const sh = abaDia_();
+  const fmt = (d, f) => Utilities.formatDate(d, GEO.FUSO, f);
+  const hoje = fmt(new Date(), 'yyyy-MM-dd');
+  const dma = iso => iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4);
+  const props = PropertiesService.getScriptProperties();
+  const ult = sh.getLastRow();
+  const linhas = ult > 1 ? sh.getRange(2, 1, ult - 1, COLS_DIA.length).getValues() : [];
+  const itens = [], situacao = [];
+  const isoDe = v => (v instanceof Date && !isNaN(v)) ? fmt(v, 'yyyy-MM-dd') : '';
+  linhas.forEach((l, i) => {
+    const linha = i + 2;
+    const titulo = String(l[1] || '').trim(), texto = String(l[2] || '').trim(), link = String(l[3] || '').trim(), fonte = String(l[4] || '').trim();
+    if (!titulo && !texto && !link) { situacao.push({ t: '', env: l[7] }); return; }
+    let id = String(l[8] || '').trim();
+    if (!id) { id = 'd' + Utilities.getUuid().replace(/-/g, '').slice(0, 10); sh.getRange(linha, 9).setValue(id); }
+    if (!titulo) { situacao.push({ t: '⚠ Falta o título', env: l[7] }); return; }
+    if (!texto && !link) { situacao.push({ t: '⚠ Falta o texto ou o link da mídia', env: l[7] }); return; }
+    if (!sim_(l[5])) { situacao.push({ t: 'Rascunho · marque "Publicar?" = Sim quando estiver pronto', env: l[7] }); return; }
+    let data = isoDe(l[0]);
+    const semData = !data;
+    if (semData) data = hoje;
+    if (data > hoje) { situacao.push({ t: 'Agendado para ' + dma(data) + ' (a notificação sai nesse dia)', env: l[7] }); return; }
+    const md = midiaDia_(link);
+    if (semData) sh.getRange(linha, 1).setValue(new Date());
+    const item = { id: id, data: data, titulo: titulo.slice(0, 140), texto: texto.slice(0, 2500), midia: md.midia, fonte: fonte.slice(0, 200) };
+    itens.push(item);
+    situacao.push({ item: item, aviso: md.aviso || '', env: l[7] });
+  });
+  itens.sort((a, b) => b.data.localeCompare(a.data));
+  return {
+    itens: itens.slice(0, 200),
+    escreverSituacao: () => {
+      if (!situacao.length) return;
+      const out = situacao.map(r => {
+        if (!r.item) return [r.t, r.env || ''];
+        const quando = props.getProperty('dia-' + r.item.id);
+        let t = 'No ar desde ' + dma(r.item.data) + (quando ? ' · notificação enviada' : ' · notificação na fila');
+        if (r.aviso) t += ' · ' + r.aviso;
+        return [t, r.env instanceof Date ? r.env : (quando ? new Date(quando) : '')];
+      });
+      sh.getRange(2, 7, out.length, 2).setValues(out);
     }
   };
 }
@@ -1749,9 +1869,11 @@ function painelProfessor_() {
   let duvId = ''; try { duvId = planilhaDuvidas_().getParent().getId(); } catch (e) { }
   let notasId = ''; try { notasId = planilhaNotas_().getId(); } catch (e) { }
   let inscId = ''; try { inscId = planilhaInscricoes_().getParent().getId(); } catch (e) { }
+  let urlDia = ''; try { urlDia = pl(GEO.PLANILHA_CONFIG) + '#gid=' + abaDia_().getSheetId(); } catch (e) { }
   const planilhas = [
     { nome: 'Conteúdo', desc: 'Unidades, capítulos, períodos, aulas de aprofundamento', url: pl(GEO.PLANILHA_CONTEUDO) },
     { nome: 'Configurações e Mural', desc: 'Turmas, mensagem inicial, mural de avisos, senha', url: pl(GEO.PLANILHA_CONFIG) },
+    { nome: 'Conteúdo Geográfico do Dia', desc: 'Postar na página inicial · inventário das postagens', url: urlDia },
     { nome: 'Dúvidas dos alunos', desc: 'Ler, responder e publicar', url: pl(duvId) },
     { nome: 'Notas e lista de alunos', desc: 'Atividades avaliativas e aba Alunos', url: pl(notasId) },
     { nome: 'Mensagens de incentivo', desc: 'Frases que aparecem ao marcar resumos e atividades', url: pl(GEO.PLANILHA_MENSAGENS) },
@@ -1796,6 +1918,7 @@ function painelProfessor_() {
     notas: pl(notasId),
     duvidas: pl(duvId),
     config: pl(GEO.PLANILHA_CONFIG),
+    dia: urlDia,
     conteudo: pl(GEO.PLANILHA_CONTEUDO)
   };
 }

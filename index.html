@@ -718,6 +718,29 @@ body.m-escuro .privbtn{background:#2F5BC4;box-shadow:0 0 0 1.5px #9DB8FF,0 6px 1
 .pushon{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.84rem;color:var(--muted);padding:0 4px}
 .pushon .link{font-size:.84rem;flex:none}
 /* App real: agenda, avisos, instalação, carregamento */
+.dia{position:relative;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--pen);border-radius:var(--r);padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 10px rgba(29,63,143,.07)}
+.dia-h{display:flex;align-items:center;gap:10px}
+.dia-ic{flex:none;width:38px;height:38px;border-radius:50%;background:var(--pen);color:var(--on-pen);display:grid;place-items:center}
+.dia-ic svg{width:28px;height:28px}
+.dia-h .eyebrow{display:block;color:var(--pen);font-weight:800;letter-spacing:.03em;font-size:.7rem;line-height:1.3}
+.dia-q{display:block;font-size:.84rem;color:var(--muted)}
+.dia-novo{margin-left:auto;background:var(--hl);color:var(--m-ink,#1E2430);font-weight:800;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 9px}
+.dia-t{margin:2px 0 0;font-size:1.22rem;line-height:1.25}
+.dia .media{margin:6px 0}
+.dia-tx p{margin:0 0 8px;line-height:1.55}.dia-tx p:last-child{margin:0}
+.dia-tx a{color:var(--pen);font-weight:700}
+.dia-fonte{margin:0;font-size:.82rem;color:var(--muted)}
+.dia-fonte a{color:inherit}
+.dia-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.dia-vazio{border-style:dashed;border-top-style:solid}
+.dia-teaser{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--pen-soft);color:var(--ink);border:1px solid var(--line);border-left:5px solid var(--pen);border-radius:var(--r);padding:10px 12px;font:inherit;cursor:pointer}
+.dia-teaser .dia-ic{width:32px;height:32px}.dia-teaser .dia-ic svg{width:23px;height:23px}
+.dia-teaser b{display:block;line-height:1.25}
+.dia-teaser .eyebrow{display:block;color:var(--pen);font-weight:800;letter-spacing:.03em;font-size:.68rem}
+.dia-lista{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
+.dia-li{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;color:var(--ink);cursor:pointer}
+.dia-li .meta{font-size:.8rem}
+.sheet .dia{border:0;box-shadow:none;padding:0;border-top:0}
 .banner{background:var(--hl-soft);color:var(--ink);border-left:5px solid var(--hl);border-radius:6px var(--r) var(--r) 6px;padding:10px 12px;font-weight:700;font-size:.95rem}
 .install{display:flex;gap:12px;align-items:center;text-align:left;width:100%;border:1.5px dashed var(--pen);background:var(--pen-soft)}
 .inst-ic{flex:none;width:40px;height:40px;border-radius:12px;background:var(--pen);color:var(--on-pen);display:grid;place-items:center}
@@ -1873,11 +1896,68 @@ function vSobre(){
     <button class="prof-entrar" id="profEntrar">${PROF()?'Painel do professor':'Área do professor'}</button>
   </section>`;
 }
+/* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
+const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
+const diaLista=()=>(DATA&&DATA.dia)||[];
+function diaQuando(iso){
+  if(iso===HOJE)return 'Postado hoje';
+  const d=new Date(iso+'T12:00:00'),ont=new Date(TODAY);ont.setDate(ont.getDate()-1);
+  if(iso===ISO(ont))return 'Postado ontem';
+  return 'Postado em '+d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+}
+const diaLink=t=>t.replace(/(^|[\s(])(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+function diaTexto(t){
+  return `<div class="dia-tx">${String(t||'').split(/\n{2,}|\n/).map(l=>l.trim()).filter(Boolean).map(l=>/^https?:\/\/\S+$/.test(l)?midia(l,''):`<p>${diaLink(esc(l))}</p>`).join('')}</div>`;
+}
+function diaCorpo(d){
+  return `${d.midia?midia(d.midia.url,'',d.midia.tipo==='imagem'):''}${d.texto?diaTexto(d.texto):''}${d.fonte?`<p class="dia-fonte">Fonte: ${diaLink(esc(d.fonte))}</p>`:''}`;
+}
+const diaVistos=()=>store.get('diaVisto',[])||[];
+function diaMarcar(id){const v=diaVistos();if(!v.includes(id)){v.push(id);store.set('diaVisto',v.slice(-200))}}
+const diaNovo=()=>{const d=diaLista()[0];return d&&!diaVistos().includes(d.id)?d:null};
+function diaHome(){
+  const l=diaLista();
+  if(!l.length)return PROF()?`<article class="dia dia-vazio" id="dia"><header class="dia-h"><span class="dia-ic">${DIA_IC}</span><span><span class="eyebrow">Conteúdo Geográfico do Dia</span><span class="dia-q">Nada postado ainda. Esta caixa só aparece para os alunos depois da primeira postagem.</span></span></header>${profEdit([['Postar na planilha',profP().dia||profP().config]])}</article>`:'';
+  const d=l[0],novo=!diaVistos().includes(d.id);
+  return `<article class="dia" id="dia" data-diaid="${esc(d.id)}" aria-labelledby="diaT">
+    <header class="dia-h"><span class="dia-ic">${DIA_IC}</span><span><span class="eyebrow">Conteúdo Geográfico do Dia</span><span class="dia-q">${diaQuando(d.data)}</span></span>${novo?'<span class="dia-novo">Novo</span>':''}</header>
+    <h2 class="dia-t" id="diaT">${esc(d.titulo)}</h2>
+    ${diaCorpo(d)}
+    ${l.length>1?`<div class="dia-acts"><button class="btn btn-ghost" id="diaAnt">Conteúdos anteriores (${l.length-1})</button></div>`:''}
+    ${profEdit([['Postar ou editar na planilha',profP().dia||profP().config]])}
+  </article>`;
+}
+function diaTeaser(){
+  const d=diaNovo();if(!d)return '';
+  return `<button class="dia-teaser" data-go-dia><span class="dia-ic">${DIA_IC}</span><span style="min-width:0"><span class="eyebrow">Novo · Conteúdo Geográfico do Dia</span><b>${esc(d.titulo)}</b></span>${CHEVR}</button>`;
+}
+function diaAbrir(id){
+  const l=diaLista(),d=l.find(x=>x.id===id);if(!d)return diaArquivo();
+  diaMarcar(d.id);
+  sheet(`<article class="dia"><header class="dia-h"><span class="dia-ic">${DIA_IC}</span><span><span class="eyebrow">Conteúdo Geográfico do Dia</span><span class="dia-q">${diaQuando(d.data)}</span></span></header>
+    <h2 class="dia-t">${esc(d.titulo)}</h2>${diaCorpo(d)}</article>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${l.length>1?'<button class="btn btn-ghost" id="diaLista">Ver todos os conteúdos</button>':''}<button class="btn btn-primary" data-close>Fechar</button></div>`,
+  (o,close)=>{const b=o.querySelector('#diaLista');if(b)b.onclick=()=>{close();diaArquivo()}});
+}
+function diaArquivo(){
+  const l=diaLista();
+  sheet(`<h2>Conteúdos Geográficos já postados</h2><p class="meta" style="margin:0">Do mais recente para o mais antigo. Toque para ver de novo.</p>
+    <div class="dia-lista">${l.map(d=>`<button class="dia-li" data-dia="${esc(d.id)}"><span class="meta">${esc(d.data.split('-').reverse().join('/'))}</span><b>${esc(d.titulo)}</b></button>`).join('')}</div>
+    <button class="btn btn-primary" data-close>Fechar</button>`,
+  (o,close)=>o.querySelectorAll('[data-dia]').forEach(b=>b.onclick=()=>{close();diaAbrir(b.dataset.dia)}));
+}
+function irParaDia(id){
+  S.cap=null;go('home');
+  setTimeout(()=>{const el=document.getElementById('dia');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+    const d0=diaLista()[0];if(id&&d0&&id!==d0.id)diaAbrir(id)},250);
+}
+
 function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
     <div class="home-head">${GLOBO_HH}<h1 class="home-t">GeoEstudos</h1><span class="eyebrow hh-l">Desenvolvido pelo Prof. Me. Haroldo Matos</span><span class="eyebrow hh-l">Geografia · Anos finais do Ensino Fundamental</span></div>
     ${fixosHtml(null)}
+    ${diaHome()}
     <details class="fold mini"><summary>Sobre o Prof. Haroldo Matos ${CHEVD}</summary><div class="fold-body">
       <p>Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
       <p>Atuo como professor na rede pública municipal de São Luís. Nesta rede, ministro a disciplina de Geografia para estudantes dos anos finais do Ensino Fundamental.</p>
@@ -1983,6 +2063,7 @@ function vTurma(){
     ${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}
     ${MINHA&&S.turma!==MINHA?`<div class="outra"><span>Você está vendo a <b>Turma ${esc(S.turma)}</b>. Sua turma é a <b>${esc(MINHA)}</b>.</span><div class="outra-b"><button class="btn btn-primary" data-turma="${esc(MINHA)}">Voltar para a ${esc(MINHA)}</button><button class="link" id="mudarMinha">Esta é a minha turma</button></div></div>`:''}
     ${fixosHtml(S.turma)}
+    ${diaTeaser()}
     <button class="u-voltar" data-uescolha><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Unidades</button>
     <div class="card hello">${GLOBO_HH}
       <span class="eyebrow">Turma ${esc(S.turma)} · ${y.label}${S.turma===MINHA?' · minha turma':''}</span>
@@ -2011,7 +2092,7 @@ function vTurma(){
 }
 
 function bannersTurma(){
-  return `${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}${fixosHtml(S.turma)}`;
+  return `${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}${fixosHtml(S.turma)}${diaTeaser()}`;
 }
 function vEscolhaUnidade(){
   const y=Y();
@@ -2224,6 +2305,7 @@ const ROTEIROS=[
   ['Atividade avaliativa (vale nota)',9,['Na pasta das aulas de aprofundamento, crie [teste] 1 Avaliação com 20 questões (A a D e Resposta:).','Com o modo professor ligado, abra a aula no app e faça a atividade para testar: os envios vão para a aba (teste).','Para liberar: acrescente Prazo: dd/mm/aaaa e tire o [teste] do nome.','Confira a lista de alunos (aba Alunos) e veja as notas na planilha de notas.'],P=>[['Planilha de notas e alunos',P.notas]]],
   ['Datas na agenda',10,['Use a agenda da turma (Geografia 71, 72…).','Títulos reconhecidos: Entrega do caderno · Cap. 14, Atividade de fixação · Cap. 14, Aula de aprofundamento 1 · prazo, Avaliação…','O primeiro link da descrição vira botão no app.'],P=>[['Abrir a Agenda',P.agendaGeral]]],
   ['Aviso no mural',11,['Planilha de Configurações › aba Mural de avisos: uma linha por aviso.','Preencha título, mensagem, Para quem (anos, turmas ou todas) e destaque.','Notificação no celular: Sim ou Não.','Por último, Publicar? = Sim. A coluna Situação diz o que falta.'],P=>[['Planilha de Configurações e Mural',P.config]]],
+  ['Conteúdo Geográfico do Dia',20,['Planilha de Configurações › aba Conteúdo do Dia: uma linha por postagem.','Preencha o título, um texto breve e/ou o link da mídia (YouTube, imagem, arquivo do Drive, site). A fonte é opcional.','Por último, Publicar? = Sim. Em até 5 minutos aparece na página inicial e todas as turmas recebem a notificação.','A aba guarda o inventário: data de publicação, situação e quando a notificação saiu. Não apague linhas antigas.'],P=>[['Aba Conteúdo do Dia',P.dia||P.config]]],
   ['Responder dúvidas',12,['Abra a planilha de dúvidas.','Escreva a resposta na coluna Sua resposta.','Em Publicar no app, escolha Turma, Ano ou Não. O nome do aluno nunca aparece.'],P=>[['Planilha de dúvidas',P.duvidas]]],
   ['Unidades e períodos',5,['Planilha de Conteúdo › aba Períodos das unidades: início e fim de cada unidade (calendário da SEMED).','O app abre só a unidade mais recente que já começou; a troca é automática.','Títulos das unidades: aba Unidades.'],P=>[['Planilha de Conteúdo',P.conteudo]]],
   ['Trocar a senha do modo professor',19,['Planilha de Configurações: apague a célula da linha Senha do modo professor e digite a nova senha.','Em até 5 minutos o robô guarda a senha embaralhada e apaga a célula.','As entradas antigas deixam de valer: entre de novo.'],P=>[['Planilha de Configurações',P.config]]],
@@ -2674,6 +2756,7 @@ function render(){
   if(!S.cap&&document.body.classList.contains('foco'))focoSair();
   document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
   $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre,prof:vProf}[S.tab]();
+  if(S.tab==='home'&&!S.cap){const d0=diaLista()[0];if(d0&&!diaVistos().includes(d0.id))setTimeout(()=>diaMarcar(d0.id),1500)}
   if(PROF())$('#view').insertAdjacentHTML('afterbegin',profBarra());
   if(MINHA&&S.turma&&S.turma!==MINHA&&S.tab!=='home'&&S.tab!=='turma')$('#view').insertAdjacentHTML('afterbegin',`<div class="outra mini"><span>Vendo a <b>Turma ${esc(S.turma)}</b> · sua turma é a ${esc(MINHA)}</span><button class="link" data-turma="${esc(MINHA)}">Voltar</button></div>`);
   if(S.cap){loadAnn();paintResumo()}
@@ -2820,6 +2903,8 @@ document.addEventListener('click',ev=>{
   const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;S.uAberta=false;store.set('turma',S.turma);
     go('turma');if(!MINHA&&!COMP)perguntarTurma(S.turma);return}
   if(t.closest('#pushTurmas'))return turmasSheet();
+  if(t.closest('#diaAnt'))return diaArquivo();
+  if(t.closest('[data-go-dia]'))return irParaDia();
   if(t.closest('#celComp')){sheet(`<h2>Usar como celular compartilhado?</h2><p style="margin:0">A turma ${esc(MINHA)} deixa de ser fixa. O app passa a abrir na escolha de turmas e a barra volta às cores padrão.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="ccSim">Sim, é compartilhado</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,(o,close)=>{o.querySelector('#ccSim').onclick=()=>{close();COMP=true;MINHA=null;store.set('compartilhado',true);store.set('minha',null);render();explicarCompartilhado(true)}});return}
   if(t.closest('#celFixar')){fixarSheet();return}
   if(t.closest('#ccComo')){explicarCompartilhado(false);return}
@@ -2832,6 +2917,7 @@ document.addEventListener('click',ev=>{
 /* Abrir na tela certa ao tocar num aviso */
 function abrirDeAviso(o){
   if(!o||!DATA)return;
+  if(o.ir==='dia'){irParaDia(o.cap||'');return}
   if(o.turma&&TURMAS.includes(o.turma)){S.turma=o.turma;store.set('turma',S.turma)}
   if(!S.turma)return;
   if(o.ir==='mural'){
