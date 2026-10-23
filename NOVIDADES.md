@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.2.8 · 23/10/2026
+- O logo GeoEstudos no topo virou botão de volta à página inicial.
+
 ## 1.2.7 · 23/10/2026
 - Rodapé completo só na página inicial; nas demais, apenas compartilhar e versão.
 
