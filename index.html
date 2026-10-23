@@ -928,6 +928,8 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .sb-nota b{line-height:1.3}.sb-nota span:last-child{font-size:.92rem;line-height:1.5}
 .sb-conta{background:var(--pen-soft);border-left:4px solid var(--pen);border-radius:8px;padding:9px 12px;font-weight:700;line-height:1.5}
 .sb-conta small{display:block;font-weight:400;color:var(--muted);font-size:.85rem}
+.rev-rasc{margin:0;padding:8px 10px;border:1.5px dashed var(--pen);border-radius:10px;background:var(--pen-soft);font-size:.88rem;line-height:1.45}
+.rev-rasc .profedit{margin-top:8px}
 .sb-tct{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:4px}
 .ulist{display:flex;flex-direction:column;gap:10px}
 .ucard{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:12px 14px;width:100%;color:var(--ink)}
@@ -1445,9 +1447,10 @@ const hashQ=t=>{let h=5381;for(const ch of String(t))h=((h<<5)+h+ch.charCodeAt(0
 const embaralhar=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const revKey=n=>anoT()+'-'+n;
 function revCard(c,n){
-  const r=c.revisao;if(!r||!r.length)return '';
+  const r=c.revisao;if(!r||!r.length||(c.revisaoRascunho&&!PROF()))return '';
   const st=(store.get('rev',{})||{})[revKey(n)],qt=Math.min(QPOR,r.length);
   return `<div class="card revcard"><div class="rev-head"><span class="rev-ic">${REVIC}</span><span><b>Revisão rápida</b><br><span class="meta">Opcional · não vale nota · ${qt} perguntas</span></span></div>
+    ${c.revisaoRascunho?`<div class="rev-rasc"><b>Rascunho:</b> só você vê, no modo professor. Para liberar aos alunos, apague “[rascunho]” do nome do Doc.${profEdit([['Editar a revisão',docUrl(c.docRevisao)]])}</div>`:''}
     <p class="rev-why">Se quiser, faça uma revisão rápida para fixar o que estudou neste resumo. O app corrige e explica cada resposta.</p>
     ${st&&st.ult?`<p class="meta" style="margin:0">Última revisão: ${st.ult.a} de ${st.ult.t} acertos.</p>`:''}
     <button class="rev-go" data-rev="${esc(String(n))}">${st&&st.ult?'Fazer outra revisão':'Começar revisão'}</button></div>`;
@@ -1460,7 +1463,7 @@ function sortearRevisao(n,c){
   return escolha.map(({p,h})=>{const ord=embaralhar([0,1,2,3]);return {h,q:p.q,a:ord.map(i=>p.a[i]),c:ord.indexOf(p.c),e:p.e||'',certa:p.a[p.c]}});
 }
 function abrirRevisao(n){
-  const c=capOf(n);if(!c||!c.revisao||!c.revisao.length)return;
+  const c=capOf(n);if(!c||!c.revisao||!c.revisao.length||(c.revisaoRascunho&&!PROF()))return;
   if(TTS.on)ttsParar();
   Q={n,c,lista:sortearRevisao(n,c),i:0,res:[],resp:null};
   let o=document.querySelector('.qz-o');
@@ -2050,7 +2053,7 @@ function vSobre(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.2.8',APP_DATA='2026-10-23';
+const APP_VERSAO='1.3.0',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2459,7 +2462,7 @@ const ROTEIROS=[
   ['Publicar um resumo',4,['Na pasta da unidade, crie um Google Doc com o número e o título do capítulo, por exemplo: 14 Região Norte.','Para escrever sem publicar, comece o nome com [rascunho].','Use os estilos de título (Formatar › Estilos de parágrafo) nas seções: eles viram os títulos no app e as telas do modo apresentação.','Tire o [rascunho] do nome. Em até 5 minutos o resumo e o PDF aparecem no app.'],P=>[['Planilha de Conteúdo (capítulos)',P.conteudo]]],
   ['Atividade de fixação (formulário)',6,['Crie o formulário no Google Formulários, com perguntas de nome completo e turma.','Toque em Enviar › ícone de link e copie o endereço.','Cole na planilha Conteúdo › Capítulos, coluna Atividade, na linha do capítulo.','Marque o prazo na agenda de cada turma: Atividade de fixação · Cap. 14.'],P=>[['Planilha de Conteúdo',P.conteudo],['Agendas',P.agendaGeral]]],
   ['Aula de aprofundamento',7,['Na subpasta das aulas de aprofundamento da unidade, crie o Doc com o número e o título: 1 Título da aula.','Atividade escrita no próprio app: Doc 1 Atividade. Por formulário: link na aba Temas Transversais da planilha de Conteúdo.','Prazo na agenda: Aula de aprofundamento 1 · prazo.'],P=>[['Planilha de Conteúdo',P.conteudo]]],
-  ['Revisão rápida (não vale nota)',8,['Ao lado do resumo, crie o Doc 14 Revisão.','Cada pergunta: enunciado, A) a D), linha Resposta: e, se quiser, Explicação:.','Até 12 perguntas; o app sorteia 6 a cada vez.','Pode pedir ao Claude para escrever as perguntas a partir do resumo.'],P=>[]],
+  ['Revisão rápida (não vale nota)',8,['Ao lado do resumo, crie o Doc 14 Revisão.','Cada pergunta: enunciado, A) a D), linha Resposta: e, se quiser, Explicação:.','Até 12 perguntas; o app sorteia 6 a cada vez.','Pode pedir ao Claude para escrever as perguntas a partir do resumo.','Com o nome [rascunho] 14 Revisão, a revisão aparece só no modo professor: teste no app e, quando estiver boa, apague o [rascunho] do nome.'],P=>[]],
   ['Atividade avaliativa (vale nota)',9,['Na pasta das aulas de aprofundamento, crie [teste] 1 Avaliação com 20 questões (A a D e Resposta:).','Com o modo professor ligado, abra a aula no app e faça a atividade para testar: os envios vão para a aba (teste).','Para liberar: acrescente Prazo: dd/mm/aaaa e tire o [teste] do nome.','Confira a lista de alunos (aba Alunos) e veja as notas na planilha de notas.'],P=>[['Planilha de notas e alunos',P.notas]]],
   ['Datas na agenda',10,['Use a agenda da turma (Geografia 71, 72…).','Títulos reconhecidos: Entrega do caderno · Cap. 14, Atividade de fixação · Cap. 14, Aula de aprofundamento 1 · prazo, Avaliação…','O primeiro link da descrição vira botão no app.'],P=>[['Abrir a Agenda',P.agendaGeral]]],
   ['Aviso no mural',11,['Planilha de Configurações › aba Mural de avisos: uma linha por aviso.','Preencha título, mensagem, Para quem (anos, turmas ou todas) e destaque.','Notificação no celular: Sim ou Não.','Por último, Publicar? = Sim. A coluna Situação diz o que falta.'],P=>[['Planilha de Configurações e Mural',P.config]]],

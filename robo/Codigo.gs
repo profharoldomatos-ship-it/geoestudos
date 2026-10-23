@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-23 · conteúdo do dia v16';
+const VERSAO_ROBO = '2026-10-23 · revisão em rascunho no modo professor v17';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -390,15 +390,20 @@ function lerDocs_() {
       const arqs = pu.getFilesByType(MimeType.GOOGLE_DOCS);
       while (arqs.hasNext()) {
         const f = arqs.next();
-        const nome = f.getName();
-        if (/^\s*\[\s*rascunho/i.test(nome)) continue;
+        let nome = f.getName();
+        const rasc = /^\s*\[\s*rascunho/i.test(nome);
+        if (rasc) nome = nome.replace(/^\s*\[\s*rascunho\s*\]?\s*/i, '');
         const mc = nome.match(/^\s*(\d+)\s*[-–—.:]?\s*(.*)$/);
         if (!mc) continue;
         if (/^revis[ãa]o\b/i.test(mc[2].trim())) {
-          // "14 Revisão": perguntas da revisão rápida do capítulo 14
-          (revs[ano] = revs[ano] || {})[parseInt(mc[1], 10)] = { id: f.getId(), atualizado: f.getLastUpdated().toISOString() };
+          // "14 Revisão": perguntas da revisão rápida do capítulo 14.
+          // "[rascunho] 14 Revisão": aparece só no modo professor, para testar antes de liberar.
+          const rn = parseInt(mc[1], 10), rv = (revs[ano] = revs[ano] || {});
+          if (rasc && rv[rn] && !rv[rn].rascunho) continue;      // a versão final prevalece
+          rv[rn] = { id: f.getId(), atualizado: f.getLastUpdated().toISOString(), rascunho: rasc };
           continue;
         }
+        if (rasc) continue;
         if (/^(avalia[çc][ãa]o|atividade\s+avaliativa)\b/i.test(mc[2].trim())) {
           // "14 Avaliação" ou "14 Atividade avaliativa": atividade que vale nota, do capítulo 14
           (avals[ano] = avals[ano] || {})[parseInt(mc[1], 10)] = { id: f.getId(), atualizado: f.getLastUpdated().toISOString() };
@@ -671,7 +676,7 @@ function montarAnos_(conf, conteudo, docs, anterior) {
       const u = Object.keys(unidades).map(k => unidades[k]).filter(x => x.caps[n])[0];
       if (!u) return;
       const cap = u.caps[n], ant = antRev[d.id];
-      cap.docRevisao = d.id; cap.atualizadoRevisao = d.atualizado;
+      cap.docRevisao = d.id; cap.atualizadoRevisao = d.atualizado; cap.revisaoRascunho = !!d.rascunho;
       if (ant && ant.r && ant.at === d.atualizado) { cap.revisao = ant.r; cap.revisaoErros = ant.err || []; return; }
       try {
         const lido = lerRevisao_(DocumentApp.openById(d.id).getBody().getText());
@@ -897,7 +902,7 @@ function resumoTexto_(d) {
   Object.keys(d.agenda).forEach(t => l.push('Agenda ' + t + ': ' + d.agenda[t].length + ' evento(s)'));
   d.anos.forEach(a => a.unidades.forEach(u => u.caps.forEach(c => {
     if (!c.docRevisao) return;
-    l.push('Revisão ' + a.nome + ' · Cap. ' + c.n + ': ' + (c.revisao || []).length + ' pergunta(s) ok' + ((c.revisaoErros || []).length ? ' · PROBLEMAS:' : ''));
+    l.push('Revisão ' + a.nome + ' · Cap. ' + c.n + (c.revisaoRascunho ? ' (rascunho: só no modo professor)' : '') + ': ' + (c.revisao || []).length + ' pergunta(s) ok' + ((c.revisaoErros || []).length ? ' · PROBLEMAS:' : ''));
     (c.revisaoErros || []).forEach(e => l.push('   ⚠ ' + e));
   })));
   d.anos.forEach(a => a.unidades.forEach(u => u.caps.forEach(c => {
