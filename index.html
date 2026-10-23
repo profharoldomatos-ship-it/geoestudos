@@ -1959,6 +1959,20 @@ function vSobre(){
         <li><b>Ciência e Tecnologia:</b> Ciência e Tecnologia.</li>
       </ul>
       <p>As <b>aulas de aprofundamento</b> do GeoEstudos partem dos capítulos do livro didático e dialogam com esses temas, ligando o conteúdo de Geografia a questões do presente e ao território de São Luís e do Maranhão.</p>`)}
+    ${bloco('tt','globo','Linha teórica','Geografia Crítica, GeoHistória e Milton Santos',`
+      <p>A escolha dos temas, dos exemplos e das aulas de aprofundamento segue a <b>Geografia Crítica</b>. Essa corrente estuda o espaço geográfico como <b>produto da sociedade e da sua história</b>: quem produz o espaço, de que modo, para quem e com quais desigualdades.</p>
+      <p>Na perspectiva da <b>GeoHistória</b>, espaço e tempo são inseparáveis. Como ensina Milton Santos, cada lugar guarda marcas de tempos diferentes, as <b>rugosidades</b>. Em São Luís, por exemplo, o casario do Centro Histórico convive com os bairros e as avenidas de hoje, e cada um conta uma parte da história da cidade.</p>
+      <p><b>Autores de referência</b>, com destaque para Milton Santos e os pesquisadores que dialogam com a sua obra:</p>
+      <ul class="sb-tct">
+        <li><b>Milton Santos:</b> <i>Por uma Geografia Nova</i> (1978); <i>O espaço do cidadão</i> (1987); <i>A natureza do espaço</i> (1996); <i>Por uma outra globalização</i> (2000).</li>
+        <li><b>Milton Santos e María Laura Silveira:</b> <i>O Brasil: território e sociedade no início do século XXI</i> (2001).</li>
+        <li><b>Ana Fani Alessandri Carlos:</b> <i>O lugar no/do mundo</i> (1996).</li>
+        <li><b>Ruy Moreira:</b> <i>O que é Geografia</i> (1981).</li>
+        <li><b>Carlos Walter Porto-Gonçalves:</b> <i>Os (des)caminhos do meio ambiente</i> (1989).</li>
+        <li><b>Yves Lacoste:</b> <i>A Geografia: isso serve, em primeiro lugar, para fazer a guerra</i> (1976).</li>
+        <li><b>Fernand Braudel</b>, que formulou a ideia de geo-história: <i>O Mediterrâneo e o mundo mediterrânico na época de Filipe II</i> (1949).</li>
+      </ul>
+      <p><b>Pluralismo.</b> Essa é a orientação teórica do professor e convive com o currículo oficial: os conteúdos seguem a BNCC, o DCTMA e o livro didático adotado pela rede. A LDB garante a liberdade de ensinar e o <b>pluralismo de ideias e de concepções pedagógicas</b> (art. 3º, II e III). Os estudantes são incentivados a comparar pontos de vista e a formar a própria opinião.</p>`)}
     ${bloco('nov','sino','O que o app NÃO faz','Câmera, microfone, localização e cadastro',`
       <ul class="sb-list">
       ${no('Não usa a câmera','Em nenhum momento o app pede ou ativa a câmera do celular.')}
@@ -2024,7 +2038,7 @@ function vSobre(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.2.2',APP_DATA='2026-10-23';
+const APP_VERSAO='1.2.3',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';

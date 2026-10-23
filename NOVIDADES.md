@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.2.3 · 23/10/2026
+- Sobre: novo bloco “Linha teórica” (Geografia Crítica, GeoHistória, Milton Santos e autores de referência).
+
 ## 1.2.2 · 23/10/2026
 - Página inicial: saudação “Estudante, seja bem-vinda(o)!” ao lado do nome.
 
