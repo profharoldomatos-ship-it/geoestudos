@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-22 · avaliação nos Temas v11';
+const VERSAO_ROBO = '2026-10-22 · aulas de aprofundamento v12';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -640,11 +640,11 @@ function montarAnos_(conf, conteudo, docs, anterior) {
       if (d.aula) {
         if (!t.titulo) t.titulo = d.aula.nome;
         t.doc = d.aula.id; t.atualizado = d.aula.atualizado; t.resumo = textoDoc(d.aula);
-        t.pdfDoc = pdfDe(d.aula.id, d.aula.atualizado, 'GeoEstudos · ' + ano + 'º ano · Tema Transversal ' + n + ' – ' + (t.titulo || d.aula.nome));
+        t.pdfDoc = pdfDe(d.aula.id, d.aula.atualizado, 'GeoEstudos · ' + ano + 'º ano · Aula de aprofundamento ' + n + ' – ' + (t.titulo || d.aula.nome));
       }
       if (d.atividade) {
         t.docAtividade = d.atividade.id; t.atualizadoAtividade = d.atividade.atualizado; t.atividadeTexto = textoDoc(d.atividade);
-        t.pdfAtv = pdfDe(d.atividade.id, d.atividade.atualizado, 'GeoEstudos · ' + ano + 'º ano · Tema Transversal ' + n + ' – Atividade');
+        t.pdfAtv = pdfDe(d.atividade.id, d.atividade.atualizado, 'GeoEstudos · ' + ano + 'º ano · Aula de aprofundamento ' + n + ' – Atividade');
       }
       if (d.aval) {
         // Atividade avaliativa do Tema: questões publicadas SEM o gabarito (quem corrige é o robô)
@@ -709,10 +709,10 @@ function eventoParaApp_(id, titulo, descricao, data, hora) {
   const t = semAcento_(titulo);
   const tipo = t.indexOf('entrega do caderno') === 0 ? 'caderno'
     : t.indexOf('atividade de fixacao') === 0 ? 'atividade'
-    : t.indexOf('tema transversal') >= 0 ? 'tema'
+    : (t.indexOf('tema transversal') >= 0 || t.indexOf('aprofundamento') >= 0) ? 'tema'
     : /avaliac|prova|teste|simulado/.test(t) ? 'avaliacao' : 'aviso';
   const mc = String(titulo).match(/cap(?:[ií]tulo|\.)?\s*(\d+)/i);
-  const mt = tipo === 'tema' ? String(titulo).match(/tema transversal\s*(\d+)/i) : null;
+  const mt = tipo === 'tema' ? String(titulo).match(/(?:tema transversal|aula de aprofundamento|aprofundamento)\s*(\d+)/i) : null;
   return { id: id + '@' + data, data: data, hora: hora, titulo: String(titulo || '').trim(), tipo: tipo, cap: mt ? 't' + mt[1] : (mc ? +mc[1] : null), descricao: desc, link: link };
 }
 
@@ -745,7 +745,7 @@ function calcularAvisos_(dados, anterior, conf) {
   dados.anos.forEach(a => a.unidades.forEach(u => (u.temas || []).forEach(t => {
     const id = 'tt-' + a.ano + '-' + t.n;
     if (t.resumo && !antTemas[a.ano + '-' + t.n] && !ja[id]) {
-      avisos.push({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Tema Transversal novo', texto: 'Tema Transversal ' + t.n + ': ' + t.titulo + '. Aula extra que vale ponto na recuperação.', cap: 't' + t.n });
+      avisos.push({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Nova aula de aprofundamento', texto: 'Aula de aprofundamento ' + t.n + ': ' + t.titulo + '. Aula extra que vale ponto na recuperação.', cap: 't' + t.n });
     }
   })));
 
@@ -924,7 +924,7 @@ function resumoEventos_(evs, hoje) {
   const partes = [];
   if (q('caderno')) partes.push(q('caderno') === 1 ? 'entrega do caderno' : q('caderno') + ' entregas do caderno');
   if (q('atividade')) partes.push(q('atividade') === 1 ? (hoje ? 'último dia da atividade de fixação' : 'prazo final da atividade de fixação') : (hoje ? 'último dia de ' : 'prazo final de ') + q('atividade') + ' atividades de fixação');
-  if (q('tema')) partes.push(q('tema') === 1 ? 'prazo do Tema Transversal' : 'prazo de ' + q('tema') + ' Temas Transversais');
+  if (q('tema')) partes.push(q('tema') === 1 ? 'prazo de aula de aprofundamento' : 'prazo de ' + q('tema') + ' aulas de aprofundamento');
   if (q('avaliacao')) partes.push(q('avaliacao') === 1 ? 'avaliação' : q('avaliacao') + ' avaliações');
   return partes.join(' e ') + (caps.length === 1 ? ' (Cap. ' + caps[0] + ')' : caps.length > 1 ? ' (Caps. ' + caps[0] + ' a ' + caps[caps.length - 1] + ')' : '');
 }
@@ -1431,7 +1431,7 @@ function avaliacaoPublicada_(docId) {
     if (c.aval && c.aval.doc === docId) achou = { ano: String(a.ano), rot: 'Cap. ' + c.n, titulo: c.titulo, aval: c.aval, turmas: a.turmas || [] };
   })));
   ((d && d.anos) || []).forEach(a => (a.unidades || []).forEach(u => (u.temas || []).forEach(t => {
-    if (t.aval && t.aval.doc === docId) achou = { ano: String(a.ano), rot: 'Tema ' + t.n, titulo: t.titulo, aval: t.aval, turmas: a.turmas || [] };
+    if (t.aval && t.aval.doc === docId) achou = { ano: String(a.ano), rot: 'Aprofundamento ' + t.n, titulo: t.titulo, aval: t.aval, turmas: a.turmas || [] };
   })));
   return achou;
 }
