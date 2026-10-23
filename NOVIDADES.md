@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.2.4 · 23/10/2026
+- Página inicial: saudação menor, em uma linha e em itálico, para se distinguir do texto de baixo.
+
 ## 1.2.3 · 23/10/2026
 - Sobre: novo bloco “Linha teórica” (Geografia Crítica, GeoHistória, Milton Santos e autores de referência).
 
