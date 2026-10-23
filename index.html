@@ -2637,8 +2637,39 @@ function toast(msg,undo){
   if(undo)t.querySelector('.undo').onclick=()=>{t.remove();undo()};
   document.body.appendChild(t);setTimeout(()=>t.remove(),undo?6000:2400);
 }
-function go(tab,cap){if(adjusting)cancelAdjust();if(TTS.on)ttsParar();fecharRevisao();S.tab=tab;S.cap=cap||null;render();scrollTo(0,0);salvarLugar();
+function go(tab,cap){if(adjusting)cancelAdjust();if(TTS.on)ttsParar();fecharRevisao();
+  navGuardarRolagem();S.tab=tab;S.cap=cap||null;render();scrollTo(0,0);salvarLugar();navEmpilhar();
   if(S.cap&&S.restore){const r=S.restore;S.restore=null;requestAnimationFrame(()=>irParaBloco(r))}}
+/* Botão "voltar" do celular: cada tela entra no histórico do navegador.
+   Voltar fecha primeiro a janela aberta (folha, revisão, atividade, apresentação) e depois volta à tela anterior. */
+let navRestaurando=false;
+const navFoto=()=>({geo:1,tab:S.tab,cap:S.cap,turma:S.turma,unit:S.unit,ua:!!S.uAberta,y:0});
+function navMesma(a,b){return a&&b&&a.tab===b.tab&&String(a.cap)===String(b.cap)&&a.turma===b.turma&&String(a.unit)===String(b.unit)&&a.ua===b.ua}
+function navGuardarRolagem(){try{const st=history.state;if(st&&st.geo)history.replaceState(Object.assign({},st,{y:Math.round(scrollY)}),'')}catch(e){}}
+function navEmpilhar(){
+  if(navRestaurando)return;
+  try{const f=navFoto();if(navMesma(history.state,f))return;history.pushState(f,'')}catch(e){}
+}
+function navFecharJanela(){
+  const os=[...document.querySelectorAll('.overlay')].filter(o=>!o.hidden);
+  const o=os[os.length-1];if(!o)return false;
+  if(o.classList.contains('ap'))fecharApres();
+  else if(o.classList.contains('avl-o'))avFechar();
+  else if(o.classList.contains('qz-o'))fecharRevisao();
+  else{document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));if(o.isConnected)o.remove()}
+  return true;
+}
+addEventListener('popstate',e=>{
+  if(navFecharJanela()){try{history.pushState(navFoto(),'')}catch(err){}return}
+  const st=e.state;if(!st||!st.geo)return;
+  navRestaurando=true;
+  try{
+    if(st.turma&&TURMAS.includes(st.turma))S.turma=st.turma;
+    S.unit=st.unit==null?null:st.unit;S.uAberta=!!st.ua;
+    go(st.tab||'home',st.cap!=null?capId(st.cap):null);
+    const y=st.y||0;if(y)requestAnimationFrame(()=>setTimeout(()=>scrollTo(0,y),60));
+  }finally{navRestaurando=false}
+});
 
 /* Baixa os dados do robô */
 let fetching=false,lastFetch=0,pendingRender=false;
@@ -2753,10 +2784,11 @@ function abrirDeAviso(o){
     }catch(e){}
   }
   lugarPronto=true;salvarLugar();
+  try{history.replaceState(navFoto(),'')}catch(e){}
 })();
-(()=>{const q=new URLSearchParams(location.search);if(q.has('professor')){const on=q.get('professor')!=='0';history.replaceState(null,'',location.pathname);setTimeout(()=>{if(on)profEntrar();else profSair()},600)}})();
-(()=>{const q=new URLSearchParams(location.search);if(q.has('convite')){history.replaceState(null,'',location.pathname);setTimeout(boasVindas,400)}})();
-(()=>{const q=new URLSearchParams(location.search);if(q.get('ir')||q.get('turma')){const o={ir:q.get('ir'),turma:q.get('turma'),cap:q.get('cap')};history.replaceState(null,'',location.pathname);applyMode();render();abrirDeAviso(o)}})();
+(()=>{const q=new URLSearchParams(location.search);if(q.has('professor')){const on=q.get('professor')!=='0';history.replaceState(navFoto(),'',location.pathname);setTimeout(()=>{if(on)profEntrar();else profSair()},600)}})();
+(()=>{const q=new URLSearchParams(location.search);if(q.has('convite')){history.replaceState(navFoto(),'',location.pathname);setTimeout(boasVindas,400)}})();
+(()=>{const q=new URLSearchParams(location.search);if(q.get('ir')||q.get('turma')){const o={ir:q.get('ir'),turma:q.get('turma'),cap:q.get('cap')};history.replaceState(navFoto(),'',location.pathname);applyMode();render();abrirDeAviso(o)}})();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.geoAbrir)abrirDeAviso(e.data.geoAbrir)});
 applyMode();applyFonte();if(!document.querySelector('#view').innerHTML)render();carregar().then(conferirPush);
 if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
