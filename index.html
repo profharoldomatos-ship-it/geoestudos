@@ -614,6 +614,17 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .bv-passos li{counter-increment:b;display:flex;gap:10px;align-items:flex-start;line-height:1.45}
 .bv-passos li::before{content:counter(b);flex:none;width:24px;height:24px;border-radius:50%;background:var(--pen);color:var(--on-pen);display:grid;place-items:center;font-weight:700;font-size:.82rem}
 .bv-ic{display:inline-flex;vertical-align:-4px;border:1px solid var(--line);border-radius:6px;padding:1px 4px;background:var(--surface-2)}
+.fora{margin:10px 0 0;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:.9rem;line-height:1.45;color:var(--ink)}
+.fora b.ft{font-size:.95rem}
+.fora .fora-b{display:flex;gap:8px;flex-wrap:wrap}
+.fora .btn{min-height:40px;padding:8px 14px;font-size:.9rem}
+.ih-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:4px}
+.ih-tabs button{border:0;border-radius:9px;padding:8px 6px;font:inherit;font-weight:700;font-size:.92rem;background:none;color:var(--muted);cursor:pointer}
+.ih-tabs button[aria-selected="true"]{background:var(--surface);color:var(--pen);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ih-pan{display:flex;flex-direction:column;gap:10px}.ih-pan[hidden]{display:none}
+.ih-nota{margin:0;font-size:.86rem;line-height:1.5;color:var(--muted)}
+.ih-nota a{color:var(--pen);font-weight:700}
+.ih-nav{margin:0;background:var(--pen-soft);border-radius:10px;padding:9px 12px;font-size:.88rem;line-height:1.5}
 .bv-alerta{background:var(--hl-soft);border-left:4px solid var(--hl);border-radius:10px;padding:8px 12px;font-size:.9rem;line-height:1.45;color:var(--ink)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mural{display:flex;flex-direction:column;gap:8px}
@@ -1087,6 +1098,7 @@ setTimeout(fim,rm?1600:3300);a.addEventListener('click',fim)}}catch(e){}})();</s
     </div>
     <button class="modebtn" id="modeBtn" aria-label="Escolha o tema do app" aria-haspopup="dialog"><span class="mb-ic" aria-hidden="true"></span><span class="mb-t">Escolha o tema<br>do app</span></button>
   </header>
+  <div id="foraBanner" hidden></div>
   <main id="view"></main>
   <footer class="foot">
     <div class="foot-home">
@@ -1757,13 +1769,46 @@ function installCard(){
   if(standalone())return '';
   return `<button class="card install" id="installBtn"><span class="inst-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3M10 18.5h4"/></svg></span><span><b>Instale o GeoEstudos no celular</b><br><span class="meta">Fica com ícone na tela inicial e abre mesmo sem internet.</span></span></button>`;
 }
+/* Aberto dentro do Instagram (ou outro app): oferecer abrir no navegador do celular */
+const URL_APP=()=>new URL('./',location.href).href;
+const PLAY_CHROME='https://play.google.com/store/apps/details?id=com.android.chrome';
+const emAppDeRede=()=>/Instagram|FBAN|FBAV|FB_IAB|Threads|Line\/|MicroMessenger|Snapchat|TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent);
+const nomeAppRede=()=>{const u=navigator.userAgent;return /Instagram/i.test(u)?'Instagram':/FBAN|FBAV|FB_IAB/i.test(u)?'Facebook':/Threads/i.test(u)?'Threads':/TikTok|musical_ly|Bytedance/i.test(u)?'TikTok':'outro aplicativo'};
+function abrirFora(){
+  const u=new URL(URL_APP());
+  if(ehIOS()){location.href='x-safari-'+u.href;return}
+  // Android: abre no Chrome; se o Chrome não estiver instalado, vai para a página dele na Play Store
+  location.href='intent://'+u.host+u.pathname+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(PLAY_CHROME)+';end';
+}
+function foraHtml(curto){
+  const ap=nomeAppRede(),ios=ehIOS();
+  return `<div class="fora" role="note"><b class="ft">Você abriu o GeoEstudos dentro do ${ap}.</b>
+    <span>${curto?'Aqui ele funciona, mas não instala nem envia avisos.':'Dentro do '+ap+' o app funciona, mas não dá para instalar nem receber avisos.'} Abra no navegador do celular:</span>
+    <div class="fora-b"><button class="btn btn-primary" data-fora>${ios?'Abrir no Safari':'Abrir no Chrome'}</button><button class="btn btn-ghost" data-copiarlink>Copiar o link</button></div>
+    <span class="meta">Se o botão não funcionar: toque em <b>${ios?'⋯':'⋮'}</b> no canto da tela e escolha <b>Abrir no navegador externo</b>${ios?' (ou Abrir no Safari)':''}.</span></div>`;
+}
+function atualizarFora(){const b=document.getElementById('foraBanner');if(!b)return;const on=emAppDeRede()&&ehCelular();b.hidden=!on;if(on&&!b.innerHTML)b.innerHTML=foraHtml(true)}
 function installHelp(){
-  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const ios=ehIOS(),ap=emAppDeRede()&&ehCelular();
   sheet(`<h2>Instalar o GeoEstudos</h2>
-    ${ios?`<ol class="steps"><li>Abra este endereço no <b>Safari</b>.</li><li>Toque no botão <b>Compartilhar</b> (o quadrado com a seta para cima).</li><li>Escolha <b>Adicionar à Tela de Início</b> e depois <b>Adicionar</b>.</li></ol>`
-    :`<ol class="steps"><li>Abra este endereço no <b>Chrome</b>.</li><li>Toque no menu <b>⋮</b> (três pontinhos, no canto de cima).</li><li>Escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</li></ol>`}
-    <p class="meta" style="margin:0">Depois disso, o GeoEstudos aparece junto com os outros aplicativos do celular.</p>
-    <button class="btn btn-primary" data-close>Entendi</button>`);
+    ${ap?foraHtml(false):''}
+    <div class="ih-tabs" role="tablist"><button role="tab" data-ih="and" aria-selected="${!ios}">Android</button><button role="tab" data-ih="ios" aria-selected="${ios}">iPhone</button></div>
+    <div class="ih-pan" data-pan="and"${ios?' hidden':''}>
+      ${deferredPrompt&&!ios?'<button class="btn btn-primary" id="ihAgora">Instalar o GeoEstudos agora</button>':''}
+      <ol class="steps"><li>Abra o endereço do app no <b>Chrome</b>.</li><li>Toque em <b>Instalar app</b>, se aparecer. Se não aparecer, toque nos <b>três pontinhos ⋮</b> (canto de cima) e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</li><li>Abra o GeoEstudos <b>pelo ícone</b> que aparece na tela do celular.</li></ol>
+      <p class="ih-nav"><b>Não tem o Chrome?</b> Ele é gratuito: <a href="${PLAY_CHROME}" target="_blank" rel="noopener">instale pela Play Store</a> e volte a este link.</p>
+      <p class="ih-nota"><b>Outros navegadores:</b> Samsung Internet, Edge e Firefox também instalam (no menu, procure <b>Instalar</b> ou <b>Adicionar à tela inicial</b>). Em alguns, como Opera ou o navegador da Xiaomi, pode ficar só um atalho, e os avisos no celular podem não funcionar.</p>
+    </div>
+    <div class="ih-pan" data-pan="ios"${ios?'':' hidden'}>
+      <ol class="steps"><li>Abra o endereço do app no <b>Safari</b>.</li><li>Toque em <b>Compartilhar</b> (o quadrado com a seta para cima).</li><li>Escolha <b>Adicionar à Tela de Início</b> e depois <b>Adicionar</b>.</li><li>Abra o GeoEstudos <b>pelo ícone</b>. No iPhone, os avisos só funcionam quando o app é aberto pelo ícone.</li></ol>
+      <p class="ih-nota">No iPhone não é preciso instalar nada além disso: o Safari já vem no aparelho.</p>
+    </div>
+    <p class="ih-nota"><b>Prefere não instalar?</b> Tudo funciona direto no navegador: resumos, atividades e calendário. Instalado, o app ganha ícone, abre mais rápido, funciona sem internet e recebe os avisos da turma.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" data-close>Entendi</button><button class="btn btn-ghost" data-copiarlink>Copiar o link do app</button></div>`,
+  (o,close)=>{
+    o.querySelectorAll('[data-ih]').forEach(b=>b.onclick=()=>{o.querySelectorAll('[data-ih]').forEach(x=>x.setAttribute('aria-selected',x===b));o.querySelectorAll('[data-pan]').forEach(p=>p.hidden=p.dataset.pan!==b.dataset.ih)});
+    const ag=o.querySelector('#ihAgora');if(ag)ag.onclick=()=>{if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{if(r&&r.outcome==='accepted')close()}).finally(()=>{deferredPrompt=null;ag.hidden=true})};
+  });
 }
 
 /* Avisos no celular (Web Push enviado pelo robô) */
@@ -2053,7 +2098,7 @@ function vSobre(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.3.1',APP_DATA='2026-10-23';
+const APP_VERSAO='1.4.0',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2817,9 +2862,7 @@ function boasVindas(){
   if(standalone())return;
   let corpo;
   if(noAppDeOutro()){
-    corpo=`<div class="bv-alerta">Você abriu o link <b>dentro de outro aplicativo</b> (WhatsApp, Instagram…). Para instalar, abra no navegador do celular:</div>
-      <ol class="bv-passos"><li><span>Toque nos <b>três pontinhos ⋮</b> (ou em <b>⋯</b>) no canto da tela.</span></li><li><span>Escolha <b>Abrir no navegador</b>, <b>Abrir no Chrome</b> ou <b>Abrir no Safari</b>.</span></li><li><span>Lá, siga as instruções para instalar.</span></li></ol>
-      <button class="btn btn-ghost" id="bvCopiar">Copiar o link do app</button>`;
+    corpo=foraHtml(false);
   }else if(ehIOS()){
     corpo=`<ol class="bv-passos"><li><span>Confira se está no <b>Safari</b>. Se não estiver, copie o link e abra no Safari.</span></li><li><span>Toque em <b>Compartilhar</b> ${SHARE_IOS}, na barra de baixo.</span></li><li><span>Role e escolha <b>Adicionar à Tela de Início</b>, depois <b>Adicionar</b>.</span></li><li><span>Abra o GeoEstudos <b>pelo ícone</b> e escolha a sua turma.</span></li></ol>`;
   }else if(ehCelular()){
@@ -3063,6 +3106,8 @@ document.addEventListener('click',ev=>{
     if(gain)cheer('atividade',String(n)[0]==='t'?`Atividade da aula de aprofundamento ${String(n).slice(1)} registrada.`:`Atividade do Capítulo ${n} registrada como enviada.`);return}
   const tb=t.closest('[data-turma]');if(tb){S.turma=tb.dataset.turma;S.unit=null;S.uAberta=false;store.set('turma',S.turma);
     go('turma');if(!MINHA&&!COMP)perguntarTurma(S.turma);return}
+  if(t.closest('[data-fora]'))return abrirFora();
+  if(t.closest('[data-copiarlink]')){const u=URL_APP();try{navigator.clipboard.writeText(u).then(()=>toast('Link copiado. Cole no navegador.'),()=>toast(u))}catch(e){toast(u)}return}
   if(t.closest('#pushTurmas'))return turmasSheet();
   if(t.closest('#diaAnt'))return diaArquivo();
   if(t.closest('[data-go-dia]'))return irParaDia();
@@ -3104,7 +3149,7 @@ function abrirDeAviso(o){
 (()=>{const q=new URLSearchParams(location.search);if(q.has('convite')){history.replaceState(navFoto(),'',location.pathname);setTimeout(boasVindas,400)}})();
 (()=>{const q=new URLSearchParams(location.search);if(q.get('ir')||q.get('turma')){const o={ir:q.get('ir'),turma:q.get('turma'),cap:q.get('cap')};history.replaceState(navFoto(),'',location.pathname);applyMode();render();abrirDeAviso(o)}})();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.geoAbrir)abrirDeAviso(e.data.geoAbrir)});
-applyMode();applyFonte();if(!document.querySelector('#view').innerHTML)render();carregar().then(conferirPush);
+applyMode();applyFonte();atualizarFora();if(!document.querySelector('#view').innerHTML)render();carregar().then(conferirPush);
 if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>
