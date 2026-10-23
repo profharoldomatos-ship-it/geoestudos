@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-22 · calendário SEMED 2026 v14';
+const VERSAO_ROBO = '2026-10-22 · modo professor v15';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -65,6 +65,14 @@ function doGet(e) {
     let b = {};
     try { b = JSON.parse(p.avalcheck); } catch (err) {}
     return ContentService.createTextOutput(JSON.stringify(conferirAvaliacao_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.prof !== undefined) {
+    let b = {};
+    try { b = JSON.parse(p.prof); } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify(entrarProfessor_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.profdados !== undefined) {
+    return ContentService.createTextOutput(JSON.stringify(dadosProfessor_(String(p.profdados)))).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.robo !== undefined) {
     return ContentService.createTextOutput(JSON.stringify({ ok: true, versao: VERSAO_ROBO })).setMimeType(ContentService.MimeType.JSON);
@@ -147,6 +155,7 @@ function instalar() {
   abaMural_();
   abaAlunos_();
   prepararAbaPeriodos_();
+  prepararConfigProfessor_();
   const d = atualizar();
   Logger.log('Atualização automática ligada: a cada ' + GEO.MINUTOS + ' minutos, e na hora quando você edita as planilhas ou as ' + agendas + ' agendas.');
   Logger.log(resumoTexto_(d));
@@ -173,6 +182,7 @@ function atualizar() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) { Logger.log('Outra atualização já está em andamento.'); return null; }
   try {
+    try { guardarSenhaProfessor_(); } catch (e) { Logger.log('Senha do professor: ' + e); }
     const anterior = lerDadosAnteriores_();
     const conf = lerConfig_();
     const conteudo = lerConteudo_();
@@ -1649,4 +1659,143 @@ function receberAvaliacao_(b) {
     Logger.log('Avaliação: ' + err);
     return { ok: false, erro: 'Não foi possível enviar agora. Suas respostas continuam guardadas no celular.' };
   }
+}
+
+/* ================================================================== */
+/* Modo professor                                                      */
+/* A senha é digitada pelo professor na planilha de Configurações       */
+/* (linha "Senha do modo professor"). Na rodada seguinte o robô guarda  */
+/* só uma versão embaralhada (hash) e apaga a célula. O app nunca       */
+/* conhece a senha: ele pergunta ao robô, que devolve uma chave de      */
+/* acesso válida por 30 dias.                                           */
+/* ================================================================== */
+const PROF_DIAS = 30;
+function hex_(bytes) { return bytes.map(b => ((b & 255) + 256).toString(16).slice(1)).join(''); }
+function hashSenha_(senha, sal) { return hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, sal + '|' + senha, Utilities.Charset.UTF_8)); }
+function segredoProf_() {
+  const props = PropertiesService.getScriptProperties();
+  let s = props.getProperty('profSegredo');
+  if (!s) { s = Utilities.getUuid() + Utilities.getUuid(); props.setProperty('profSegredo', s); }
+  return s;
+}
+function prepararConfigProfessor_() {
+  const sh = SpreadsheetApp.openById(GEO.PLANILHA_CONFIG).getSheets()[0];
+  const v = sh.getDataRange().getDisplayValues();
+  if (!v.some(l => semAcento_(l[0]).indexOf('login do modo professor') === 0)) sh.appendRow(['Login do modo professor', 'prof.haroldomatos@gmail.com', 'Login para entrar no modo professor do app (pode trocar)']);
+  if (!v.some(l => semAcento_(l[0]).indexOf('senha do modo professor') === 0)) sh.appendRow(['Senha do modo professor', '', 'Digite aqui a senha que quiser (mínimo 6 caracteres). Em até 5 minutos o robô guarda a senha embaralhada e apaga esta célula.']);
+}
+/** Lê a senha digitada na planilha, guarda só o hash e apaga a célula. */
+function guardarSenhaProfessor_() {
+  prepararConfigProfessor_();
+  const sh = SpreadsheetApp.openById(GEO.PLANILHA_CONFIG).getSheets()[0];
+  const v = sh.getDataRange().getDisplayValues();
+  const props = PropertiesService.getScriptProperties();
+  v.forEach((l, i) => {
+    const k = semAcento_(l[0]);
+    if (k.indexOf('login do modo professor') === 0) props.setProperty('profLogin', String(l[1] || '').trim().toLowerCase());
+    if (k.indexOf('senha do modo professor') === 0) {
+      const senha = String(l[1] || '');
+      if (!senha || senha.indexOf('••') === 0) return;
+      const cel = sh.getRange(i + 1, 2);
+      if (senha.length < 6) { cel.setValue('').setNote('A senha precisa ter pelo menos 6 caracteres. Digite outra.'); return; }
+      const sal = Utilities.getUuid();
+      props.setProperty('profSal', sal);
+      props.setProperty('profHash', hashSenha_(senha, sal));
+      props.setProperty('profVersao', String(Date.now()));   // senha nova: as entradas antigas deixam de valer
+      cel.setValue('•••••• (definida em ' + Utilities.formatDate(new Date(), GEO.FUSO, 'dd/MM/yyyy HH:mm') + ')').setNote('Senha guardada pelo robô. Para trocar, apague esta célula e digite a nova senha.');
+    }
+  });
+}
+function tokenProf_(exp) {
+  const props = PropertiesService.getScriptProperties();
+  const msg = exp + '.' + (props.getProperty('profVersao') || '0');
+  return exp + '.' + hex_(Utilities.computeHmacSha256Signature(msg, segredoProf_())).slice(0, 40);
+}
+function tokenValido_(tok) {
+  const exp = parseInt(String(tok || '').split('.')[0], 10);
+  return !!exp && exp > Date.now() && tok === tokenProf_(exp);
+}
+function entrarProfessor_(b) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const cache = CacheService.getScriptCache();
+    const disp = String(b.aparelho || '').replace(/[^\w-]/g, '').slice(0, 40) || 'sem-id';
+    const kE = 'profErro|' + disp, nE = parseInt(cache.get(kE) || '0', 10);
+    if (nE >= 5) return { ok: false, erro: 'Muitas tentativas. Espere 15 minutos e tente de novo.' };
+    const hash = props.getProperty('profHash'), sal = props.getProperty('profSal');
+    if (!hash) return { ok: false, erro: 'A senha ainda não foi definida. Digite-a na planilha de Configurações, na linha "Senha do modo professor", e espere 5 minutos.' };
+    const login = String(b.login || '').trim().toLowerCase(), senha = String(b.senha || '');
+    const loginOk = login === (props.getProperty('profLogin') || 'prof.haroldomatos@gmail.com');
+    if (!loginOk || hashSenha_(senha, sal) !== hash) {
+      cache.put(kE, String(nE + 1), 900);
+      Utilities.sleep(800);
+      return { ok: false, erro: 'Login ou senha incorretos.' };
+    }
+    cache.remove(kE);
+    const exp = Date.now() + PROF_DIAS * 864e5;
+    return { ok: true, token: tokenProf_(exp), expira: exp, painel: painelProfessor_() };
+  } catch (err) { return { ok: false, erro: 'Não foi possível entrar agora.' }; }
+}
+function dadosProfessor_(tok) {
+  if (!tokenValido_(tok)) return { ok: false, sair: true, erro: 'Sua entrada expirou. Entre de novo.' };
+  try { return { ok: true, painel: painelProfessor_() }; } catch (err) { return { ok: false, erro: 'Não foi possível carregar o painel.' }; }
+}
+/** Atalhos e situação do app para o painel do professor. */
+function painelProfessor_() {
+  const props = PropertiesService.getScriptProperties();
+  const pl = id => id ? 'https://docs.google.com/spreadsheets/d/' + id + '/edit' : '';
+  const pasta = id => id ? 'https://drive.google.com/drive/folders/' + id : '';
+  const planilhaId = k => { try { return props.getProperty(k) || ''; } catch (e) { return ''; } };
+  let duvId = ''; try { duvId = planilhaDuvidas_().getParent().getId(); } catch (e) { }
+  let notasId = ''; try { notasId = planilhaNotas_().getId(); } catch (e) { }
+  let inscId = ''; try { inscId = planilhaInscricoes_().getParent().getId(); } catch (e) { }
+  const planilhas = [
+    { nome: 'Conteúdo', desc: 'Unidades, capítulos, períodos, aulas de aprofundamento', url: pl(GEO.PLANILHA_CONTEUDO) },
+    { nome: 'Configurações e Mural', desc: 'Turmas, mensagem inicial, mural de avisos, senha', url: pl(GEO.PLANILHA_CONFIG) },
+    { nome: 'Dúvidas dos alunos', desc: 'Ler, responder e publicar', url: pl(duvId) },
+    { nome: 'Notas e lista de alunos', desc: 'Atividades avaliativas e aba Alunos', url: pl(notasId) },
+    { nome: 'Mensagens de incentivo', desc: 'Frases que aparecem ao marcar resumos e atividades', url: pl(GEO.PLANILHA_MENSAGENS) },
+    { nome: 'Celulares com avisos', desc: 'Inscrições de notificação', url: pl(inscId) }
+  ].filter(x => x.url);
+  const pastas = [{ nome: 'App Geografia (pasta principal)', url: pasta(GEO.PASTA_APP), anos: [] }];
+  const anos = DriveApp.getFolderById(GEO.PASTA_APP).getFolders();
+  const listaAnos = [];
+  while (anos.hasNext()) {
+    const pa = anos.next(), ma = pa.getName().match(/([789])\s*º?\s*ano/i);
+    if (!ma) continue;
+    const un = [], it = pa.getFolders();
+    while (it.hasNext()) {
+      const pu = it.next(), mu = pu.getName().match(/unidade\s*(\d+)/i);
+      if (!mu) continue;
+      let temas = '';
+      const st = pu.getFolders();
+      while (st.hasNext()) { const pt = st.next(); if (/tema|aprofund/i.test(pt.getName())) temas = pasta(pt.getId()); }
+      un.push({ n: parseInt(mu[1], 10), url: pasta(pu.getId()), temas: temas });
+    }
+    un.sort((a, b) => a.n - b.n);
+    listaAnos.push({ ano: ma[1], url: pasta(pa.getId()), unidades: un });
+  }
+  listaAnos.sort((a, b) => a.ano - b.ano);
+  let pdfs = ''; try { pdfs = pasta(pastaPdfs_().getId()); } catch (e) { }
+  const agendas = CalendarApp.getAllCalendars().filter(c => c.getName().indexOf(GEO.PREFIXO_AGENDA) === 0)
+    .map(c => ({ nome: c.getName(), url: 'https://calendar.google.com/calendar/u/0/r?cid=' + encodeURIComponent(c.getId()) }))
+    .sort((a, b) => a.nome < b.nome ? -1 : 1);
+  let dados = null; try { dados = JSON.parse(lerCache_() || '{}'); } catch (e) { }
+  const situacao = dados && dados.anos ? resumoTexto_(dados).split('\n') : [];
+  return {
+    versao: VERSAO_ROBO,
+    atualizado: dados && dados.versao || '',
+    situacao: situacao,
+    planilhas: planilhas,
+    pastaApp: pasta(GEO.PASTA_APP),
+    anos: listaAnos,
+    pdfs: pdfs,
+    agendas: agendas,
+    agendaGeral: 'https://calendar.google.com/calendar/u/0/r',
+    robo: 'https://script.google.com/d/' + ScriptApp.getScriptId() + '/edit',
+    notas: pl(notasId),
+    duvidas: pl(duvId),
+    config: pl(GEO.PLANILHA_CONFIG),
+    conteudo: pl(GEO.PLANILHA_CONTEUDO)
+  };
 }
