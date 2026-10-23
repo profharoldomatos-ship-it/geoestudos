@@ -1875,8 +1875,14 @@ function vSobre(){
       </div>
       <p class="sb-conta">Média do período = (Nota 1 + Nota 2 + Nota 3) ÷ 3</p>
       <p><b>Recuperação paralela.</b> Ao longo do período, o Prof. Haroldo Matos desenvolve a <b>recuperação paralela</b> com as <b>aulas de aprofundamento</b> e as atividades ligadas a elas, inclusive as atividades avaliativas feitas aqui no app. Ela é aberta a todos: pode <b>melhorar a média</b> de quem já alcançou 7,0 e, sobretudo, ajudar quem ainda não alcançou a chegar lá, <b>evitando a recuperação de período</b>.</p>
+      <p>A forma de usar a nota da recuperação paralela é definida pelo professor <b>conforme a realidade de cada turma</b>, e a turma é informada. São duas possibilidades:</p>
+      <div class="sb-notas">
+        <div class="sb-nota"><span class="sn-n">A</span><b>Substitui a menor nota</b><span>Se a nota da recuperação paralela for maior que alguma das 3 notas do período, ela <b>substitui a mais baixa</b>, e a média é calculada de novo.</span></div>
+        <div class="sb-nota"><span class="sn-n">B</span><b>Média com a nota do período</b><span>A nota da recuperação paralela e a média do período são somadas e divididas por 2.</span></div>
+      </div>
       <p><b>Recuperação de período.</b> Quem, mesmo depois da recuperação paralela, ficar com média abaixo de 7,0 faz uma tarefa definida pelo professor: avaliação em sala, atividade ou trabalho escrito para casa, ou outro instrumento adequado à turma.</p>
-      <p class="sb-conta">Média final = (média após a recuperação paralela + nota da recuperação de período) ÷ 2<small>Exemplo: média 5,0 e recuperação 9,0 → (5,0 + 9,0) ÷ 2 = 7,0. A média final é a nota registrada no boletim.</small></p>
+      <p class="sb-conta">Média final = (média após a recuperação paralela + nota da recuperação de período) ÷ 2<small>Exemplo: média 5,0 e recuperação 9,0 → (5,0 + 9,0) ÷ 2 = 7,0.</small></p>
+      <p><b>A recuperação não diminui a nota.</b> Se o resultado da conta for menor que a média que o estudante já tinha, <b>prevalece a média anterior</b>. Exemplo: média 6,0 e recuperação 4,0 → a conta daria 5,0, mas fica 6,0. A média final é a nota registrada no boletim.</p>
       <p><b>Frequência.</b> A presença é controlada à parte, no diário de classe: a LDB exige frequência mínima de 75% das horas letivas para a aprovação (art. 24, VI).</p>
       <p><b>Para as famílias.</b> As marcações de tarefa feitas no app ajudam a acompanhar, mas a comprovação está no caderno, que o professor verifica e avalia (veja “Para pais e responsáveis”). A base legal da avaliação contínua e da recuperação paralela está no tema “Currículo, livro didático e avaliação”.</p>`)}
     ${bloco('ano','atv','Currículo, livro didático e avaliação','Rede Municipal de São Luís, coleção Teláris Essencial, DCTMA, BNCC e LDB',`
@@ -1959,7 +1965,7 @@ function vSobre(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.1.2',APP_DATA='2026-10-23';
+const APP_VERSAO='1.1.3',APP_DATA='2026-10-23';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';

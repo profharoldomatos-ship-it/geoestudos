@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.1.3 · 23/10/2026
+- Sobre/avaliações: formas de usar a recuperação paralela (A: substitui a menor nota; B: média com a nota do período) e regra de que a recuperação de período não diminui a média.
+
 ## 1.1.2 · 23/10/2026
 - Sobre: novo bloco “Como funcionam as avaliações de Geografia” (3 notas, recuperação paralela, recuperação de período, frequência).
 
