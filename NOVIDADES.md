@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.1.1 · 23/10/2026
+- Sobre: novo bloco “Para pais e responsáveis” (tipo de iniciativa, marcadores de tarefas e a supervisão do caderno).
+
 ## 1.1.0 · 23/10/2026
 - Conteúdo Geográfico do Dia na página inicial (caixa recolhível, conteúdos anteriores, notificação para todas as turmas). Robô v16.
 - Rodapé reorganizado: nome, iniciativa do professor, Sobre, contato, compartilhar e versão.
