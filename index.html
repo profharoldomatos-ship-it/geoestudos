@@ -281,7 +281,19 @@ h2.r-h{letter-spacing:0} h3.r-h2{letter-spacing:0}
 .toast{position:fixed;bottom:calc(150px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.88rem;z-index:40;width:max-content;max-width:calc(100% - 32px)}
 .foot{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font-size:.86rem;color:var(--muted);line-height:1.55;display:flex;flex-direction:column;gap:8px}
 .foot a{font-weight:700;word-break:break-all}
-.foot .copy{align-self:flex-start;font-size:.8rem;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--surface);color:var(--ink)}
+.foot .copy{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:5px 14px;background:var(--surface);color:var(--ink)}
+.foot-id{display:flex;align-items:center;gap:9px}
+.foot-mark{flex:none;width:30px;height:30px;border-radius:50%;background:var(--pen);color:var(--on-pen);display:grid;place-items:center}
+.foot-mark svg{width:22px;height:22px}
+.foot-nome{font-family:var(--display);font-size:1.25rem;font-weight:800;color:var(--pen);letter-spacing:-.01em;line-height:1}
+.foot-ini{margin:0;font-size:.84rem;line-height:1.5}
+.foot-contato{margin:0}
+.foot-sep{border:0;border-top:1px solid var(--line);margin:6px 0;width:100%}
+.foot-sobre-w{display:flex;flex-direction:column;gap:8px}.foot-sobre-w[hidden]{display:none}
+.foot-sobre{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;font-size:.9rem;font-weight:700;text-align:left;cursor:pointer}
+.foot-sobre svg{flex:none;color:var(--pen)}
+.foot-sobre .fs-ch{margin-left:auto;color:var(--muted);font-size:1.15rem;line-height:1}
+.foot-sobre:hover{border-color:color-mix(in srgb,var(--pen) 35%,var(--line))}
 .bar-msg{flex:1;font-size:.86rem;padding:0 8px;line-height:1.3}
 .bar-kind{position:absolute;top:-26px;left:10px;font-size:.74rem;font-weight:700;background:var(--ink);color:var(--bg);border-radius:8px 8px 0 0;padding:4px 10px}
 .markbar.edit{margin-top:20px}
@@ -744,7 +756,7 @@ details.dia:not([open]) .dia-h{border-radius:var(--r)}
 .dia-vazio .dia-b{flex-direction:row;align-items:center;gap:14px}
 .dia-vazio .dia-ilu{flex:none;width:64px;height:64px;color:var(--pen);opacity:.9}
 .dia-vazio p{margin:0;line-height:1.5;font-size:.95rem}
-.dia-vazio .dia-em{display:block;font-family:var(--title,inherit);font-weight:800;font-size:1.05rem;color:var(--pen);margin-bottom:2px}
+.dia-vazio .dia-em{display:block;font-family:var(--display);font-weight:800;font-size:1.05rem;color:var(--pen);margin-bottom:2px}
 .dia-teaser{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--pen-soft);color:var(--ink);border:1px solid var(--line);border-left:5px solid var(--pen);border-radius:var(--r);padding:10px 12px;font:inherit;cursor:pointer}
 .dia-teaser .dia-ic{width:32px;height:32px}.dia-teaser .dia-ic svg{width:23px;height:23px}
 .dia-teaser b{display:block;line-height:1.25}
@@ -1000,8 +1012,19 @@ body.m-escuro .ul-sec.tt-sec{color:#5EEAD4}
   </header>
   <main id="view"></main>
   <footer class="foot">
-    <p style="margin:0">Em caso de dúvidas, problemas técnicos, problemas com os conteúdos de aula ou envio de atividades e trabalhos, envie e-mail para <a href="mailto:prof.haroldomatos@gmail.com">prof.haroldomatos@gmail.com</a>.</p>
-    <div class="foot-b"><button class="copy" id="copyMail">Copiar e-mail</button><button class="privmini" data-go="sobre"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Sobre o GeoEstudos e privacidade</span><span aria-hidden="true" class="pm-ch">›</span></button></div>
+    <div class="foot-id">
+      <span class="foot-mark" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg></span>
+      <b class="foot-nome">GeoEstudos</b>
+    </div>
+    <p class="foot-ini">GeoEstudos é uma iniciativa exclusiva do Prof. Haroldo Matos, o que não obriga a Rede Municipal de São Luís a disseminar seu uso mais ampliado.</p>
+    <div class="foot-sobre-w">
+      <hr class="foot-sep">
+      <button class="foot-sobre" data-go="sobre"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Sobre o GeoEstudos e privacidade</span><span aria-hidden="true" class="fs-ch">›</span></button>
+    </div>
+    <hr class="foot-sep">
+    <p class="foot-contato">Em caso de dúvidas, problemas técnicos, problemas com os conteúdos de aula ou envio de atividades e trabalhos, comunique-se, via e-mail, com o Prof. Haroldo Matos: <a href="mailto:prof.haroldomatos@gmail.com">prof.haroldomatos@gmail.com</a>.</p>
+    <button class="copy" id="copyMail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/></svg>Copiar e-mail</button>
+    <hr class="foot-sep">
     <button class="foot-share" id="shareApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg><span>Compartilhar o GeoEstudos com um colega</span></button>
   </footer>
 </div>
@@ -1827,6 +1850,7 @@ function vSobre(){
     ${bloco('pen','livro','Quem fez o GeoEstudos','Autoria e início do projeto',`
       <p>O GeoEstudos foi desenvolvido pelo <b>Prof. Haroldo Matos</b>, professor de Geografia dos anos finais do Ensino Fundamental da Rede Municipal de São Luís (MA), com o auxílio do <b>Claude</b>, assistente de inteligência artificial criado pela empresa Anthropic, que apoiou a programação e o design do aplicativo.</p>
       <p>O desenvolvimento começou em <b>outubro de 2026</b>.</p>
+      <p>O GeoEstudos é uma <b>iniciativa exclusiva do Prof. Haroldo Matos</b>, o que não obriga a Rede Municipal de São Luís a disseminar seu uso mais ampliado.</p>
       <p>Os conteúdos e as atividades são de responsabilidade do professor. O aplicativo <b>não envia dados dos estudantes</b> ao Claude nem a qualquer outra inteligência artificial.</p>`)}
     ${bloco('ano','globo','Para que serve','Finalidade pedagógica',`
       <p>O GeoEstudos existe para <b>disponibilizar os conteúdos</b> trabalhados em sala, <b>facilitar o acesso</b> dos estudantes a eles e <b>apoiar o aprendizado e as avaliações</b>. Ele não foi feito para coletar informações sobre os estudantes.</p>
@@ -2777,7 +2801,7 @@ function render(){
   if(MINHA&&S.turma&&S.turma!==MINHA&&S.tab!=='home'&&S.tab!=='turma')$('#view').insertAdjacentHTML('afterbegin',`<div class="outra mini"><span>Vendo a <b>Turma ${esc(S.turma)}</b> · sua turma é a ${esc(MINHA)}</span><button class="link" data-turma="${esc(MINHA)}">Voltar</button></div>`);
   if(S.cap){loadAnn();paintResumo()}
   clearTimeout(popT);popT=setTimeout(checarPopups,700);
-  const pf=document.querySelector('.foot .privmini');if(pf)pf.hidden=S.tab==='sobre'&&!S.cap;
+  const pf=document.querySelector('.foot-sobre-w');if(pf)pf.hidden=S.tab==='sobre'&&!S.cap;
   document.querySelectorAll('.tab').forEach(b=>{b.removeAttribute('aria-current');if(b.dataset.tab===S.tab)b.setAttribute('aria-current','page')});
 }
 /* Menu de turmas: abre para cima a partir da aba Turma */
