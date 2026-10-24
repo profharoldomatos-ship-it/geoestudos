@@ -7,35 +7,33 @@
 <title>GeoNotas</title>
 <link rel="icon" href="icone.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icone-192.png">
-<meta name="theme-color" content="#1f5f5b">
+<meta name="theme-color" content="#F4ECD8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,700&display=swap">
 <style>
 :root{
-  --bg:#f4f1ea; --card:#ffffff; --ink:#1f2a2a; --muted:#66706e; --line:#e2ddd2;
-  --brand:#1f5f5b; --brand-ink:#ffffff; --accent:#c8742c;
-  --ok:#2e7d4f; --ok-bg:#e3f2e8; --low:#b23a2e; --low-bg:#fbe6e3; --mid:#a86a00; --mid-bg:#fdf1d8;
-  --field:#faf8f3; --shadow:0 1px 2px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.05);
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --ok:#1F7A45; --ok-bg:#E3F3E8; --mid:#8A5A00; --mid-bg:#F6E3A6;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 2px 8px rgba(0,0,0,.04); color-scheme:light;
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#121716; --card:#1b2221; --ink:#e7ecea; --muted:#9aa5a2; --line:#2c3533;
-    --brand:#3f9c94; --brand-ink:#0d1413; --accent:#e0954f;
-    --ok:#6fcf97; --ok-bg:#183326; --low:#ff8a7a; --low-bg:#3a1c18; --mid:#f2c160; --mid-bg:#3a2e12;
-    --field:#151b1a; --shadow:none;
-  }
-}
+/* mesmas cores dos modos Sépia e Claro do GeoEstudos */
+body,body.t-sepia{--bg:#F4ECD8;--card:#FAF4E4;--field:#F4ECD8;--ink:#3B2F22;--muted:#54483A;--line:#DCCFB2;--brand:#2B4A8A;--brand-ink:#FFFFFF;--accent:#9A3A2A;--low:#9A3A2A;--low-bg:#F6E1D8}
+body.t-claro{--bg:#FBF8F1;--card:#FFFDF8;--field:#FBF8F1;--ink:#26303F;--muted:#4A5260;--line:#E3DCCB;--brand:#1D3F8F;--brand-ink:#FFFFFF;--accent:#A33A2C;--low:#A33A2C;--low-bg:#FBE6E3}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 var(--body)}
 button{font:inherit;color:inherit}
 .top{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 16px 0;border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;gap:8px}
-.brand{font-weight:700;font-size:18px;letter-spacing:.2px}
-.brand small{font-weight:500;color:var(--muted);font-size:13px;margin-left:6px}
+.brand{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font-family:var(--body);font-weight:400;color:var(--muted);font-size:12px;letter-spacing:0}
 .spacer{flex:1}
 .sync{font-size:12px;color:var(--muted);white-space:nowrap}
 .sync.err{color:var(--low)} .sync.busy{color:var(--accent)}
 .iconbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;width:36px;height:36px;display:grid;place-items:center;cursor:pointer}
-.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 8px;scrollbar-width:none}
-.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-weight:600;cursor:pointer}
+.chips{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;padding:10px 0 8px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 0;font-weight:700;font-size:16px;cursor:pointer;text-align:center}
 .chip.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
 .tabs{display:flex;gap:2px}
 .tab{flex:1;border:0;background:none;padding:10px 4px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer}
@@ -84,6 +82,15 @@ td.nm,th.nm{text-align:left;position:sticky;left:0;background:var(--card);max-wi
 .field{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line)}
 .field:first-child{border-top:0}
 .field .lb{flex:1;min-width:0}
+ .iconbtn.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+a.iconbtn{color:inherit}
+.privnav{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.privnav select{margin:0;flex:1;font-weight:700}
+.privnav .iconbtn{width:44px;height:44px;flex:none;font-size:20px}
+.privtag{display:flex;align-items:center;gap:8px;background:var(--card);border:1px dashed var(--brand);color:var(--brand);border-radius:12px;padding:8px 12px;font-size:13px;font-weight:700;margin-bottom:10px}
+.foot{margin:24px 0 0;text-align:center;font-size:13px;color:var(--muted)}
+.foot button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;margin:0 3px;cursor:pointer}
+.foot button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:14px;z-index:50;max-width:90vw;display:none}
 .toast.show{display:block}
 .login{position:fixed;inset:0;z-index:40;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px}
@@ -103,14 +110,16 @@ td.nm,th.nm{text-align:left;position:sticky;left:0;background:var(--card);max-wi
     <a class="iconbtn" href="../?professor=1" title="Voltar ao GeoEstudos" aria-label="Voltar ao painel do GeoEstudos" style="text-decoration:none">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     </a>
-    <div class="brand">GeoNotas<small id="sub"></small></div>
+    <div class="brand">GeoNotas<small><span id="sub"></span> <span class="sync" id="sync"></span></small></div>
     <div class="spacer"></div>
-    <span class="sync" id="sync"></span>
-    <button class="iconbtn" id="logout" title="Sair" aria-label="Sair">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+    <button class="iconbtn" id="privBtn" title="Um aluno por vez" aria-label="Mostrar um aluno por vez" aria-pressed="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
     </button>
     <button class="iconbtn" id="refresh" title="Atualizar da planilha" aria-label="Atualizar">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+    </button>
+    <button class="iconbtn" id="logout" title="Sair" aria-label="Sair">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
     </button>
   </div>
   <div class="chips" id="chips"></div>
@@ -305,7 +314,8 @@ const byCol=d=>id=>d.columns.find(c=>c.c==id);
 /* ---------- telas ---------- */
 function render(){
   const d=cur();if(!d)return;
-  if(S.kind==='final')return renderFinal(d);
+  if(S.priv)return renderPriv(d);
+  if(S.kind==='final'){renderFinal(d);$('#main').insertAdjacentHTML('beforeend',foot());bindFoot();return}
   const main=$('#main');
   const seg='<div class="seg"><button data-m="atividade" class="'+(S.mode==='atividade'?'on':'')+'">Por atividade</button><button data-m="aluno" class="'+(S.mode==='aluno'?'on':'')+'">Por aluno</button></div>';
   if(S.mode==='aluno'){
@@ -325,9 +335,59 @@ function render(){
     $('#colSel').addEventListener('change',e=>{S.colSel[key]=+e.target.value;render()});
     bindControls($('#lst'),byRow(d),byCol(d));
   }
+  $('#main').insertAdjacentHTML('beforeend',foot());bindFoot();
   bindSeg();
 }
 function bindSeg(){document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{S.mode=b.dataset.m;store.set('mode',S.mode);render()}))}
+
+function fieldsHtml(d,row){
+  const groups=[];
+  d.columns.forEach(c=>{const g=c.group||c.leaf;let G=groups.find(x=>x.g===g);if(!G){G={g,cols:[]};groups.push(G)}G.cols.push(c)});
+  return groups.map(G=>'<div class="grp">'+esc(G.g)+'</div><div class="list">'+
+    G.cols.map(c=>'<div class="field"><span class="lb">'+esc(c.leaf)+'</span>'+control(row,c)+'</div>').join('')+'</div>').join('');
+}
+
+/* Um aluno por vez: a lista fica recolhida e só aparece o aluno escolhido
+   (para mostrar a nota a um estudante sem expor a dos colegas). */
+function renderPriv(d){
+  const rows=d.rows;if(!rows.length){$('#main').innerHTML='<div class="empty">Nenhum aluno nesta aba.</div>'+foot();bindFoot();return}
+  let i=rows.findIndex(r=>r.r===S.privRow);
+  if(i<0){i=0;S.privRow=rows[0].r}
+  const row=rows[i];
+  const nav='<div class="privtag">Um aluno por vez · a lista da turma está recolhida</div>'+
+    '<div class="privnav"><button class="iconbtn" id="pPrev" aria-label="Aluno anterior"'+(i?'':' disabled')+'>‹</button>'+
+    '<select id="pSel" aria-label="Escolher aluno">'+rows.map(r=>'<option value="'+r.r+'"'+(r.r===row.r?' selected':'')+'>'+esc(r.n)+'. '+esc(r.nome)+'</option>').join('')+'</select>'+
+    '<button class="iconbtn" id="pNext" aria-label="Próximo aluno"'+(i<rows.length-1?'':' disabled')+'>›</button></div>';
+  let body;
+  if(S.kind==='final'){
+    const tone=finalTone(d);
+    body='<div class="list">'+d.columns.map(c=>{const v=row.cells[c.c].v,t=tone(c,v);return '<div class="field"><span class="lb">'+esc(c.leaf)+'</span>'+(t?'<span class="calc '+t+'">'+esc(shown(v))+'</span>':'<span class="calc g-none">'+esc(shown(v))+'</span>')+'</div>'}).join('')+'</div>';
+  }else body=fieldsHtml(d,row);
+  $('#main').innerHTML=nav+'<div id="pBody">'+body+'</div>'+foot();
+  const go=r=>{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();S.privRow=r;render();window.scrollTo(0,0)};
+  $('#pSel').addEventListener('change',e=>go(+e.target.value));
+  $('#pPrev').addEventListener('click',()=>rows[i-1]&&go(rows[i-1].r));
+  $('#pNext').addEventListener('click',()=>rows[i+1]&&go(rows[i+1].r));
+  if(S.kind!=='final')bindControls($('#pBody'),byRow(d),byCol(d));
+  bindFoot();
+}
+
+/* rodapé: tema de cores (Sépia ou Claro), guardado neste aparelho */
+function foot(){
+  const t=S.tema;
+  return '<div class="foot">Cores: <button data-tema="sepia" class="'+(t==='sepia'?'on':'')+'">Sépia</button><button data-tema="claro" class="'+(t==='claro'?'on':'')+'">Claro</button></div>';
+}
+function bindFoot(){document.querySelectorAll('[data-tema]').forEach(b=>b.addEventListener('click',()=>{setTema(b.dataset.tema);render()}))}
+function setTema(t){
+  S.tema=t==='claro'?'claro':'sepia';store.set('tema',S.tema);
+  document.body.classList.toggle('t-claro',S.tema==='claro');document.body.classList.toggle('t-sepia',S.tema==='sepia');
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=S.tema==='claro'?'#FBF8F1':'#F4ECD8';
+}
+function setPriv(on){
+  S.priv=!!on;store.set('priv',S.priv?'1':'');
+  const b=$('#privBtn');b.classList.toggle('on',S.priv);b.setAttribute('aria-pressed',S.priv);
+  b.title=S.priv?'Mostrar a lista completa':'Um aluno por vez';
+}
 
 function openSheet(r){S.openRow=r;renderSheet();$('#sheet').classList.add('open')}
 function renderSheet(){
@@ -335,10 +395,7 @@ function renderSheet(){
   const row=d.rows.find(x=>x.r===S.openRow);if(!row)return;
   $('#sName').textContent=row.nome;
   $('#sSub').textContent='Turma '+S.turma+' · nº '+row.n+' · '+d.sheet;
-  const groups=[];
-  d.columns.forEach(c=>{const g=c.group||c.leaf;let G=groups.find(x=>x.g===g);if(!G){G={g,cols:[]};groups.push(G)}G.cols.push(c)});
-  $('#sBody').innerHTML=groups.map(G=>'<div class="grp">'+esc(G.g)+'</div><div class="list">'+
-    G.cols.map(c=>'<div class="field"><span class="lb">'+esc(c.group?c.leaf:c.leaf)+'</span>'+control(row,c)+'</div>').join('')+'</div>').join('');
+  $('#sBody').innerHTML=fieldsHtml(d,row);
   bindControls($('#sBody'),byRow(d),byCol(d));
 }
 function stepSheet(dir){
@@ -347,6 +404,13 @@ function stepSheet(dir){
   if(n){S.openRow=n.r;renderSheet();$('#sBody').scrollTop=0}
 }
 
+function finalTone(d){
+  const p28=d.columns.find(c=>/PARA\s*28/i.test(c.label));
+  return (c,v)=>{
+    if(p28&&c.c===p28.c){const n=num(v);if(n==null)return '';return n>10?'g-low':n>7?'g-mid':'g-ok'}
+    return (c.calc&&num(v)!=null&&/PER[ÍI]ODO|M[ÉE]DIA/i.test(c.label))?grade(v):'';
+  };
+}
 function renderFinal(d){
   const fin=d.columns.find(c=>/M[ÉE]DIA FINAL/i.test(c.label))||keyCols(d).slice(-1)[0];
   const p28=d.columns.find(c=>/PARA\s*28/i.test(c.label));
@@ -371,7 +435,7 @@ function renderFinal(d){
 /* ---------- navegação ---------- */
 function drawChips(){
   $('#chips').innerHTML=S.cfg.turmas.map(t=>'<button class="chip'+(t===S.turma?' on':'')+'" data-t="'+t+'">'+t+'</button>').join('');
-  document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{S.turma=b.dataset.t;store.set('turma',S.turma);drawChips();ensure()}));
+  document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{S.turma=b.dataset.t;S.privRow=null;store.set('turma',S.turma);drawChips();ensure()}));
 }
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
   S.kind=b.dataset.k;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));ensure();
@@ -388,6 +452,12 @@ document.addEventListener('visibilitychange',()=>{
   const typing=document.activeElement&&document.activeElement.classList.contains('inp');
   if(d&&!S.pending&&!typing&&Date.now()-new Date(d.fetchedAt)>20000)load(S.turma,S.kind,true);
 });
+
+$('#privBtn').addEventListener('click',()=>{
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  setPriv(!S.priv);$('#sheet').classList.remove('open');S.openRow=null;window.scrollTo(0,0);render();
+});
+setTema(store.get('tema')||'sepia');setPriv(store.get('priv')==='1');
 
 $('#loginForm').addEventListener('submit',async e=>{
   e.preventDefault();
