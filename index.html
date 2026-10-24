@@ -1019,6 +1019,10 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .profedit a,.pf-chips a{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--surface);color:var(--pen);font-weight:700;font-size:.84rem;border-radius:999px;padding:5px 11px;text-decoration:none}
 .prof-entrar{align-self:center;font-size:.76rem;color:var(--muted);opacity:.75;padding:8px;text-decoration:underline;text-underline-offset:3px}
 .pf-sit{display:flex;flex-direction:column;gap:8px}
+.pf-notas{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);border-left:5px solid var(--pen)}
+.pf-notas>span:nth-child(2){display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.pf-notas-ic{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--surface-2);color:var(--pen);flex:none}
+.pf-notas>svg{color:var(--pen);flex:none}
 .pf-sit.tem-prob{border-color:var(--rust)}
 .pf-h{display:flex;justify-content:space-between;align-items:center}
 .pf-alerta{margin:0;color:var(--rust)}
@@ -2371,7 +2375,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.7.1',APP_DATA='2026-10-24';
+const APP_VERSAO='1.8.0',APP_DATA='2026-10-24';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2849,6 +2853,7 @@ function vProf(){
   return `<section class="section prof">
     <div><span class="ypill" style="background:var(--pen)">Prof. Me. Haroldo Matos</span><h1 style="margin-top:6px">Painel do professor</h1>
       <p class="meta" style="margin:4px 0 0">Atalhos para editar o conteúdo e roteiros de cada tarefa. Com o modo ligado, cada tela do app mostra botões de edição que só você vê.</p></div>
+    <a class="card pf-notas" href="geonotas/"><span class="pf-notas-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span><b>GeoNotas</b><span class="meta">Lançar e consultar as notas das turmas · pede a senha do GeoNotas</span></span>${CHEVR}</a>
     <div class="card pf-sit${prob.length?' tem-prob':''}">
       <div class="pf-h"><b>Situação do robô</b><button class="meta link" id="profAtual">Atualizar</button></div>
       <p class="meta" style="margin:0">App ${APP_VERSAO} · Robô: ${esc(P.versao||'')}${quando?' · dados de '+quando:''}</p>

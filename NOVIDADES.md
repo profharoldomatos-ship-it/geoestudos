@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.8.0 · 24/10/2026
+- Painel do professor: botão para o GeoNotas, que agora funciona como uma página do próprio GeoEstudos (pasta geonotas/), protegida por senha própria. No GeoNotas, botão de volta ao painel.
+
 ## 1.7.1 · 24/10/2026
 - Retirado o atalho do GeoNotas do painel do professor: o GeoNotas passa a ser aberto de forma independente.
 
