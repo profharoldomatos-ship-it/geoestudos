@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-24 · agenda do professor v18';
+const VERSAO_ROBO = '2026-10-24 · registro de envios v19';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -1084,6 +1084,17 @@ function enviarAvisos_(notifs) {
   }
   removerInscricoes_(mortos);
   Logger.log('Avisos enviados para ' + ok + ' celular(es).');
+  // Registro dos envios (aparece no painel do professor). Os lembretes da agenda do professor não entram.
+  const pub = notifs.filter(n => n.turma !== 'PROF');
+  if (!pub.length) return;
+  try {
+    const props = PropertiesService.getScriptProperties();
+    let reg = []; try { reg = JSON.parse(props.getProperty('registroEnvios') || '[]'); } catch (e) { }
+    const tits = []; pub.forEach(n => { if (tits.indexOf(n.titulo) < 0) tits.push(n.titulo); });
+    const ts = []; pub.forEach(n => { const t = n.turma === '*' ? 'todas' : n.turma; if (ts.indexOf(t) < 0) ts.push(t); });
+    reg.push({ quando: new Date().toISOString(), titulos: tits.slice(0, 4), turmas: ts, celulares: alvo.filter(a => a.turmas.some(t => t !== 'PROF') || turmas['*']).length, entregues: ok, falhas: reqs.length - ok - mortos.length, removidos: mortos.length });
+    props.setProperty('registroEnvios', JSON.stringify(reg.slice(-15)));
+  } catch (e) { Logger.log('Registro de envios: ' + e); }
 }
 
 /** Envia um aviso de teste para todos os celulares que ativaram os avisos (todas as turmas). */
@@ -1987,6 +1998,8 @@ function painelProfessor_() {
     config: pl(GEO.PLANILHA_CONFIG),
     dia: urlDia,
     minhaAgenda: agendaProfPainel_(),
+    envios: (() => { try { return JSON.parse(props.getProperty('registroEnvios') || '[]').reverse(); } catch (e) { return []; } })(),
+    inscritos: (() => { try { const c = {}; lerInscricoes_().forEach(s => s.turmas.forEach(t => { if (t !== 'PROF') c[t] = (c[t] || 0) + 1; })); return c; } catch (e) { return {}; } })(),
     conteudo: pl(GEO.PLANILHA_CONTEUDO)
   };
 }

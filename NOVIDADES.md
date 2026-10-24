@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.6.1 · 24/10/2026
+- Painel do professor: registro dos avisos enviados (quando, para quais turmas, quantos celulares receberam), celulares inscritos por turma e opção de receber no próprio celular os avisos das turmas. Robô v19.
+
 ## 1.6.0 · 24/10/2026
 - Modo professor: “Minha agenda”, ligada à agenda do Google “GeoEstudos · Professor”, com lembretes só no celular do professor (véspera, dia e 1 hora antes). Robô v18.
 
