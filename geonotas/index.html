@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>GeoNotas</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icone-192.png">
+<meta name="theme-color" content="#1f5f5b">
+<style>
+:root{
+  --bg:#f4f1ea; --card:#ffffff; --ink:#1f2a2a; --muted:#66706e; --line:#e2ddd2;
+  --brand:#1f5f5b; --brand-ink:#ffffff; --accent:#c8742c;
+  --ok:#2e7d4f; --ok-bg:#e3f2e8; --low:#b23a2e; --low-bg:#fbe6e3; --mid:#a86a00; --mid-bg:#fdf1d8;
+  --field:#faf8f3; --shadow:0 1px 2px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121716; --card:#1b2221; --ink:#e7ecea; --muted:#9aa5a2; --line:#2c3533;
+    --brand:#3f9c94; --brand-ink:#0d1413; --accent:#e0954f;
+    --ok:#6fcf97; --ok-bg:#183326; --low:#ff8a7a; --low-bg:#3a1c18; --mid:#f2c160; --mid-bg:#3a2e12;
+    --field:#151b1a; --shadow:none;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 16px 0;border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:8px}
+.brand{font-weight:700;font-size:18px;letter-spacing:.2px}
+.brand small{font-weight:500;color:var(--muted);font-size:13px;margin-left:6px}
+.spacer{flex:1}
+.sync{font-size:12px;color:var(--muted);white-space:nowrap}
+.sync.err{color:var(--low)} .sync.busy{color:var(--accent)}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;width:36px;height:36px;display:grid;place-items:center;cursor:pointer}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 8px;scrollbar-width:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-weight:600;cursor:pointer}
+.chip.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.tabs{display:flex;gap:2px}
+.tab{flex:1;border:0;background:none;padding:10px 4px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer}
+.tab.on{color:var(--brand);border-bottom-color:var(--brand)}
+main{padding:12px 16px 90px;max-width:760px;margin:0 auto}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:10px}
+.seg button{flex:1;border:0;background:none;padding:8px;border-radius:9px;font-weight:600;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--brand);color:var(--brand-ink)}
+select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.list{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--line);min-height:52px}
+.row:first-child{border-top:0}
+.row.tap{cursor:pointer}
+.num{width:22px;color:var(--muted);font-size:12px;text-align:right;flex:0 0 auto}
+.name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctx{font-size:12px;color:var(--muted);flex:0 0 auto;min-width:40px;text-align:right}
+.inp{width:68px;flex:0 0 auto;text-align:center;font:inherit;font-weight:600;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:8px 4px}
+.inp:focus{outline:2px solid var(--brand);border-color:transparent}
+.inp.saving{border-color:var(--accent)} .inp.bad{border-color:var(--low);color:var(--low)}
+.tog{width:68px;height:38px;flex:0 0 auto;border-radius:10px;border:1px solid var(--line);background:var(--field);cursor:pointer;font-weight:700;color:var(--muted)}
+.tog.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.tog.saving{opacity:.55}
+.calc{min-width:44px;text-align:center;font-weight:700;border-radius:8px;padding:4px 6px;flex:0 0 auto}
+.g-ok{background:var(--ok-bg);color:var(--ok)} .g-low{background:var(--low-bg);color:var(--low)} .g-mid{background:var(--mid-bg);color:var(--mid)}
+.g-none{color:var(--muted)}
+.hint{color:var(--muted);font-size:13px;margin:4px 2px 10px}
+.empty,.loading{padding:40px 16px;text-align:center;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:12px;color:var(--muted)}
+.tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700;position:sticky;top:0;background:var(--card)}
+td.nm,th.nm{text-align:left;position:sticky;left:0;background:var(--card);max-width:150px;overflow:hidden;text-overflow:ellipsis}
+/* folha do aluno */
+.sheet{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column}
+.sheet.open{display:flex}
+.sheet header{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg)}
+.sheet header .t{flex:1;min-width:0}
+.sheet header .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet header .t span{font-size:12px;color:var(--muted)}
+.sheet .body{overflow-y:auto;padding:12px 16px 40px;flex:1}
+.grp{margin:14px 2px 6px;font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.4px}
+.field{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line)}
+.field:first-child{border-top:0}
+.field .lb{flex:1;min-width:0}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:14px;z-index:50;max-width:90vw;display:none}
+.toast.show{display:block}
+.login{position:fixed;inset:0;z-index:40;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px}
+.login.open{display:flex}
+.login form{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+.login h1{margin:0;font-size:24px}
+.login p{margin:0;color:var(--muted);font-size:14px}
+.login input{font:inherit;font-size:16px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.login button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:12px;background:var(--brand);color:var(--brand-ink);cursor:pointer}
+.login button:disabled{opacity:.6}
+.login .err{color:var(--low);font-weight:600;min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="bar">
+    <div class="brand">GeoNotas<small id="sub"></small></div>
+    <div class="spacer"></div>
+    <span class="sync" id="sync"></span>
+    <button class="iconbtn" id="logout" title="Sair" aria-label="Sair">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+    </button>
+    <button class="iconbtn" id="refresh" title="Atualizar da planilha" aria-label="Atualizar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+    </button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-k="notas">Notas</button>
+    <button class="tab" data-k="cadernos">Cadernos</button>
+    <button class="tab" data-k="final">Resultados</button>
+  </div>
+</div>
+<main id="main"><div class="loading">Carregando…</div></main>
+
+<div class="sheet" id="sheet">
+  <header>
+    <button class="iconbtn" id="sClose" aria-label="Fechar">✕</button>
+    <div class="t"><b id="sName"></b><span id="sSub"></span></div>
+    <button class="iconbtn" id="sPrev" aria-label="Anterior">‹</button>
+    <button class="iconbtn" id="sNext" aria-label="Próximo">›</button>
+  </header>
+  <div class="body" id="sBody"></div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="login" id="login">
+  <form id="loginForm" autocomplete="on">
+    <h1>GeoNotas</h1>
+    <p>Acesso exclusivo do Prof. Haroldo Matos.</p>
+    <input type="text" name="username" value="GeoNotas" autocomplete="username" hidden>
+    <input id="senha" type="password" placeholder="Senha" autocomplete="current-password" required>
+    <button id="entrar" type="submit">Entrar</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<script>
+const S = {
+  cfg:null, turma:null, kind:'notas', mode:'atividade',
+  data:{},            // data[turma][kind] = {columns, rows, fetchedAt}
+  colSel:{},          // coluna escolhida por turma+kind
+  pending:0, openRow:null
+};
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store = {
+  get(k){try{return localStorage.getItem('geonotas.'+k)}catch(e){return null}},
+  set(k,v){try{localStorage.setItem('geonotas.'+k,v)}catch(e){}}
+};
+
+/* Robô do GeoNotas (Google Apps Script). Todas as chamadas levam a chave de entrada;
+   se ela venceu, o app volta para a tela de senha. */
+const ROBO='https://script.google.com/macros/s/AKfycbzROyyYqz_L8kad5ACUtsz51j98fQG0DFhoD1sCAtt-Y-8jBaKqNwMu15D1NRAdtBiU/exec';
+async function api(acao,extra){
+  let j;
+  try{
+    const r=await fetch(ROBO,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({acao,token:store.get('token')},extra||{}))});
+    j=await r.json();
+  }catch(e){throw new Error('Sem conexão com o robô. Tente de novo com internet.')}
+  if(!j.ok){if(j.sessao===false){store.set('token','');showLogin()}throw new Error(j.erro||'Erro no robô.')}
+  return j;
+}
+function showLogin(){$('#login').classList.add('open');setTimeout(()=>$('#senha').focus(),80)}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3500)}
+function setSync(txt,cls){const s=$('#sync');s.textContent=txt;s.className='sync '+(cls||'')}
+
+/* ---------- números e cores ---------- */
+function num(v){
+  if(v===''||v==null||typeof v==='boolean')return null;
+  const s=String(v).trim();
+  if(s.startsWith('#'))return null;
+  const n=Number(s.includes(',')?s.replace(/\./g,'').replace(',','.'):s);
+  return isNaN(n)?null:n;
+}
+function shown(v){if(typeof v==='boolean')return v?'✓':'—';const s=String(v||'');return !s||s.startsWith('#')?'—':s}
+function grade(v){const n=num(v);if(n==null)return 'g-none';return n>=7?'g-ok':'g-low'}
+function parseInput(s){
+  s=String(s).trim();
+  if(s==='')return {ok:true,v:''};
+  const n=Number(s.replace(',','.'));
+  if(isNaN(n)||n<0)return {ok:false};
+  return {ok:true,v:n};
+}
+
+/* ---------- dados ---------- */
+function cur(){return (S.data[S.turma]||{})[S.kind]}
+async function load(turma,kind,quiet){
+  if(!quiet){$('#main').innerHTML='<div class="loading">Lendo a planilha da '+esc(turma)+'…</div>'}
+  setSync('lendo…','busy');
+  try{
+    const d=(await api('dados',{turma,kind})).dados;
+    (S.data[turma]=S.data[turma]||{})[kind]=d;
+    setSync('atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+    if(turma===S.turma&&kind===S.kind)render();
+    if(S.openRow!=null&&turma===S.turma&&kind===S.kind)renderSheet();
+  }catch(e){
+    setSync('erro','err');
+    if(!quiet)$('#main').innerHTML='<div class="empty">Não consegui ler a planilha.<br>'+esc(e.message||e)+'</div>';
+    else toast(e.message||String(e));
+  }
+}
+function ensure(){const d=cur();if(d){render();}else load(S.turma,S.kind);}
+
+/* colunas-chave: médias/finais calculadas, para dar contexto */
+function keyCols(d){return d.columns.filter(c=>c.calc&&/FINAL|M[ÉE]DIA/i.test(c.label))}
+function keyVal(d,row){
+  const ks=keyCols(d);
+  for(let i=ks.length-1;i>=0;i--){const v=row.cells[ks[i].c].v;if(num(v)!=null)return {v,col:ks[i]};}
+  return null;
+}
+function inputCols(d){return d.columns.filter(c=>!c.calc)}
+
+/* coluna padrão nos cadernos: capítulo com a data mais recente já passada */
+function defaultCol(d){
+  const cols=inputCols(d);
+  if(S.kind!=='cadernos')return cols[0];
+  const today=new Date();let best=null,bestT=-Infinity;
+  cols.forEach(c=>{c.parts.forEach(p=>{const m=p.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m){const t=new Date(+m[3],m[2]-1,+m[1]);if(t<=today&&t>bestT){bestT=t;best=c}}})});
+  return best||cols[0];
+}
+
+/* ---------- gravação ---------- */
+async function save(row,col,value,el){
+  const d=cur(), turma=S.turma, kind=S.kind;
+  S.pending++;setSync('salvando…','busy');el&&el.classList.add('saving');
+  try{
+    const fresh=(await api('salvar',{turma,kind,row:row.r,col:col.c,value,nome:row.nome})).linha;
+    const dd=S.data[turma][kind];
+    const i=dd.rows.findIndex(x=>x.r===row.r);
+    if(i>=0){Object.keys(dd.rows[i].cells).forEach(k=>{if(fresh.cells[k])dd.rows[i].cells[k]=fresh.cells[k]})}
+    // cadernos alteram a nota de caderno na aba de notas
+    if(kind==='cadernos'&&S.data[turma])delete S.data[turma].notas;
+    if(kind==='notas'&&S.data[turma])delete S.data[turma].final;
+    patchRow(dd.rows[i]);
+    setSync('salvo ✓');
+  }catch(e){
+    setSync('erro','err');toast(e.message||String(e));
+    el&&el.classList.add('bad');
+    load(turma,kind,true); // ressincroniza com o que está de fato na planilha
+  }finally{
+    S.pending--;el&&el.classList.remove('saving');
+  }
+}
+
+/* atualiza na tela os valores de uma linha sem perder o foco de digitação */
+function patchRow(row){
+  if(!row)return;
+  document.querySelectorAll('[data-r="'+row.r+'"]').forEach(el=>{
+    const c=el.dataset.c, cell=row.cells[c];
+    if(c==='key'){const k=keyVal(cur(),row);el.textContent=k?shown(k.v):'—';if(el.classList.contains('calc'))el.className='calc '+(k?grade(k.v):'g-none');return}
+    if(!cell)return;
+    if(el.classList.contains('inp')){if(el!==document.activeElement){el.value=shown(cell.v)==='—'?'':cell.v;el.classList.remove('bad')}}
+    else if(el.classList.contains('tog')){el.classList.toggle('on',cell.v===true);el.textContent=cell.v===true?'✓':'—'}
+    else{el.textContent=shown(cell.v);el.className='calc '+grade(cell.v)}
+  });
+}
+
+/* ---------- controles de lançamento ---------- */
+function control(row,col){
+  const cell=row.cells[col.c];
+  const attrs='data-r="'+row.r+'" data-c="'+col.c+'"';
+  if(!cell.ed)return '<span class="calc '+grade(cell.v)+'" '+attrs+'>'+esc(shown(cell.v))+'</span>';
+  if(col.check)return '<button class="tog'+(cell.v===true?' on':'')+'" '+attrs+'>'+(cell.v===true?'✓':'—')+'</button>';
+  const val=shown(cell.v)==='—'?'':cell.v;
+  return '<input class="inp" inputmode="decimal" enterkeyhint="next" autocomplete="off" value="'+esc(val)+'" '+attrs+'>';
+}
+function bindControls(root,rowsById,colsById){
+  root.querySelectorAll('.tog').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
+    const row=rowsById(b.dataset.r), col=colsById(b.dataset.c);
+    const nv=!(row.cells[col.c].v===true);
+    row.cells[col.c].v=nv;b.classList.toggle('on',nv);b.textContent=nv?'✓':'—';
+    save(row,col,nv,b);
+  }));
+  root.querySelectorAll('.inp').forEach(inp=>{
+    inp.addEventListener('click',e=>e.stopPropagation());
+    inp.addEventListener('focus',()=>{inp.dataset.orig=inp.value;inp.select()});
+    inp.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){e.preventDefault();const all=[...root.querySelectorAll('.inp')];const i=all.indexOf(inp);(all[i+1]||inp).focus();if(!all[i+1])inp.blur()}
+    });
+    inp.addEventListener('blur',()=>{
+      if(inp.value===inp.dataset.orig)return;
+      const p=parseInput(inp.value);
+      if(!p.ok){inp.classList.add('bad');toast('Valor inválido: use números como 7,5');return}
+      if(p.v!==''&&p.v>10)toast('Atenção: valor acima de 10 gravado.');
+      inp.classList.remove('bad');
+      const row=rowsById(inp.dataset.r), col=colsById(inp.dataset.c);
+      save(row,col,p.v,inp);
+    });
+  });
+}
+const byRow=d=>id=>d.rows.find(r=>r.r==id);
+const byCol=d=>id=>d.columns.find(c=>c.c==id);
+
+/* ---------- telas ---------- */
+function render(){
+  const d=cur();if(!d)return;
+  if(S.kind==='final')return renderFinal(d);
+  const main=$('#main');
+  const seg='<div class="seg"><button data-m="atividade" class="'+(S.mode==='atividade'?'on':'')+'">Por atividade</button><button data-m="aluno" class="'+(S.mode==='aluno'?'on':'')+'">Por aluno</button></div>';
+  if(S.mode==='aluno'){
+    main.innerHTML=seg+'<div class="hint">Toque num aluno para ver e lançar tudo do '+S.cfg.periodo+'º período.</div><div class="list">'+
+      d.rows.map(r=>{const k=keyVal(d,r);return '<div class="row tap" data-open="'+r.r+'"><span class="num">'+esc(r.n)+'</span><span class="name">'+esc(r.nome)+'</span><span class="calc '+(k?grade(k.v):'g-none')+'" data-r="'+r.r+'" data-c="key">'+(k?esc(shown(k.v)):'—')+'</span></div>'}).join('')+'</div>';
+    main.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',()=>openSheet(+el.dataset.open)));
+  }else{
+    const cols=inputCols(d);
+    if(!cols.length){main.innerHTML=seg+'<div class="empty">Esta aba não tem colunas de lançamento.</div>';bindSeg();return}
+    const key=S.turma+S.kind;
+    let col=d.columns.find(c=>c.c===S.colSel[key]&&!c.calc)||defaultCol(d);
+    S.colSel[key]=col.c;
+    const opts=cols.map(c=>'<option value="'+c.c+'"'+(c.c===col.c?' selected':'')+'>'+esc(c.label)+'</option>').join('');
+    main.innerHTML=seg+'<select id="colSel">'+opts+'</select><div class="list" id="lst">'+
+      d.rows.map(r=>{const k=keyVal(d,r);return '<div class="row"><span class="num">'+esc(r.n)+'</span><span class="name">'+esc(r.nome)+'</span><span class="ctx" data-r="'+r.r+'" data-c="key">'+(k?esc(shown(k.v)):'—')+'</span>'+control(r,col)+'</div>'}).join('')+'</div>'+
+      '<div class="hint" style="margin-top:8px">À direita do nome: média atual calculada pela planilha.</div>';
+    $('#colSel').addEventListener('change',e=>{S.colSel[key]=+e.target.value;render()});
+    bindControls($('#lst'),byRow(d),byCol(d));
+  }
+  bindSeg();
+}
+function bindSeg(){document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{S.mode=b.dataset.m;store.set('mode',S.mode);render()}))}
+
+function openSheet(r){S.openRow=r;renderSheet();$('#sheet').classList.add('open')}
+function renderSheet(){
+  const d=cur();if(!d)return;
+  const row=d.rows.find(x=>x.r===S.openRow);if(!row)return;
+  $('#sName').textContent=row.nome;
+  $('#sSub').textContent='Turma '+S.turma+' · nº '+row.n+' · '+d.sheet;
+  const groups=[];
+  d.columns.forEach(c=>{const g=c.group||c.leaf;let G=groups.find(x=>x.g===g);if(!G){G={g,cols:[]};groups.push(G)}G.cols.push(c)});
+  $('#sBody').innerHTML=groups.map(G=>'<div class="grp">'+esc(G.g)+'</div><div class="list">'+
+    G.cols.map(c=>'<div class="field"><span class="lb">'+esc(c.group?c.leaf:c.leaf)+'</span>'+control(row,c)+'</div>').join('')+'</div>').join('');
+  bindControls($('#sBody'),byRow(d),byCol(d));
+}
+function stepSheet(dir){
+  const d=cur();const i=d.rows.findIndex(x=>x.r===S.openRow);const n=d.rows[i+dir];
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  if(n){S.openRow=n.r;renderSheet();$('#sBody').scrollTop=0}
+}
+
+function renderFinal(d){
+  const fin=d.columns.find(c=>/M[ÉE]DIA FINAL/i.test(c.label))||keyCols(d).slice(-1)[0];
+  const p28=d.columns.find(c=>/PARA\s*28/i.test(c.label));
+  const vals=d.rows.map(r=>fin?num(r.cells[fin.c].v):null).filter(v=>v!=null);
+  const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+  const below=vals.filter(v=>v<7).length;
+  const tone=(c,v)=>{
+    if(p28&&c.c===p28.c){const n=num(v);if(n==null)return '';return n>10?'g-low':n>7?'g-mid':'g-ok'}
+    return (c.calc&&num(v)!=null&&/PER[ÍI]ODO|M[ÉE]DIA/i.test(c.label))?grade(v):'';
+  };
+  $('#main').innerHTML=
+    '<div class="stats"><div class="stat"><b>'+d.rows.length+'</b><span>alunos</span></div>'+
+    '<div class="stat"><b>'+(avg==null?'—':avg.toFixed(1).replace('.',','))+'</b><span>média da turma</span></div>'+
+    '<div class="stat"><b>'+below+'</b><span>abaixo de 7</span></div></div>'+
+    '<div class="tablewrap"><table><thead><tr><th class="nm">Aluno</th>'+d.columns.map(c=>'<th>'+esc(c.leaf.replace(/\s*PER[ÍI]ODO/i,'º P'))+'</th>').join('')+'</tr></thead><tbody>'+
+    d.rows.map(r=>'<tr><td class="nm">'+esc(r.nome)+'</td>'+d.columns.map(c=>{const v=r.cells[c.c].v,t=tone(c,v);return '<td>'+(t?'<span class="calc '+t+'">'+esc(shown(v))+'</span>':esc(shown(v)))+'</td>'}).join('')+'</tr>').join('')+
+    '</tbody></table></div>'+
+    (p28?'<div class="hint" style="margin-top:8px">“Para 28”: quanto falta para somar 28 (média 7). Vermelho = acima de 10, não alcança só com o 4º período.</div>':'')+
+    '<div class="hint">Somente leitura: esta aba é calculada na planilha.</div>';
+}
+
+/* ---------- navegação ---------- */
+function drawChips(){
+  $('#chips').innerHTML=S.cfg.turmas.map(t=>'<button class="chip'+(t===S.turma?' on':'')+'" data-t="'+t+'">'+t+'</button>').join('');
+  document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{S.turma=b.dataset.t;store.set('turma',S.turma);drawChips();ensure()}));
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  S.kind=b.dataset.k;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));ensure();
+}));
+$('#refresh').addEventListener('click',()=>{if(S.data[S.turma])S.data[S.turma]={};load(S.turma,S.kind)});
+$('#sClose').addEventListener('click',()=>{if(document.activeElement)document.activeElement.blur();$('#sheet').classList.remove('open');S.openRow=null;render()});
+$('#sPrev').addEventListener('click',()=>stepSheet(-1));
+$('#sNext').addEventListener('click',()=>stepSheet(1));
+
+/* ao voltar para o app, puxa o que foi mudado direto na planilha */
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible'||!S.turma)return;
+  const d=cur();
+  const typing=document.activeElement&&document.activeElement.classList.contains('inp');
+  if(d&&!S.pending&&!typing&&Date.now()-new Date(d.fetchedAt)>20000)load(S.turma,S.kind,true);
+});
+
+$('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const b=$('#entrar');b.disabled=true;b.textContent='Conferindo…';$('#loginErr').textContent='';
+  try{
+    const tok=(await api('entrar',{senha:$('#senha').value})).token;
+    store.set('token',tok);$('#senha').value='';$('#login').classList.remove('open');init();
+  }catch(err){$('#loginErr').textContent=err.message||String(err)}
+  b.disabled=false;b.textContent='Entrar';
+});
+$('#logout').addEventListener('click',async()=>{
+  const t=store.get('token');store.set('token','');S.data={};
+  try{await api('sair',{token:t})}catch(e){}
+  $('#main').innerHTML='';showLogin();
+});
+
+async function init(){
+  if(!store.get('token')){showLogin();return}
+  try{
+    S.cfg=await api('config');
+    $('#sub').textContent=S.cfg.periodo+'º período · '+S.cfg.ano;
+    const t=store.get('turma');S.turma=S.cfg.turmas.includes(t)?t:S.cfg.turmas[0];
+    S.mode=store.get('mode')==='aluno'?'aluno':'atividade';
+    drawChips();ensure();
+  }catch(e){$('#main').innerHTML='<div class="empty">Erro ao iniciar: '+esc(e.message||e)+'</div>'}
+}
+init();
+</script>
+</body>
+</html>
