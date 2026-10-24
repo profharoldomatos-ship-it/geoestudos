@@ -642,6 +642,8 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .tp-box{display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px}
 .tp-box h2{margin:0;font-size:1.05rem}.tp-box p{margin:0;font-size:.9rem;color:var(--muted);line-height:1.45}
 .guia .g-passos{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px;line-height:1.5}
+#offBanner{margin:10px 0 0;display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:12px;padding:8px 12px;font-size:.86rem;line-height:1.4;color:var(--ink)}
+#offBanner[hidden]{display:none}#offBanner svg{flex:none;color:var(--muted)}#offBanner .meta{display:block;font-size:.8rem}
 .fora{margin:10px 0 0;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:.9rem;line-height:1.45;color:var(--ink)}
 .fora b.ft{font-size:.95rem}
 .fora .fora-b{display:flex;gap:8px;flex-wrap:wrap}
@@ -1127,6 +1129,7 @@ setTimeout(fim,rm?1600:3300);a.addEventListener('click',fim)}}catch(e){}})();</s
     <button class="modebtn" id="modeBtn" aria-label="Escolha o tema do app" aria-haspopup="dialog"><span class="mb-ic" aria-hidden="true"></span><span class="mb-t">Escolha o tema<br>do app</span></button>
   </header>
   <div id="foraBanner" hidden></div>
+  <div id="offBanner" role="status" aria-live="polite" hidden></div>
   <main id="view"></main>
   <footer class="foot">
     <div class="foot-home">
@@ -1816,6 +1819,18 @@ function foraHtml(curto){
     <div class="fora-b"><button class="btn btn-primary" data-fora>${ios?'Abrir no Safari':'Abrir no Chrome'}</button><button class="btn btn-ghost" data-copiarlink>Copiar o link</button></div>
     <span class="meta">Se o botão não funcionar: toque em <b>${ios?'⋯':'⋮'}</b> no canto da tela e escolha <b>Abrir no navegador externo</b>${ios?' (ou Abrir no Safari)':''}.</span></div>`;
 }
+/* Sem internet: faixa discreta no topo enquanto o app mostra o conteúdo salvo */
+let semRede=false;
+function atualizarOff(){
+  const b=document.getElementById('offBanner');if(!b)return;
+  const off=navigator.onLine===false||semRede;
+  if(!off||!DATA){b.hidden=true;return}
+  let q='';try{const d=new Date(DATA.versao);q=' Atualizados pela última vez em '+d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+', às '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'.'}catch(e){}
+  b.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 5-3M22 8.8a15 15 0 0 0-11-4.1M5 12.5a10 10 0 0 1 3.5-2.2M19 12.5a10 10 0 0 0-4-2.4M8.5 16a5 5 0 0 1 7 0M12 20h.01M3 3l18 18"/></svg><span><b>Você está sem internet.</b> Mostrando os conteúdos salvos no celular.<span class="meta">${q.trim()} Quando a conexão voltar, o app atualiza sozinho.</span></span>`;
+  b.hidden=false;
+}
+addEventListener('offline',atualizarOff);
+addEventListener('online',()=>{semRede=false;atualizarOff();setTimeout(()=>{try{carregar()}catch(e){}},800)});
 function atualizarFora(){const b=document.getElementById('foraBanner');if(!b)return;const on=emAppDeRede()&&ehCelular();b.hidden=!on;if(on&&!b.innerHTML)b.innerHTML=foraHtml(true)}
 function installHelp(){
   const ios=ehIOS(),ap=emAppDeRede()&&ehCelular();
@@ -2332,7 +2347,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.5.4',APP_DATA='2026-10-23';
+const APP_VERSAO='1.5.5',APP_DATA='2026-10-24';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3271,11 +3286,11 @@ async function carregar(){
     const j=await r.json();
     if(j&&j.anos){
       const mudou=!DATA||DATA.versao!==j.versao;
-      DATA=j;store.set('dados',j);LOAD='ok';aplicarDados();setTimeout(avReenviar,1500);
+      DATA=j;store.set('dados',j);LOAD='ok';semRede=false;atualizarOff();aplicarDados();setTimeout(avReenviar,1500);
       if(S.turma&&!TURMAS.includes(S.turma)){S.turma=null;S.tab='home';S.cap=null}
       if(mudou){if(S.cap||adjusting||pending||editing)pendingRender=true;else{const y=scrollY;render();scrollTo(0,y)}}
     }
-  }catch(e){if(!DATA){LOAD='offline';render()}}
+  }catch(e){semRede=true;atualizarOff();if(!DATA){LOAD='offline';render()}}
   finally{fetching=false}
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastFetch>60e3)carregar()});
@@ -3388,7 +3403,7 @@ function abrirDeAviso(o){
 (()=>{const q=new URLSearchParams(location.search);if(q.has('convite')){history.replaceState(navFoto(),'',location.pathname);setTimeout(boasVindas,400)}})();
 (()=>{const q=new URLSearchParams(location.search);if(q.get('ir')||q.get('turma')){const o={ir:q.get('ir'),turma:q.get('turma'),cap:q.get('cap')};history.replaceState(navFoto(),'',location.pathname);applyMode();render();abrirDeAviso(o)}})();
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.geoAbrir)abrirDeAviso(e.data.geoAbrir)});
-applyMode();applyFonte();atualizarFora();if(!document.querySelector('#view').innerHTML)render();carregar().then(conferirPush);
+applyMode();applyFonte();atualizarFora();atualizarOff();if(!document.querySelector('#view').innerHTML)render();carregar().then(conferirPush);
 if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>

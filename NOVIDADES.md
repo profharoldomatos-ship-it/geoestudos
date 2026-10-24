@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.5.5 · 24/10/2026
+- Faixa “Você está sem internet. Mostrando os conteúdos salvos no celular”, com a data da última atualização; some quando a conexão volta.
+
 ## 1.5.4 · 23/10/2026
 - Rodapé: e-mail em parágrafo próprio, sem quebra no meio do endereço.
 
