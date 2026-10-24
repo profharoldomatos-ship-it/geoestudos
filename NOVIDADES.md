@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.7.1 · 24/10/2026
+- Retirado o atalho do GeoNotas do painel do professor: o GeoNotas passa a ser aberto de forma independente.
+
 ## 1.7.0 · 24/10/2026
 - Painel do professor: atalho para o GeoNotas (lançamento e consulta das notas), visível só no modo professor. O GeoNotas continua protegido pela conta Google do professor.
 
