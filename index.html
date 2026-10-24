@@ -642,8 +642,10 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .tp-box{display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px}
 .tp-box h2{margin:0;font-size:1.05rem}.tp-box p{margin:0;font-size:.9rem;color:var(--muted);line-height:1.45}
 .guia .g-passos{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px;line-height:1.5}
-#offBanner{margin:10px 0 0;display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:12px;padding:8px 12px;font-size:.86rem;line-height:1.4;color:var(--ink)}
-#offBanner[hidden]{display:none}#offBanner svg{flex:none;color:var(--muted)}#offBanner .meta{display:block;font-size:.8rem}
+#offBanner{margin:10px 0 0;display:flex;align-items:center;gap:12px;background:#2B3442;border:0;border-radius:12px;padding:10px 14px;font-size:.88rem;line-height:1.4;color:#FFFFFF;box-shadow:0 4px 14px rgba(20,28,40,.25)}
+#offBanner[hidden]{display:none}#offBanner svg{flex:none;color:#FFE27A}#offBanner b{color:#FFFFFF}#offBanner .meta{display:block;font-size:.8rem;color:#D5DCE6;margin-top:2px}
+:root[data-theme="dark"] #offBanner,body.m-escuro #offBanner{background:#3A4556}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #offBanner{background:#3A4556}}
 .fora{margin:10px 0 0;background:var(--hl-soft);border:1.5px solid var(--hl);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:.9rem;line-height:1.45;color:var(--ink)}
 .fora b.ft{font-size:.95rem}
 .fora .fora-b{display:flex;gap:8px;flex-wrap:wrap}
@@ -2347,7 +2349,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.5.5',APP_DATA='2026-10-24';
+const APP_VERSAO='1.5.6',APP_DATA='2026-10-24';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
