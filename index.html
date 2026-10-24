@@ -635,6 +635,16 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .guia-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
 .guia-btn .gb-ic{flex:none;width:38px;height:38px;border-radius:50%;background:var(--pen-soft);color:var(--pen);display:grid;place-items:center}
 .guia-btn b{display:block;font-family:var(--display)}.guia-btn .meta{font-size:.85rem}
+.pf-ag-card{display:flex;flex-direction:column;gap:10px;border-top:5px solid var(--pen)}
+.pa-g{margin:4px 0 0;font-family:var(--display);font-weight:700;font-size:.92rem;color:var(--pen)}
+.pa-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.pa-it{display:flex;gap:12px;align-items:flex-start;background:var(--surface-2);border-radius:12px;padding:9px 12px}
+.pa-d{flex:none;display:flex;flex-direction:column;align-items:center;min-width:52px;background:var(--pen);color:var(--on-pen);border-radius:10px;padding:5px 6px;font-size:.78rem;line-height:1.2}
+.pa-d b{font-family:var(--display);font-size:1rem}
+.pa-t{display:flex;flex-direction:column;gap:2px;min-width:0;line-height:1.35}.pa-t .meta{font-size:.82rem}
+.pa-acts{display:flex;gap:8px;flex-wrap:wrap}
+.pa-lemb{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--hl-soft);border-radius:12px;padding:9px 12px;font-size:.88rem;line-height:1.4}
+.pa-lemb.on{background:var(--pen-soft)}
 .tp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .tp-btn{display:flex;align-items:center;gap:8px;min-width:0;overflow-wrap:break-word;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:.9rem;font-weight:700;color:var(--ink);cursor:pointer;line-height:1.25}
 .tp-btn .sec-ic{flex:none;width:30px;height:30px;border-radius:50%;background:var(--pen-soft);color:var(--pen);display:grid;place-items:center}.tp-btn .sec-ic svg{width:17px;height:17px}
@@ -1862,12 +1872,15 @@ const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notific
 const ehIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
 let PUSH=store.get('push',null);
 if(PUSH&&!PUSH.turmas)PUSH.turmas=PUSH.turma?[PUSH.turma]:[];
+const pushTurmas=()=>PUSH?PUSH.turmas.filter(t=>t!=='PROF'):[];
+const pushProf=()=>!!(PUSH&&PUSH.turmas.includes('PROF'));
 const listaT=ts=>ts.length>1?ts.slice(0,-1).join(', ')+' e '+ts[ts.length-1]:ts[0]||'';
 function b64u8(s){const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))}
-async function avisarSW(turmas){try{const c=await caches.open('geo-push');await c.put('turma',new Response([].concat(turmas||[]).join(',')));await c.put('dataurl',new Response(CFG.DATA_URL||''))}catch(e){}}
+async function avisarSW(turmas){try{const c=await caches.open('geo-push');await c.put('turma',new Response([].concat(turmas||[]).join(',')));await c.put('dataurl',new Response(CFG.DATA_URL||''));const pt=store.get('profTok',null);await c.put('proftok',new Response([].concat(turmas||[]).includes('PROF')&&pt?pt.token:''))}catch(e){}}
 async function enviarInscricao(sub,turmas,acao){
   turmas=[].concat(turmas||[]);
-  const corpo=JSON.stringify({acao:acao||'inscrever',turma:turmas[0],turmas,sub:sub.toJSON?sub.toJSON():sub});
+  const pt=store.get('profTok',null);
+  const corpo=JSON.stringify({acao:acao||'inscrever',turma:turmas[0],turmas,sub:sub.toJSON?sub.toJSON():sub,prof:turmas.includes('PROF')&&pt?pt.token:undefined});
   let txt=null;
   // 1º: pelo mesmo caminho que baixa os resumos (GET). 2º: envio direto (POST).
   try{const r=await fetch(CFG.DATA_URL+(CFG.DATA_URL.includes('?')?'&':'?')+'inscrever='+encodeURIComponent(corpo)+'&t='+Date.now(),{cache:'no-store'});txt=await r.text()}catch(e){}
@@ -1885,10 +1898,11 @@ async function ativarPush(lista){
     const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
     if(!sub){try{sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u8(DATA.push.chave)})}catch(e){const x=new Error('o celular recusou a inscrição ('+(e&&e.name||'erro')+')');x.etapa='celular';throw x}}
-    const ts=lista&&lista.length?lista:[MINHA||S.turma];
+    let ts=lista&&lista.length?lista:[MINHA||S.turma];
+    if(lista&&lista.includes('PROF'))ts=lista;else if(pushProf()&&PROF())ts=ts.concat('PROF');
     await enviarInscricao(sub,ts);await avisarSW(ts);
     PUSH={turmas:ts,endpoint:sub.endpoint};store.set('push',PUSH);render();
-    toast(ts.length>1?'Avisos ativados para as turmas '+listaT(ts)+'.':'Avisos ativados para a turma '+ts[0]+'.');
+    const tsA=ts.filter(t=>t!=='PROF');toast(!tsA.length?'Lembretes da sua agenda ativados neste celular.':tsA.length>1?'Avisos ativados para as turmas '+listaT(tsA)+'.':'Avisos ativados para a turma '+tsA[0]+'.');
   }catch(e){
     const msg=e&&e.etapa==='rede'?'Sem conexão. Tente de novo com internet.':'Não foi possível ativar os avisos.';
     sheet(`<h2>Avisos não ativados</h2><p style="margin:0">${msg}</p><p class="meta" style="margin:0">Detalhe para o professor: <b>${esc((e&&e.etapa||'?')+' · '+(e&&e.message||e))}</b></p><button class="btn btn-primary" data-close>Ok</button>`);
@@ -1902,13 +1916,16 @@ async function conferirPush(){
   if(!PUSH||!pushOk())return;
   try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
     if(!sub||Notification.permission!=='granted'){PUSH=null;store.set('push',null);render();return}
-    if(MINHA&&(PUSH.turmas.length!==1||PUSH.turmas[0]!==MINHA)){await enviarInscricao(sub,[MINHA]);PUSH.turmas=[MINHA];store.set('push',PUSH);await avisarSW([MINHA])}
+    const keep=pushProf()&&PROF()?['PROF']:[];const ts=pushTurmas();
+    if(MINHA&&(ts.length!==1||ts[0]!==MINHA||(pushProf()&&!PROF()))){const n=[MINHA].concat(keep);await enviarInscricao(sub,n);PUSH.turmas=n;store.set('push',PUSH);await avisarSW(n)}
+    else if(pushProf()&&!PROF()){const n=ts;if(n.length){await enviarInscricao(sub,n);PUSH.turmas=n;store.set('push',PUSH);await avisarSW(n)}}
+    else await avisarSW(PUSH.turmas);
   }catch(e){}
 }
 const SINO='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
 function pushCard(){
   if(!DATA||!DATA.push||!DATA.push.chave)return '';
-  if(PUSH)return `<div class="pushon"><span>🔔 Avisos ativados para ${PUSH.turmas.length>1?'as turmas '+esc(listaT(PUSH.turmas)):'a turma '+esc(PUSH.turmas[0])}.</span><span class="pushon-b">${COMP?'<button class="link" id="pushTurmas">Alterar</button>':''}<button class="link" id="pushOff">Desativar</button></span></div>`;
+  if(pushTurmas().length)return `<div class="pushon"><span>🔔 Avisos ativados para ${pushTurmas().length>1?'as turmas '+esc(listaT(pushTurmas())):'a turma '+esc(pushTurmas()[0])}.</span><span class="pushon-b">${COMP?'<button class="link" id="pushTurmas">Alterar</button>':''}<button class="link" id="pushOff">Desativar</button></span></div>`;
   const tm=MINHA?' ('+esc(MINHA)+')':'';
   if(COMP&&pushOk()&&Notification.permission!=='denied'&&!(ehIOS()&&!standalone()))return `<button class="pushhero" id="pushTurmas"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Ative os avisos neste celular</b><span>Celular compartilhado: escolha as turmas de quem usa este aparelho.</span></div><span class="ph-btn">Escolher turmas e ativar</span></button>`;
   if(ehIOS()&&!standalone())return `<div class="pushhero"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Receba os avisos da sua turma${tm}</b><span>No iPhone, primeiro instale o app: no Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>. Abra pelo ícone e ative aqui.</span></div><button class="ph-btn" id="installBtn">Como instalar</button></div>`;
@@ -1917,7 +1934,7 @@ function pushCard(){
   return `<button class="pushhero" id="pushOn"><span class="sino" aria-hidden="true">${SINO}</span><div class="ph-t"><b>Ative os avisos da sua turma${tm}</b><span>Resumo novo, véspera das entregas e prazo das atividades de fixação: tudo no seu celular.</span></div><span class="ph-btn">Ativar avisos</span></button>`;
 }
 function turmasSheet(){
-  const marc=PUSH?PUSH.turmas:(S.turma?[S.turma]:[]);
+  const marc=pushTurmas().length?pushTurmas():(S.turma?[S.turma]:[]);
   sheet(`<h2>Avisos de quais turmas?</h2><p class="meta" style="margin:0">Marque as turmas de quem usa este celular. Os avisos de todas elas chegam aqui.</p>
     <div class="tchk">${Object.values(YEARS).map(y=>`<div class="tchk-ano" style="--yc:${y.color}"><b>${y.label}</b><div>${y.turmas.map(t=>`<label><input type="checkbox" value="${t}"${marc.includes(t)?' checked':''}><span>${t}</span></label>`).join('')}</div></div>`).join('')}</div>
     <p id="tchkErr" class="meta" style="color:var(--rust);margin:0" hidden>Marque pelo menos uma turma.</p>
@@ -2349,7 +2366,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.5.6',APP_DATA='2026-10-24';
+const APP_VERSAO='1.6.0',APP_DATA='2026-10-24';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2733,13 +2750,14 @@ function profEntrar(){
         const j=await profChamar('prof',JSON.stringify({login,senha,aparelho:ap}));
         b.disabled=false;b.textContent='Entrar';
         if(!j.ok)return err(j.erro||(j.anos?'O robô ainda não foi atualizado para o modo professor.':'Não foi possível entrar.'));
-        store.set('profTok',{token:j.token,exp:j.expira});store.set('profPainel',j.painel||{});
+        store.set('profTok',{token:j.token,exp:j.expira});store.set('profPainel',j.painel||{});store.set('profPainelEm',Date.now());if(pushProf())avisarSW(PUSH.turmas);
         close();toast('Modo professor ligado.');go('prof');
       }catch(e){b.disabled=false;b.textContent='Entrar';err('Sem conexão com o robô. Tente de novo com internet.')}
     });
   });
 }
 function profSair(){
+  if(pushProf())profLembretes(false,true);
   try{localStorage.removeItem('geo:profTok');localStorage.removeItem('geo:profPainel');localStorage.removeItem('geo:prof')}catch(e){}
   store.set('profTok',null);
   if(S.tab==='prof')S.tab='home';
@@ -2751,7 +2769,7 @@ async function profAtualizar(avisar){
   profBusy=true;
   try{
     const j=await profChamar('profdados',t.token);
-    if(j.ok){store.set('profPainel',j.painel||{});if(S.tab==='prof')render();if(avisar)toast('Painel atualizado.')}
+    if(j.ok){store.set('profPainel',j.painel||{});store.set('profPainelEm',Date.now());if(S.tab==='prof')render();if(avisar)toast('Painel atualizado.')}
     else if(j.sair){profSair();toast(j.erro||'Entre de novo no modo professor.')}
   }catch(e){if(avisar)toast('Sem conexão com o robô agora.')}
   profBusy=false;
@@ -2767,11 +2785,43 @@ const ROTEIROS=[
   ['Conteúdo Geográfico do Dia',20,['Planilha de Configurações › aba Conteúdo do Dia: uma linha por postagem.','Preencha o título, um texto breve e/ou o link da mídia (YouTube, imagem, arquivo do Drive, site). A fonte é opcional.','Por último, Publicar? = Sim. Em até 5 minutos aparece na página inicial e todas as turmas recebem a notificação.','A aba guarda o inventário: data de publicação, situação e quando a notificação saiu. Não apague linhas antigas.'],P=>[['Aba Conteúdo do Dia',P.dia||P.config]]],
   ['Responder dúvidas',12,['Abra a planilha de dúvidas.','Escreva a resposta na coluna Sua resposta.','Em Publicar no app, escolha Turma, Ano ou Não. O nome do aluno nunca aparece.'],P=>[['Planilha de dúvidas',P.duvidas]]],
   ['Unidades e períodos',5,['Planilha de Conteúdo › aba Períodos das unidades: início e fim de cada unidade (calendário da SEMED).','O app abre só a unidade mais recente que já começou; a troca é automática.','Títulos das unidades: aba Unidades.'],P=>[['Planilha de Conteúdo',P.conteudo]]],
+  ['Minha agenda (lembretes só para você)',19,['No painel, toque em + Nova tarefa (ou abra o Google Agenda e escolha a agenda GeoEstudos · Professor).','Cadastre a tarefa com a data (e o horário, se tiver). A descrição aparece no lembrete.','Em Minha agenda, toque em Ligar lembretes: chegam na véspera (18h), no dia (7h) e 1 hora antes das tarefas com horário.','Os alunos nunca veem essa agenda: ela só chega ao app com a sua entrada de professor.'],P=>[['Abrir a agenda',P.minhaAgenda&&P.minhaAgenda.url]]],
   ['Trocar a senha do modo professor',19,['Planilha de Configurações: apague a célula da linha Senha do modo professor e digite a nova senha.','Em até 5 minutos o robô guarda a senha embaralhada e apaga a célula.','As entradas antigas deixam de valer: entre de novo.'],P=>[['Planilha de Configurações',P.config]]],
   ['Quando algo não funciona',17,['Veja a seção Situação do robô, neste painel: ela mostra problemas de formato nos Docs.','Se a última atualização estiver antiga, abra o robô e rode a função atualizar (ou instalar).','Mande ao Claude um print da tela e o nome do Doc ou da linha da planilha.'],P=>[['Abrir o robô',P.robo]]]
 ];
+/* Agenda do professor: só no modo professor; o robô entrega com a chave e manda lembretes só para este celular */
+async function profLembretes(ligar,silencioso){
+  if(!pushOk()){if(!silencioso)toast('Este celular não aceita avisos.');return}
+  if(ligar){
+    if(ehIOS()&&!standalone())return toast('No iPhone, instale o app e abra pelo ícone para receber lembretes.');
+    const ts=pushTurmas().concat('PROF');return ativarPush(ts);
+  }
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
+    const ts=pushTurmas();
+    if(sub){if(ts.length){await enviarInscricao(sub,ts);await avisarSW(ts);PUSH.turmas=ts;store.set('push',PUSH)}else{enviarInscricao(sub,['PROF'],'remover').catch(()=>{});await sub.unsubscribe();PUSH=null;store.set('push',null)}}
+  }catch(e){}
+  if(!silencioso){render();toast('Lembretes da agenda desligados neste celular.')}
+}
+function agendaProfHtml(P){
+  const A=P.minhaAgenda;
+  if(!A)return `<div class="card pf-ag-card"><b>Minha agenda</b><span class="meta">Atualize o robô (versão 18) para usar a sua agenda pessoal aqui.</span></div>`;
+  if(A.erro)return `<div class="card pf-ag-card"><b>Minha agenda</b><span class="meta">Não foi possível ler a agenda: ${esc(A.erro)}</span></div>`;
+  const ev=(A.eventos||[]).filter(e=>e.data>=HOJE),am=ISO(new Date(TODAY.getTime()+864e5)),sem=ISO(new Date(TODAY.getTime()+7*864e5));
+  const grupos=[['Hoje',ev.filter(e=>e.data===HOJE)],['Amanhã',ev.filter(e=>e.data===am)],['Próximos 7 dias',ev.filter(e=>e.data>am&&e.data<=sem)],['Mais adiante',ev.filter(e=>e.data>sem).slice(0,12)]].filter(g=>g[1].length);
+  const novo='https://calendar.google.com/calendar/u/0/r/eventedit?src='+encodeURIComponent(decodeURIComponent((A.url||'').split('cid=')[1]||''));
+  const item=e=>`<li class="pa-it"><span class="pa-d"><b>${e.data.slice(8,10)}/${e.data.slice(5,7)}</b>${e.hora?`<span>${esc(e.hora)}</span>`:'<span>dia todo</span>'}</span><span class="pa-t"><b>${esc(e.titulo)}</b>${e.descricao?`<span class="meta">${esc(e.descricao.slice(0,140))}</span>`:''}</span></li>`;
+  const lemb=pushProf()&&typeof Notification!=='undefined'&&Notification.permission==='granted';
+  return `<div class="card pf-ag-card" id="minhaAgenda">
+    <div class="pf-h"><b>Minha agenda</b><span class="meta">só você vê</span></div>
+    ${grupos.length?grupos.map(([g,l])=>`<p class="pa-g">${g}</p><ul class="pa-l">${l.map(item).join('')}</ul>`).join(''):'<p class="meta" style="margin:0">Nenhuma tarefa nos próximos dias. Cadastre na agenda “GeoEstudos · Professor”.</p>'}
+    <div class="pa-acts"><a class="btn btn-primary" href="${esc(novo)}" target="_blank" rel="noopener">+ Nova tarefa</a><a class="btn btn-ghost" href="${esc(A.url||'')}" target="_blank" rel="noopener">Abrir a agenda</a></div>
+    <div class="pa-lemb${lemb?' on':''}"><span>${lemb?'🔔 <b>Lembretes ligados neste celular</b>: na véspera, no dia e 1 hora antes das tarefas com horário.':'🔕 <b>Receba lembretes</b> das suas tarefas neste celular: na véspera, no dia e 1 hora antes.'}</span>
+      <button class="${lemb?'link':'btn btn-ghost'}" id="${lemb?'paOff':'paOn'}">${lemb?'Desligar':'Ligar lembretes'}</button></div>
+  </div>`;
+}
 function vProf(){
   const P=profP(),t=store.get('profTok',null);
+  if(Date.now()-(store.get('profPainelEm',0)||0)>10*60e3)setTimeout(()=>profAtualizar(false),50);
   const quando=P.atualizado?new Date(P.atualizado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
   const sit=(P.situacao||[]).filter(Boolean);
   const prob=sit.filter(l=>/⚠|PROBLEMA/i.test(l));
@@ -2786,6 +2836,7 @@ function vProf(){
       ${prob.length?`<p class="pf-alerta"><b>${prob.length} ${prob.length===1?'ponto pede':'pontos pedem'} atenção:</b></p><ul class="pf-prob">${prob.map(l=>`<li>${esc(l.replace(/^\s*⚠\s*/,''))}</li>`).join('')}</ul>`:'<p class="pf-ok">'+CHECK+' Nenhum problema de formato nos Docs.</p>'}
       <details class="fold"><summary>Ver o relatório completo ${CHEVD}</summary><div class="fold-body"><pre class="pf-pre">${esc(sit.join('\n'))}</pre>${ver?`<a class="meta link" href="${esc(ver)}" target="_blank" rel="noopener">Abrir a página de situação</a>`:''}</div></details>
     </div>
+    ${agendaProfHtml(P)}
     ${sec('Planilhas','pen','livro')}
     <div class="pf-grid">${(P.planilhas||[]).map(x=>link(x.nome,x.url,x.desc)).join('')}</div>
     ${sec('Pastas no Drive','pen','livro')}
@@ -3347,6 +3398,8 @@ document.addEventListener('click',ev=>{
   const bh=t.closest('[data-busca-cap]');if(bh){const id=capId(bh.dataset.buscaCap),c=capOf(id);if(c){S.unit=c.u;S.restore={b:+bh.dataset.buscaB,flash:true};go('resumos',id)}return}
   const dv=t.closest('[data-duvida]');if(dv)return duvidaSheet(dv.dataset.duvida);
   if(t.closest('#duvMais')){S.duvAberta=true;return render()}
+  if(t.closest('#paOn'))return profLembretes(true);
+  if(t.closest('#paOff'))return profLembretes(false);
   if(t.closest('#pushOn'))return ativarPush();
   if(t.closest('#pushOff'))return desativarPush();
   if(t.closest('#pushHelp'))return pushHelp();
@@ -3379,6 +3432,7 @@ document.addEventListener('click',ev=>{
 /* Abrir na tela certa ao tocar num aviso */
 function abrirDeAviso(o){
   if(!o||!DATA)return;
+  if(o.ir==='profagenda'){if(PROF()){S.cap=null;go('prof');setTimeout(()=>{const a=document.getElementById('minhaAgenda');if(a)a.scrollIntoView({block:'start'})},300)}return}
   if(o.ir==='dia'){irParaDia(o.cap||'');return}
   if(o.turma&&TURMAS.includes(o.turma)){S.turma=o.turma;store.set('turma',S.turma)}
   if(!S.turma)return;

@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-23 · revisão em rascunho no modo professor v17';
+const VERSAO_ROBO = '2026-10-24 · agenda do professor v18';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -92,6 +92,7 @@ function doGet(e) {
     // Pedido do celular ao receber um aviso: devolve só as notificações recentes (arquivo pequeno)
     let n = [];
     try { n = JSON.parse(txt).notificacoes || []; } catch (err) {}
+    if (p.prof && tokenValido_(String(p.prof))) { try { n = n.concat(JSON.parse(PropertiesService.getScriptProperties().getProperty('profNotifs') || '[]')); } catch (err) {} }
     return ContentService.createTextOutput(JSON.stringify({ notificacoes: n })).setMimeType(ContentService.MimeType.JSON);
   }
   return ContentService.createTextOutput(txt).setMimeType(ContentService.MimeType.JSON);
@@ -116,7 +117,7 @@ function processarInscricao_(b) {
       const conf = lerConfig_();
       const validas = [].concat.apply([], Object.keys(conf.turmas).map(k => conf.turmas[k]));
       // Um celular pode receber avisos de várias turmas (celular compartilhado)
-      const turmas = [].concat(b.turmas || b.turma || []).map(String).filter(t => validas.indexOf(t) >= 0);
+      const turmas = [].concat(b.turmas || b.turma || []).map(String).filter(t => validas.indexOf(t) >= 0 || (t === 'PROF' && tokenValido_(b.prof)));
       if (!turmas.length) return { ok: false, erro: 'turma inválida' };
       salvarInscricao_(ep, turmas.join('; '));
       return { ok: true, versao: VERSAO_ROBO };
@@ -148,6 +149,7 @@ function instalar() {
       agendas++;
     }
   });
+  try { ScriptApp.newTrigger('aoMudarAlgo').forUserCalendar(agendaProf_().getId()).onEventUpdated().create(); } catch (e) { Logger.log('Agenda do professor: ' + e); }
   chavesAvisos_();
   planilhaInscricoes_();
   prepararAbaTemas_();
@@ -228,6 +230,7 @@ function atualizar() {
     }
     if (mural) { try { mural.escreverSituacao(); } catch (err) { Logger.log('Mural (situação): ' + err); } }
     if (dia) { try { dia.escreverSituacao(); } catch (err) { Logger.log('Conteúdo do Dia (situação): ' + err); } }
+    try { lembretesProf_(conf); } catch (err) { Logger.log('Agenda do professor: ' + err); }
     return dados;
   } finally {
     lock.releaseLock();
@@ -1392,6 +1395,65 @@ function lerDia_() {
   };
 }
 
+/* ================================================================== */
+/* Agenda do professor: agenda do Google "GeoEstudos · Professor".      */
+/* Nunca entra no arquivo público: só vai ao app com a chave do         */
+/* professor, e os lembretes vão só aos celulares inscritos como PROF.  */
+/* ================================================================== */
+const NOME_AGENDA_PROF = 'GeoEstudos · Professor';
+function agendaProf_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('agendaProf');
+  if (id) { try { const c = CalendarApp.getCalendarById(id); if (c) return c; } catch (e) { } }
+  let cal = CalendarApp.getCalendarsByName(NOME_AGENDA_PROF)[0];
+  if (!cal) cal = CalendarApp.createCalendar(NOME_AGENDA_PROF, { summary: 'Tarefas e compromissos do professor. Só aparece no modo professor do GeoEstudos; os alunos nunca veem.', color: CalendarApp.Color.BLUE, timeZone: GEO.FUSO });
+  props.setProperty('agendaProf', cal.getId());
+  return cal;
+}
+function eventosProf_(dias) {
+  const cal = agendaProf_();
+  const fmt = (d, f) => Utilities.formatDate(d, GEO.FUSO, f);
+  const ini = new Date(Date.now() - 864e5), fim = new Date(Date.now() + (dias || 60) * 864e5);
+  return cal.getEvents(ini, fim).map(e => {
+    const diaTodo = e.isAllDayEvent();
+    const st = diaTodo ? e.getAllDayStartDate() : e.getStartTime();
+    return { id: e.getId().replace(/@.*/, '') + '-' + fmt(st, 'yyyyMMddHHmm'), titulo: e.getTitle() || '(sem título)', descricao: String(e.getDescription() || '').replace(/<[^>]+>/g, ' ').slice(0, 400),
+      data: fmt(st, 'yyyy-MM-dd'), hora: diaTodo ? '' : fmt(st, 'HH:mm'), ini: st.getTime() };
+  }).sort((a, b) => a.ini - b.ini);
+}
+function agendaProfPainel_() {
+  try {
+    const cal = agendaProf_();
+    return { nome: NOME_AGENDA_PROF, url: 'https://calendar.google.com/calendar/u/0/r?cid=' + encodeURIComponent(cal.getId()), eventos: eventosProf_(60).slice(0, 60).map(e => ({ titulo: e.titulo, descricao: e.descricao, data: e.data, hora: e.hora })) };
+  } catch (e) { return { erro: String(e) }; }
+}
+/** Lembretes da agenda do professor: na véspera, no dia e 1 hora antes (eventos com horário). */
+function lembretesProf_(conf) {
+  const props = PropertiesService.getScriptProperties();
+  const fmt = (d, f) => Utilities.formatDate(d, GEO.FUSO, f);
+  const agora = new Date(), hoje = fmt(agora, 'yyyy-MM-dd'), amanha = fmt(new Date(agora.getTime() + 864e5), 'yyyy-MM-dd');
+  const min = h => { const m = /^(\d{1,2}):(\d{2})/.exec(h || ''); return m ? (+m[1]) * 60 + (+m[2]) : -1; };
+  const cur = min(fmt(agora, 'HH:mm'));
+  const janela = h => { const i = min(h); return i >= 0 && cur >= i && cur < i + 180; };
+  let feitos = {}; try { feitos = JSON.parse(props.getProperty('profAvisados') || '{}'); } catch (e) { }
+  const evs = eventosProf_(3), novas = [], iso = agora.toISOString();
+  const add = (chave, titulo, texto) => { if (feitos[chave]) return; feitos[chave] = hoje; novas.push({ id: 'p-' + chave, turma: 'PROF', quando: iso, titulo: titulo, texto: texto.slice(0, 220), cap: '', tab: 'profagenda' }); };
+  const desc = e => e.titulo + (e.hora ? ' · ' + e.hora : '');
+  if (janela(conf.lembreteVespera || '18:00')) evs.filter(e => e.data === amanha).forEach(e => add('v-' + e.id, '🗓️ Amanhã: ' + e.titulo, desc(e) + (e.descricao ? ' · ' + e.descricao : '')));
+  if (janela(conf.lembreteDia || '07:00')) evs.filter(e => e.data === hoje).forEach(e => add('d-' + e.id, '🗓️ Hoje: ' + e.titulo, desc(e) + (e.descricao ? ' · ' + e.descricao : '')));
+  evs.filter(e => e.hora && e.ini - agora.getTime() <= 60 * 60000 && e.ini > agora.getTime()).forEach(e => add('h-' + e.id, '⏰ Daqui a pouco: ' + e.titulo, 'Às ' + e.hora + (e.descricao ? ' · ' + e.descricao : '')));
+  // limpa registros antigos
+  const lim = fmt(new Date(agora.getTime() - 4 * 864e5), 'yyyy-MM-dd');
+  Object.keys(feitos).forEach(k => { if (feitos[k] < lim) delete feitos[k]; });
+  props.setProperty('profAvisados', JSON.stringify(feitos));
+  if (!novas.length) return;
+  let lista = []; try { lista = JSON.parse(props.getProperty('profNotifs') || '[]'); } catch (e) { }
+  const limQ = new Date(Date.now() - 3 * 864e5).toISOString();
+  lista = lista.filter(n => n.quando >= limQ).concat(novas).slice(-30);
+  props.setProperty('profNotifs', JSON.stringify(lista));
+  enviarAvisos_(novas);
+}
+
 function prepararAbaTemas_() {
   const ss = SpreadsheetApp.openById(GEO.PLANILHA_CONTEUDO);
   let sh = ss.getSheets().filter(s => semAcento_(s.getName()).indexOf('temas') === 0)[0];
@@ -1924,6 +1986,7 @@ function painelProfessor_() {
     duvidas: pl(duvId),
     config: pl(GEO.PLANILHA_CONFIG),
     dia: urlDia,
+    minhaAgenda: agendaProfPainel_(),
     conteudo: pl(GEO.PLANILHA_CONTEUDO)
   };
 }

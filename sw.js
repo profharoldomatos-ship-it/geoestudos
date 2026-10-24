@@ -1,6 +1,6 @@
 /* GeoEstudos: guarda o aplicativo no celular para abrir sem internet.
    Os resumos ficam guardados pelo próprio app (armazenamento do navegador). */
-const VERSAO = 'geo-v105';
+const VERSAO = 'geo-v106';
 const BASE = ['./', 'index.html', 'config.js', 'manifest.webmanifest',
   'qrcode.min.js', 'icones/geoestudos.svg', 'icones/geoestudos-96.png', 'icones/geoestudos-192.png', 'icones/geoestudos-512.png'];
 
@@ -42,12 +42,12 @@ async function lerPush(k) { try { const c = await caches.open('geo-push'); const
 async function gravarPush(k, v) { try { const c = await caches.open('geo-push'); await c.put(k, new Response(String(v))); } catch (e) {} }
 
 async function mostrarAvisos() {
-  const turmas = (await lerPush('turma')).split(',').filter(Boolean), url = await lerPush('dataurl');
+  const turmas = (await lerPush('turma')).split(',').filter(Boolean), url = await lerPush('dataurl'), ptok = await lerPush('proftok');
   const ultimo = Number(await lerPush('ultimo')) || 0;
   const icon = 'icones/geoestudos-192.png', badge = 'icones/badge-96.png';
   let lista = [];
   try {
-    const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'avisos=1&t=' + Date.now(), { cache: 'no-store' });
+    const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'avisos=1' + (ptok && turmas.includes('PROF') ? '&prof=' + encodeURIComponent(ptok) : '') + '&t=' + Date.now(), { cache: 'no-store' });
     const j = await r.json();
     lista = (j.notificacoes || []).filter(n => (n.turma === '*' || turmas.includes(n.turma)) && Date.parse(n.quando) > ultimo);
   } catch (e) {}
@@ -57,8 +57,8 @@ async function mostrarAvisos() {
   lista.sort((a, b) => a.quando.localeCompare(b.quando));
   await gravarPush('ultimo', Date.parse(lista[lista.length - 1].quando));
   for (const n of lista.slice(-3)) {
-    const titulo = turmas.length > 1 && n.turma !== '*' ? 'Turma ' + n.turma + ' · ' + n.titulo : n.titulo;
-    await self.registration.showNotification(titulo, { body: n.texto, icon, badge, tag: n.id, data: { turma: n.turma === '*' ? '' : n.turma, ir: n.tab || 'turma', cap: n.cap || '' } });
+    const titulo = turmas.filter(t => t !== 'PROF').length > 1 && n.turma !== '*' && n.turma !== 'PROF' ? 'Turma ' + n.turma + ' · ' + n.titulo : n.titulo;
+    await self.registration.showNotification(titulo, { body: n.texto, icon, badge, tag: n.id, data: { turma: n.turma === '*' || n.turma === 'PROF' ? '' : n.turma, ir: n.tab || 'turma', cap: n.cap || '' } });
   }
 }
 self.addEventListener('push', e => e.waitUntil(mostrarAvisos()));
