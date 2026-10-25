@@ -399,10 +399,10 @@ function diasAula(turma){
   const c=S.cfg.chamada;if(!c)return [];
   const p=s=>{const[a,m,d]=s.split('-').map(Number);return new Date(a,m-1,d)};
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  const fim=p(c.fim)<hoje?p(c.fim):hoje,out=[];
+  const fim=p(c.fim),out=[];
   for(let d=p(c.inicio);d<=fim;d.setDate(d.getDate()+1)){
     const t=(c.horario[d.getDay()]||[]).filter(x=>x===turma).length;
-    if(t){const iso=isoDe(d);out.push({iso,br:brDe(iso),tempos:t,wd:d.getDay(),feriado:c.feriados[iso]||''})}
+    if(t){const iso=isoDe(d);out.push({iso,br:brDe(iso),tempos:t,wd:d.getDay(),feriado:c.feriados[iso]||'',futuro:d>hoje})}
   }
   return out;
 }
@@ -417,7 +417,7 @@ function chDia(d,br,turma){
 }
 function chStats(d,dias){
   const st={};d.alunos.forEach(n=>st[n]={aulas:0,p:0,f:0,fj:0,seg:0,fim:false});
-  const feitos=dias.filter(x=>!x.feriado).map(x=>({x,r:chDia(d,x.br)})).filter(o=>Object.keys(o.r.st).length);
+  const feitos=dias.filter(x=>!x.feriado&&!x.futuro).map(x=>({x,r:chDia(d,x.br)})).filter(o=>Object.keys(o.r.st).length);
   feitos.forEach(({x,r})=>{const au=Math.max(0,x.tempos-(r.na?r.na.aulas:0));
     Object.entries(r.st).forEach(([n,v])=>{const s=st[n];if(!s)return;s.aulas+=au;if(v==='P')s.p+=au;else if(v==='F')s.f+=au;else if(v==='FJ')s.fj+=au})});
   // faltas seguidas (dias), contando do registro mais recente para trás
@@ -428,10 +428,10 @@ function chStats(d,dias){
 function renderChamada(d){
   const main=$('#main'),dias=diasAula(S.turma);
   const seg='<div class="seg"><button data-ch="dia" class="'+(CH.sub==='dia'?'on':'')+'">Chamada do dia</button><button data-ch="freq" class="'+(CH.sub==='freq'?'on':'')+'">Frequência</button></div>';
-  if(!dias.length){main.innerHTML=seg+'<div class="empty">Nenhum dia de aula desta turma no período até hoje.</div>';bindCh();return}
+  if(!dias.length){main.innerHTML=seg+'<div class="empty">Nenhum dia de aula desta turma no período.</div>';bindCh();return}
   const {st,feitos}=chStats(d,dias);
   if(CH.sub==='freq'){
-    const pend=dias.filter(x=>!x.feriado&&!chDia(d,x.br).salvo);
+    const pend=dias.filter(x=>!x.feriado&&!x.futuro&&!chDia(d,x.br).salvo);
     const baixa=d.alunos.filter(n=>st[n].pct!=null&&st[n].pct<75),seguidas=d.alunos.filter(n=>st[n].seg>=3);
     main.innerHTML=seg+
       '<div class="stats"><div class="stat"><b>'+feitos+'</b><span>chamadas feitas</span></div><div class="stat"><b>'+baixa.length+'</b><span>abaixo de 75%</span></div><div class="stat"><b>'+seguidas.length+'</b><span>3+ faltas seguidas</span></div></div>'+
@@ -444,12 +444,12 @@ function renderChamada(d){
     bindCh();return;
   }
   // dia escolhido: o guardado, senão hoje (ou o último dia de aula até hoje)
-  let i=dias.findIndex(x=>x.iso===CH.dia[S.turma]);if(i<0)i=dias.length-1;
+  let i=dias.findIndex(x=>x.iso===CH.dia[S.turma]);if(i<0){i=dias.filter(x=>!x.futuro).length-1;if(i<0)i=0}
   const dia=dias[i];CH.dia[S.turma]=dia.iso;
   const r=chDia(d,dia.br),na=r.na,naTotal=na&&na.aulas>=dia.tempos,aulas=dia.tempos-(na?na.aulas:0);
   const k=S.turma+'|'+dia.br,ed=CH.edit[k];
   const head='<div class="ch-dia"><button class="iconbtn" id="chPrev"'+(i?'':' disabled')+'>‹</button>'+
-    '<select id="chSel">'+dias.map((x,j)=>{const rr=chDia(d,x.br);const ic=x.feriado?'🎌':rr.na&&rr.na.aulas>=x.tempos?'NA':rr.salvo?'✓':'•';return '<option value="'+j+'"'+(j===i?' selected':'')+'>'+DSEM[x.wd]+', '+x.br.slice(0,5)+' · '+x.tempos+(x.tempos>1?' aulas':' aula')+'  '+ic+'</option>'}).join('')+'</select>'+
+    '<select id="chSel">'+dias.map((x,j)=>{const rr=chDia(d,x.br);const ic=x.feriado?'🎌':rr.na&&rr.na.aulas>=x.tempos?'NA':rr.salvo?'✓':x.futuro?'(futura)':'•';return '<option value="'+j+'"'+(j===i?' selected':'')+'>'+DSEM[x.wd]+', '+x.br.slice(0,5)+' · '+x.tempos+(x.tempos>1?' aulas':' aula')+'  '+ic+'</option>'}).join('')+'</select>'+
     '<button class="iconbtn" id="chNext"'+(i<dias.length-1?'':' disabled')+'>›</button>'+
     (dia.feriado?'':'<button class="na-btn'+(na?' on':'')+'" id="chNA">NA</button>')+'</div>';
   let corpo='';
@@ -461,6 +461,7 @@ function renderChamada(d){
       '<textarea id="naObs" rows="2" class="obs-txt" placeholder="Justificativa (obrigatória para marcar NA)">'+esc(na?na.obs:'')+'</textarea>'+
       '<div class="na-acts">'+(na?'<button id="naTirar" class="lnk">Remover NA</button>':'')+'<button id="naOk" class="obs-btn" style="margin:0">'+(na?'Atualizar':'Marcar NA')+'</button></div></div>':'';
     if(naTotal)corpo=naPanel+'<div class="empty"><b>Sem aula neste dia.</b><br>'+esc(na.obs||'')+'</div>';
+    else if(dia.futuro)corpo=naPanel+(na?'<div class="hint">'+na.aulas+' de '+dia.tempos+' aulas sem aula prevista ('+esc(na.obs||'')+').</div>':'')+'<div class="empty"><b>Aula futura.</b><br>A chamada abre no dia. Se já souber que não haverá aula, use o botão NA.</div>';
     else{
       const cont={P:0,F:0,FJ:0,_:0};d.alunos.forEach(n=>{const v=r.st[n];if(v)cont[v]++;else cont._++});
       corpo=naPanel+(na?'<div class="hint">'+na.aulas+' de '+dia.tempos+' aulas não aconteceram ('+esc(na.obs||'')+'). Conta '+aulas+(aulas>1?' aulas':' aula')+' neste dia.</div>':'')+
@@ -718,7 +719,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.7.0',APP_DATA='2026-10-25';
+const APP_VERSAO='1.7.1',APP_DATA='2026-10-25';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
