@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, interactive-widget=resizes-content">
 <meta name="robots" content="noindex, nofollow">
 <title>GeoNotas</title>
 <link rel="icon" href="icone.svg" type="image/svg+xml">
@@ -91,7 +91,7 @@ td.nm,th.nm{text-align:left;position:sticky;left:0;background:var(--card);max-wi
 .sheet header .t{flex:1;min-width:0}
 .sheet header .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sheet header .t span{font-size:12px;color:var(--muted)}
-.sheet .body{overflow-y:auto;padding:12px 16px 40px;flex:1}
+.sheet .body{overflow-y:auto;padding:12px 16px 40px;flex:1;min-height:0;overscroll-behavior:contain}
 .grp{margin:14px 2px 6px;font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.4px}
 .field{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line)}
 .field:first-child{border-top:0}
@@ -812,7 +812,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.8.3',APP_DATA='2026-10-25';
+const APP_VERSAO='1.8.4',APP_DATA='2026-10-25';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
@@ -889,6 +889,16 @@ async function gravarImport(){
   }catch(e){toast(e.message);b.disabled=false;b.textContent='Tentar de novo'}
 }
 
+/* teclado do celular: a ficha encolhe para a área visível e o campo em edição sobe para o meio */
+function ajustaFicha(){
+  const sh=$('#sheet'),vv=window.visualViewport;if(!sh||!vv)return;
+  if(!sh.classList.contains('open')){sh.style.top=sh.style.height=sh.style.bottom='';return}
+  sh.style.top=vv.offsetTop+'px';sh.style.height=vv.height+'px';sh.style.bottom='auto';
+  const a=document.activeElement;
+  if(a&&sh.contains(a)&&/^(TEXTAREA|INPUT)$/.test(a.tagName))a.scrollIntoView({block:'center'});
+}
+if(window.visualViewport){visualViewport.addEventListener('resize',ajustaFicha);visualViewport.addEventListener('scroll',ajustaFicha)}
+document.addEventListener('focusin',e=>{if(e.target.closest&&e.target.closest('#sheet')&&/^(TEXTAREA|INPUT)$/.test(e.target.tagName))[150,400,800].forEach(t=>setTimeout(ajustaFicha,t))});
 function openSheet(r){S.openRow=r;renderSheet();$('#sheet').classList.add('open')}
 function renderSheet(){
   const d=cur();if(!d)return;
@@ -982,7 +992,7 @@ document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
   S.kind=b.dataset.k;document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('on',x===b);x.toggleAttribute('aria-current',x===b)});window.scrollTo(0,0);ensure();
 }));
 $('#refresh').addEventListener('click',()=>{if(S.data[S.turma])S.data[S.turma]={};load(S.turma,S.kind)});
-$('#sClose').addEventListener('click',()=>{if(document.activeElement)document.activeElement.blur();$('#sheet').classList.remove('open');S.openRow=null;render()});
+$('#sClose').addEventListener('click',()=>{if(document.activeElement)document.activeElement.blur();$('#sheet').classList.remove('open');ajustaFicha();S.openRow=null;render()});
 $('#sPrev').addEventListener('click',()=>stepSheet(-1));
 $('#impClose').addEventListener('click',impFechar);
 $('#sNext').addEventListener('click',()=>stepSheet(1));

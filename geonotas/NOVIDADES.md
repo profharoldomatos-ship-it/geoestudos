@@ -11,6 +11,9 @@ A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google A
 ## Planejado para 2027
 - Chamada: registro do conteúdo do dia, a partir do planejamento mensal.
 
+## 1.8.4 · 25/10/2026 · teclado não cobre mais a caixa de texto
+- Com o teclado aberto, a ficha do aluno encolhe para a parte visível da tela e a caixa de observações (ou a nota em edição) sobe para o meio.
+
 ## 1.8.3 · 25/10/2026 · atalho para as observações
 - No alto da ficha do aluno (aba Notas), o botão "✎ Observações sobre este aluno" leva direto à caixa de texto.
 
