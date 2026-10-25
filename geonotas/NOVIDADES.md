@@ -11,6 +11,11 @@ A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google A
 ## Planejado para 2027
 - Chamada: registro do conteúdo do dia, a partir do planejamento mensal.
 
+## 1.8.1 · 25/10/2026 · desmarcar na chamada
+- Tocar de novo em P, F ou FJ já marcado desmarca o aluno.
+- Novo botão "Desmarcar todos" (pede confirmação). Se ninguém ficar marcado, o dia volta a "pendente" e sai da planilha.
+- Robô continua v9.
+
 ## 1.8.0 · 25/10/2026 · alinhamento com o GeoEstudos
 - Abas embaixo (Notas, Cadernos, Chamada, Resultados), como no GeoEstudos; topo limpo com "‹ GeoEstudos", "Um por vez" e ↻.
 - Cada turma ganha a cor do seu ano (7º verde, 8º laranja, 9º roxo).

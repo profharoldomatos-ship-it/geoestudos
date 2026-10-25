@@ -188,6 +188,8 @@ a.iconbtn{color:inherit}
 .ch-row .name{white-space:nowrap}
 .ch-al{font-size:11px;font-weight:700;border-radius:6px;padding:1px 5px;flex:none}
 .pf{display:flex;gap:4px;flex:none}
+.ch-mass{display:flex;gap:8px}.ch-mass .impbtn{flex:1;justify-content:center;margin-bottom:6px}
+.ch-mass .impbtn.desm{flex:0 0 auto;color:var(--low);border-color:var(--low)}
 .ch-row .name{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .pf button{width:46px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--field);font-weight:700;color:var(--muted);cursor:pointer;font-size:13px}
 .pf .pf-P.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
@@ -456,7 +458,7 @@ function chDia(d,br,turma){
   d.registros.forEach(x=>{if(x[0]!==br)return;r.salvo=true;
     if(x[1]===SEM)r.na={aulas:+x[3]||0,obs:x[4]||''};else{r.st[x[1]]=x[2];r.aulas=+x[3]||0}});
   const e=CH.edit[(turma||S.turma)+'|'+br];
-  if(e){r.st=Object.assign({},r.st,e.st);if(e.na!==undefined)r.na=e.na}
+  if(e){r.st=Object.assign({},r.st,e.st);Object.keys(r.st).forEach(n=>{if(!r.st[n])delete r.st[n]});if(e.na!==undefined)r.na=e.na}
   return r;
 }
 function chStats(d,dias){
@@ -520,7 +522,8 @@ function renderChamada(d){
     else{
       const cont={P:0,F:0,FJ:0,_:0};d.alunos.forEach(n=>{const v=r.st[n];if(v)cont[v]++;else cont._++});
       corpo=naPanel+(na?'<div class="hint">'+na.aulas+' de '+dia.tempos+' aulas não aconteceram ('+esc(na.obs||'')+'). Conta '+aulas+(aulas>1?' aulas':' aula')+' neste dia.</div>':'')+
-        '<button class="impbtn" id="chTodos" style="justify-content:center">✓ Todos presentes</button>'+
+        '<div class="ch-mass"><button class="impbtn" id="chTodos">✓ Todos presentes</button>'+(cont.P+cont.F+cont.FJ?'<button class="impbtn desm" id="chDesm">✕ Desmarcar todos</button>':'')+'</div>'+
+        '<div class="hint">Toque de novo na marcação para desmarcar.</div>'+
         '<div class="list" id="chList">'+d.alunos.map((n,j)=>{const v=r.st[n]||'',s=st[n];
           return '<div class="row ch-row"><span class="num">'+(j+1)+'</span><span class="name">'+esc(n)+
             (s.pct!=null&&s.pct<75?'<span class="ch-al g-low">'+s.pct+'%</span>':'')+(s.seg>=3?'<span class="ch-al g-mid">'+s.seg+'F</span>':'')+'</span>'+
@@ -543,8 +546,10 @@ function renderChamada(d){
   const tr=$('#naTirar');if(tr)tr.addEventListener('click',()=>{chEditar(dia,{na:null});CH.naAberto=false;render()});
   const td=$('#chTodos');if(td)td.addEventListener('click',()=>{const st2={};d.alunos.forEach(n=>{if(!r.st[n])st2[n]='P'});
     if(!Object.keys(st2).length){toast('Todos já estão marcados.');return}chEditar(dia,{st:st2});render()});
-  main.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{const o={};o[b.dataset.a]=b.dataset.v;chEditar(dia,{st:o});
-    b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));chTotais(d,dia)}));
+  main.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{const tirar=b.classList.contains('on'),o={};o[b.dataset.a]=tirar?'':b.dataset.v;chEditar(dia,{st:o});
+    b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',!tirar&&x===b));chTotais(d,dia)}));
+  const dt=$('#chDesm');if(dt)dt.addEventListener('click',()=>{const st2={};d.alunos.forEach(n=>{if(r.st[n])st2[n]=''});
+    if(!Object.keys(st2).length)return;if(!confirm('Desmarcar todos os alunos deste dia?'))return;chEditar(dia,{st:st2});render()});
   bindCh();
 }
 function chTotais(d,dia){
@@ -577,7 +582,7 @@ async function chSalvarTudo(){
       if(CH.edit[k]===e)delete CH.edit[k];
       S.data[e.turma].chamada=Object.assign(nd,{fetchedAt:new Date().toISOString()});
       setSync('salvo ✓');
-      if(S.kind==='chamada'&&S.turma===e.turma){const st=$('#chSt');if(st)st.textContent='salvo ✓';else render()}
+      if(S.kind==='chamada'&&S.turma===e.turma&&!Object.keys(CH.edit).length){const y=scrollY;render();scrollTo(0,y)}
     }catch(err){setSync('erro','err');toast('Chamada não salva: '+err.message)}
     finally{S.pend--}
   }
@@ -802,7 +807,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.8.0',APP_DATA='2026-10-25';
+const APP_VERSAO='1.8.1',APP_DATA='2026-10-25';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
