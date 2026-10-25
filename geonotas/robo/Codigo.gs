@@ -14,7 +14,7 @@ const CONFIG = {
   DIAS_SESSAO: 30, // depois disso, pede a senha de novo
   // chamada: período letivo em curso, horário semanal (1 = segunda … 5 = sexta; cada item é um tempo de aula)
   INICIO: '2026-10-09',
-  FIM: '2026-12-20',
+  FIM: '2026-12-23',
   HORARIO: { 1: ['81', '82', '91', '82', '81'], 4: ['71', '72', '71', '72'], 5: ['91', '92', '92'] },
   FERIADOS: { '2026-11-02': 'Finados', '2026-11-15': 'Proclamação da República', '2026-11-20': 'Dia da Consciência Negra', '2026-12-25': 'Natal' },
   // pastas dos formulários de atividade do período em curso (FORMULÁRIOS › ano › período 4)
