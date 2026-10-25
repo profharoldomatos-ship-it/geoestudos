@@ -6,7 +6,7 @@
  * o app só grava em células de lançamento (sem fórmula) e lê os resultados.
  */
 
-const VERSAO_ROBO = 'v7'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
+const VERSAO_ROBO = 'v8'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
 
 const CONFIG = {
   ANO: 2026,
@@ -95,6 +95,15 @@ function doPost(e) {
       case 'importar':
         sessaoValida_(q.token);
         return json_({ ok: true, gravadas: gravarImport_(q.turma, q.cols, q.itens, q.form, q.processados) });
+      case 'obs':
+        sessaoValida_(q.token);
+        return json_({ ok: true, lista: obsListar_(q.turma, q.nome) });
+      case 'obsAdd':
+        sessaoValida_(q.token);
+        return json_({ ok: true, lista: obsAdd_(q.turma, q.nome, q.texto) });
+      case 'obsDel':
+        sessaoValida_(q.token);
+        return json_({ ok: true, lista: obsDel_(q.turma, q.nome, q.linha) });
       case 'salvar':
         sessaoValida_(q.token);
         return json_({ ok: true, linha: saveCell_(q.turma, q.kind, q.row, q.col, q.value, q.nome) });
@@ -349,6 +358,50 @@ function desligarImportacaoAutomatica() {
 }
 function ultimaAutomatica_() {
   try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('auto_ultima') || 'null'); } catch (e) { return null; }
+}
+
+/* ---------- observações sobre os alunos ----------
+   Registro com data, numa aba OBSERVAÇÕES da planilha de controle da turma (criada se não existir). */
+function abaObs_(turma) {
+  const id = CONFIG.TURMAS[turma];
+  if (!id) throw new Error('Turma não configurada: ' + turma);
+  const ss = SpreadsheetApp.openById(id);
+  let sh = ss.getSheetByName('OBSERVAÇÕES');
+  if (!sh) {
+    sh = ss.insertSheet('OBSERVAÇÕES');
+    sh.getRange(1, 1, 1, 3).setValues([['DATA', 'ALUNO', 'OBSERVAÇÃO']]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+    sh.setColumnWidth(1, 140); sh.setColumnWidth(2, 280); sh.setColumnWidth(3, 520);
+    sh.getRange('A:A').setNumberFormat('dd/MM/yyyy HH:mm');
+    sh.getRange('C:C').setWrap(true);
+  }
+  return sh;
+}
+function obsListar_(turma, nome) {
+  const sh = abaObs_(turma), n = sh.getLastRow();
+  if (n < 2) return [];
+  const alvo = String(nome || '').trim();
+  return sh.getRange(2, 1, n - 1, 3).getValues()
+    .map((v, i) => ({ linha: i + 2, quando: v[0] instanceof Date ? v[0].toISOString() : String(v[0]), aluno: String(v[1]).trim(), texto: String(v[2]) }))
+    .filter(x => x.aluno === alvo && x.texto)
+    .reverse();
+}
+function obsAdd_(turma, nome, texto) {
+  texto = String(texto || '').trim().slice(0, 3000);
+  if (!nome || !texto) throw new Error('Escreva a observação antes de salvar.');
+  const lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try { abaObs_(turma).appendRow([new Date(), String(nome).trim(), texto]); }
+  finally { lock.releaseLock(); }
+  return obsListar_(turma, nome);
+}
+function obsDel_(turma, nome, linha) {
+  const lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try {
+    const sh = abaObs_(turma), r = Number(linha);
+    if (!(r >= 2) || String(sh.getRange(r, 2).getValue()).trim() !== String(nome).trim()) throw new Error('A observação mudou de lugar na planilha. Atualize e tente de novo.');
+    sh.deleteRow(r);
+  } finally { lock.releaseLock(); }
+  return obsListar_(turma, nome);
 }
 
 /* ---------- leitura genérica, guiada pelos cabeçalhos ---------- */

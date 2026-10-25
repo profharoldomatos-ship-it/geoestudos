@@ -121,6 +121,15 @@ a.iconbtn{color:inherit}
 .bloco{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
 .bloco .bl-nome{font-weight:700}
 .bloco .calc{font-size:18px;min-width:56px}
+.obs-txt{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;resize:vertical;margin:4px 0 8px}
+.obs-txt:focus{outline:2px solid var(--brand);border-color:transparent}
+.obs-btn{width:100%;font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px;background:var(--brand);color:var(--brand-ink);cursor:pointer;margin-bottom:10px}
+.obs-btn:disabled{opacity:.6}
+.obs-it{padding:10px 12px;border-top:1px solid var(--line)}
+.obs-it:first-child{border-top:0}
+.obs-q{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:3px}
+.obs-del{border:0;background:none;color:var(--low);font-size:12px;cursor:pointer;padding:0}
+.obs-t{white-space:normal;word-wrap:break-word}
 .foot{margin:24px 0 0;text-align:center;font-size:13px;color:var(--muted)}
 .foot button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;margin:0 3px;cursor:pointer}
 .foot button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
@@ -543,7 +552,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.5.0',APP_DATA='2026-10-25';
+const APP_VERSAO='1.6.0',APP_DATA='2026-10-25';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
@@ -626,8 +635,47 @@ function renderSheet(){
   const row=d.rows.find(x=>x.r===S.openRow);if(!row)return;
   $('#sName').textContent=row.nome;
   $('#sSub').textContent='Turma '+S.turma+' · nº '+row.n+' · '+d.sheet;
-  $('#sBody').innerHTML=fieldsHtml(d,row);
+  $('#sBody').innerHTML=fieldsHtml(d,row)+(S.kind==='notas'?obsHtml():'');
   bindControls($('#sBody'),byRow(d),byCol(d));
+  if(S.kind==='notas')obsCarregar(row.nome);
+}
+
+/* ===== Observações do professor sobre o aluno =====
+   Ficam na aba OBSERVAÇÕES da planilha da turma. Nunca aparecem no modo "Um aluno por vez". */
+const OBS={};
+function obsHtml(){
+  return '<div class="sec-t">Observações</div>'+
+    '<div class="hint">Só você vê: comportamento, participação, assiduidade… Ajudam a fechar a nota de desempenho. Não aparecem no modo Um aluno por vez.</div>'+
+    '<textarea id="obsTxt" class="obs-txt" rows="3" placeholder="Escreva uma observação sobre a aula de hoje…"></textarea>'+
+    '<button class="obs-btn" id="obsSalvar">Salvar observação</button>'+
+    '<div id="obsList" class="obs-list"><div class="hint">Carregando observações…</div></div>';
+}
+function obsLista(nome,lista){
+  const el=$('#obsList');if(!el||$('#sName').textContent!==nome)return;
+  el.innerHTML=lista.length?'<div class="list">'+lista.map(o=>'<div class="obs-it"><div class="obs-q">'+
+      esc(new Date(o.quando).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}))+
+      '<button class="obs-del" data-l="'+o.linha+'" aria-label="Apagar observação">apagar</button></div><div class="obs-t">'+esc(o.texto).replace(/\n/g,'<br>')+'</div></div>').join('')+'</div>'
+    :'<div class="hint">Nenhuma observação ainda.</div>';
+  el.querySelectorAll('.obs-del').forEach(b=>b.addEventListener('click',async()=>{
+    if(!confirm('Apagar esta observação?'))return;
+    b.disabled=true;
+    try{const l=(await api('obsDel',{turma:S.turma,nome,linha:+b.dataset.l})).lista;OBS[S.turma+'|'+nome]=l;obsLista(nome,l);toast('Observação apagada.')}
+    catch(e){toast(e.message);b.disabled=false}
+  }));
+}
+async function obsCarregar(nome){
+  const k=S.turma+'|'+nome;
+  if(OBS[k])obsLista(nome,OBS[k]);
+  const bt=$('#obsSalvar'),tx=$('#obsTxt');
+  if(bt)bt.addEventListener('click',async()=>{
+    const texto=tx.value.trim();if(!texto){tx.focus();return}
+    bt.disabled=true;bt.textContent='Salvando…';
+    try{const l=(await api('obsAdd',{turma:S.turma,nome,texto})).lista;OBS[k]=l;tx.value='';obsLista(nome,l);toast('Observação salva.')}
+    catch(e){toast(e.message)}
+    bt.disabled=false;bt.textContent='Salvar observação';
+  });
+  try{const l=(await api('obs',{turma:S.turma,nome})).lista;OBS[k]=l;obsLista(nome,l)}
+  catch(e){const el=$('#obsList');if(el)el.innerHTML='<div class="hint">'+esc(e.message)+'</div>'}
 }
 function stepSheet(dir){
   const d=cur();const i=d.rows.findIndex(x=>x.r===S.openRow);const n=d.rows[i+dir];
