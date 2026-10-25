@@ -11,6 +11,9 @@ A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google A
 ## Planejado para 2027
 - Chamada: registro do conteúdo do dia, a partir do planejamento mensal.
 
+## 1.8.3 · 25/10/2026 · atalho para as observações
+- No alto da ficha do aluno (aba Notas), o botão "✎ Observações sobre este aluno" leva direto à caixa de texto.
+
 ## 1.8.2 · 25/10/2026 · botões da chamada equilibrados
 - "Todos presentes" e "Desmarcar todos" dividem a largura meio a meio, com a mesma altura; ficam apagados quando não há o que fazer.
 

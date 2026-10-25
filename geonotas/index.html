@@ -188,6 +188,8 @@ a.iconbtn{color:inherit}
 .ch-row .name{white-space:nowrap}
 .ch-al{font-size:11px;font-weight:700;border-radius:6px;padding:1px 5px;flex:none}
 .pf{display:flex;gap:4px;flex:none}
+.obs-atalho{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;margin:12px 0 0;padding:10px 14px;border-radius:12px;border:1px solid #8A5A00;background:color-mix(in srgb,#8A5A00 10%,var(--card));color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.obs-atalho span{color:#8A5A00}
 .ch-mass{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
 .ch-mass .impbtn{width:auto;min-width:0;margin:0;min-height:52px;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;white-space:normal;line-height:1.2;font-size:15px;padding:10px 8px}
 .ch-mass .impbtn.desm{color:var(--low);border-color:var(--low)}
@@ -810,7 +812,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.8.2',APP_DATA='2026-10-25';
+const APP_VERSAO='1.8.3',APP_DATA='2026-10-25';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
@@ -893,7 +895,8 @@ function renderSheet(){
   const row=d.rows.find(x=>x.r===S.openRow);if(!row)return;
   $('#sName').textContent=row.nome;
   $('#sSub').textContent='Turma '+S.turma+' · nº '+nn(row.n)+' · '+(S.kind==='cadernos'?'cadernos do ':'')+S.cfg.periodo+'º período';
-  $('#sBody').innerHTML=fieldsHtml(d,row)+(S.kind==='notas'?obsHtml():'');
+  $('#sBody').innerHTML=(S.kind==='notas'?'<button class="obs-atalho" id="obsIr">✎ Observações sobre este aluno <span>↓</span></button>':'')+fieldsHtml(d,row)+(S.kind==='notas'?obsHtml():'');
+  const oi=$('#obsIr');if(oi)oi.addEventListener('click',()=>{const t=$('#obsTxt');t.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>t.focus({preventScroll:true}),350)});
   bindControls($('#sBody'),byRow(d),byCol(d));
   if(S.kind==='notas')obsCarregar(row.nome);
 }
