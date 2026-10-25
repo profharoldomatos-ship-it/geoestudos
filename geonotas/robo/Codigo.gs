@@ -269,7 +269,8 @@ function previaImport_(turma, formId, todas) {
     x.r = c.r;
     x.certeza = x.mesmaTurma === null && c.certeza === 'certo' ? 'duvida' : c.certeza;
     // aluno que já recebeu a nota desta atividade: um envio novo dele é repetido (vale o primeiro)
-    if (!x.feita && x.r && jaRs[x.r]) x.certeza = 'repetido';
+    const nomeR = x.r && (alunos.find(a => a.r === x.r) || {}).nome;
+    if (!x.feita && nomeR && jaRs[norm_(nomeR)]) x.certeza = 'repetido';
   });
   if (!todas) resp = resp.filter(x => !x.feita);
   const atual = {};
@@ -288,14 +289,14 @@ function gravarImport_(turma, cols, itens, formId, processados) {
     itens.forEach(x => {
       const r = Number(x.r); if (!(r > 0)) return;
       if (String(sh.getRange(r, 2).getDisplayValue()).trim() !== x.nome) throw new Error('A planilha mudou (linha ' + r + '). Atualize o app e importe de novo.');
-      if (x.soRegistro) { if (reg) reg.rs[turma][r] = 1; return; }
+      if (x.soRegistro) { if (reg) reg.rs[turma][norm_(x.nome)] = 1; return; }
       const m = sh.getRange(r, Number(cols.marca.c));
       if (!m.getFormula()) m.setValue(cols.marca.check ? true : x.nota);
       if (cols.nota && typeof x.nota === 'number') {
         const c = sh.getRange(r, Number(cols.nota.c));
         if (!c.getFormula()) c.setValue(x.nota);
       }
-      if (reg) reg.rs[turma][r] = 1;
+      if (reg) reg.rs[turma][norm_(x.nome)] = 1;
       n++;
     });
     SpreadsheetApp.flush();
