@@ -8,6 +8,11 @@ Formato **MAIOR.MENOR.CORREÇÃO** (o mesmo do GeoEstudos):
 
 A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google Apps Script) tem numeração própria (v1, v2…): sempre que ele muda, é preciso colar o código novo e fazer uma nova versão da implantação.
 
+## 1.7.0 · 25/10/2026 · robô v9
+- Nova aba Chamada: dias de aula de cada turma pelo horário semanal (segunda: 81, 82, 91; quinta: 71, 72; sexta: 91, 92), feriados nacionais, P / F / FJ por aluno, botão Todos presentes e totais do dia. Salva sozinha na aba CHAMADA da planilha da turma.
+- NA (não houve aula) ao lado da data: dia todo ou parte das aulas, com justificativa (inclusive ausência do professor).
+- Faltas contadas por aula; aba Frequência com % de cada aluno, alerta abaixo de 75%, faltas seguidas e chamadas pendentes.
+
 ## 1.6.0 · 25/10/2026 · robô v8
 - Observações do professor na ficha de cada aluno (Por aluno): registro com data e hora, guardado na aba OBSERVAÇÕES da planilha da turma (criada automaticamente). Não aparecem no modo Um aluno por vez.
 

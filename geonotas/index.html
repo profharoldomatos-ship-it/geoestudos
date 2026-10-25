@@ -130,6 +130,30 @@ a.iconbtn{color:inherit}
 .obs-q{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:3px}
 .obs-del{border:0;background:none;color:var(--low);font-size:12px;cursor:pointer;padding:0}
 .obs-t{white-space:normal;word-wrap:break-word}
+.ch-dia{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+.ch-dia select{margin:0;flex:1;font-weight:700;min-width:0}
+.ch-dia .iconbtn{flex:none;width:40px;height:44px;font-size:20px}
+.na-btn{flex:none;height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:700;color:var(--muted);cursor:pointer}
+.na-btn.on{background:var(--mid-bg);border-color:var(--mid);color:var(--mid)}
+.na-box{background:var(--card);border:1px solid var(--mid);border-radius:14px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+.na-op{display:flex;flex-wrap:wrap;gap:6px}
+.na-op button{border:1px solid var(--line);background:var(--field);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer}
+.na-op button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.na-op.mot button{font-size:13px;color:var(--muted)}
+.na-acts{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.na-acts .obs-btn{width:auto;padding:10px 18px;margin-left:auto}
+.lnk{border:0;background:none;color:var(--low);font-weight:700;cursor:pointer;padding:0}
+.ch-row .name{display:flex;align-items:center;gap:6px}
+.ch-row .name{white-space:nowrap}
+.ch-al{font-size:11px;font-weight:700;border-radius:6px;padding:1px 5px;flex:none}
+.pf{display:flex;gap:4px;flex:none}
+.pf button{width:40px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--field);font-weight:700;color:var(--muted);cursor:pointer;font-size:13px}
+.pf .pf-P.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.pf .pf-F.on{background:var(--low-bg);border-color:var(--low);color:var(--low)}
+.pf .pf-FJ.on{background:var(--mid-bg);border-color:var(--mid);color:var(--mid)}
+.ch-tot{position:sticky;bottom:0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;background:var(--bg);border-top:1px solid var(--line);padding:10px 2px;margin-top:10px;font-size:14px}
+.ch-st{margin-left:auto;font-size:12px;color:var(--muted)}
+.link-d{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 6px;margin:2px;cursor:pointer;font-size:13px}
 .foot{margin:24px 0 0;text-align:center;font-size:13px;color:var(--muted)}
 .foot button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;margin:0 3px;cursor:pointer}
 .foot button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
@@ -168,6 +192,7 @@ a.iconbtn{color:inherit}
   <div class="tabs" id="tabs">
     <button class="tab on" data-k="notas">Notas</button>
     <button class="tab" data-k="cadernos">Cadernos</button>
+    <button class="tab" data-k="chamada">Chamada</button>
     <button class="tab" data-k="final">Resultados</button>
   </div>
 </div>
@@ -256,7 +281,7 @@ async function load(turma,kind,quiet){
   if(!quiet){$('#main').innerHTML='<div class="loading">Lendo a planilha da '+esc(turma)+'…</div>'}
   setSync('lendo…','busy');
   try{
-    const d=(await api('dados',{turma,kind})).dados;
+    const d=kind==='chamada'?Object.assign((await api('chamada',{turma})).chamada,{fetchedAt:new Date().toISOString()}):(await api('dados',{turma,kind})).dados;
     (S.data[turma]=S.data[turma]||{})[kind]=d;
     setSync('atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
     if(turma===S.turma&&kind===S.kind)render();
@@ -361,6 +386,146 @@ const byRow=d=>id=>d.rows.find(r=>r.r==id);
 const byCol=d=>id=>d.columns.find(c=>c.c==id);
 
 /* ---------- telas ---------- */
+/* ===== Chamada =====
+   P presente · F falta · FJ falta justificada · NA não houve aula (dia todo ou parte, com justificativa).
+   A falta conta por aula: num dia de dois tempos, faltar vale 2. */
+const CH={sub:'dia',dia:{},edit:{},timer:null,naAberto:false};
+const pad2=n=>String(n).padStart(2,'0');
+const isoDe=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+const brDe=iso=>iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4);
+const SEM='(SEM AULA)';
+const DSEM=['dom','seg','ter','qua','qui','sex','sáb'];
+function diasAula(turma){
+  const c=S.cfg.chamada;if(!c)return [];
+  const p=s=>{const[a,m,d]=s.split('-').map(Number);return new Date(a,m-1,d)};
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const fim=p(c.fim)<hoje?p(c.fim):hoje,out=[];
+  for(let d=p(c.inicio);d<=fim;d.setDate(d.getDate()+1)){
+    const t=(c.horario[d.getDay()]||[]).filter(x=>x===turma).length;
+    if(t){const iso=isoDe(d);out.push({iso,br:brDe(iso),tempos:t,wd:d.getDay(),feriado:c.feriados[iso]||''})}
+  }
+  return out;
+}
+/* registros salvos, por dia, com as edições ainda não salvas por cima */
+function chDia(d,br,turma){
+  const r={na:null,st:{},aulas:null,salvo:false};
+  d.registros.forEach(x=>{if(x[0]!==br)return;r.salvo=true;
+    if(x[1]===SEM)r.na={aulas:+x[3]||0,obs:x[4]||''};else{r.st[x[1]]=x[2];r.aulas=+x[3]||0}});
+  const e=CH.edit[(turma||S.turma)+'|'+br];
+  if(e){r.st=Object.assign({},r.st,e.st);if(e.na!==undefined)r.na=e.na}
+  return r;
+}
+function chStats(d,dias){
+  const st={};d.alunos.forEach(n=>st[n]={aulas:0,p:0,f:0,fj:0,seg:0,fim:false});
+  const feitos=dias.filter(x=>!x.feriado).map(x=>({x,r:chDia(d,x.br)})).filter(o=>Object.keys(o.r.st).length);
+  feitos.forEach(({x,r})=>{const au=Math.max(0,x.tempos-(r.na?r.na.aulas:0));
+    Object.entries(r.st).forEach(([n,v])=>{const s=st[n];if(!s)return;s.aulas+=au;if(v==='P')s.p+=au;else if(v==='F')s.f+=au;else if(v==='FJ')s.fj+=au})});
+  // faltas seguidas (dias), contando do registro mais recente para trás
+  feitos.slice().reverse().forEach(({r})=>Object.entries(st).forEach(([n,s])=>{if(s.fim)return;const v=r.st[n];if(v==='F')s.seg++;else if(v)s.fim=true}));
+  Object.values(st).forEach(s=>s.pct=s.aulas?Math.round(s.p/s.aulas*100):null);
+  return {st,feitos:feitos.length};
+}
+function renderChamada(d){
+  const main=$('#main'),dias=diasAula(S.turma);
+  const seg='<div class="seg"><button data-ch="dia" class="'+(CH.sub==='dia'?'on':'')+'">Chamada do dia</button><button data-ch="freq" class="'+(CH.sub==='freq'?'on':'')+'">Frequência</button></div>';
+  if(!dias.length){main.innerHTML=seg+'<div class="empty">Nenhum dia de aula desta turma no período até hoje.</div>';bindCh();return}
+  const {st,feitos}=chStats(d,dias);
+  if(CH.sub==='freq'){
+    const pend=dias.filter(x=>!x.feriado&&!chDia(d,x.br).salvo);
+    const baixa=d.alunos.filter(n=>st[n].pct!=null&&st[n].pct<75),seguidas=d.alunos.filter(n=>st[n].seg>=3);
+    main.innerHTML=seg+
+      '<div class="stats"><div class="stat"><b>'+feitos+'</b><span>chamadas feitas</span></div><div class="stat"><b>'+baixa.length+'</b><span>abaixo de 75%</span></div><div class="stat"><b>'+seguidas.length+'</b><span>3+ faltas seguidas</span></div></div>'+
+      (pend.length?'<div class="hint"><b>Chamadas pendentes:</b> '+pend.map(x=>'<button class="link-d" data-ir="'+x.iso+'">'+x.br.slice(0,5)+'</button>').join(' ')+'</div>':'<div class="hint">Todas as chamadas até hoje estão registradas.</div>')+
+      '<div class="tablewrap"><table><thead><tr><th class="nm">Aluno</th><th>Aulas</th><th>F</th><th>FJ</th><th>Freq.</th></tr></thead><tbody>'+
+      d.alunos.map(n=>{const s=st[n];return '<tr><td class="nm">'+esc(n)+'</td><td>'+s.aulas+'</td><td>'+s.f+(s.seg>=3?' <span class="tag nenhum" title="faltas seguidas">'+s.seg+' seg.</span>':'')+'</td><td>'+s.fj+'</td><td>'+(s.pct==null?'—':'<span class="calc '+(s.pct<75?'g-low':'g-ok')+'">'+s.pct+'%</span>')+'</td></tr>'}).join('')+
+      '</tbody></table></div>'+
+      '<div class="hint" style="margin-top:8px">Faltas contadas por aula. Frequência = presenças ÷ aulas dadas; a falta justificada também conta como ausência (mínimo de 75% pela LDB). "Seguidas" conta dias com F, do mais recente para trás.</div>';
+    main.querySelectorAll('[data-ir]').forEach(b=>b.addEventListener('click',()=>{CH.dia[S.turma]=b.dataset.ir;CH.sub='dia';render()}));
+    bindCh();return;
+  }
+  // dia escolhido: o guardado, senão hoje (ou o último dia de aula até hoje)
+  let i=dias.findIndex(x=>x.iso===CH.dia[S.turma]);if(i<0)i=dias.length-1;
+  const dia=dias[i];CH.dia[S.turma]=dia.iso;
+  const r=chDia(d,dia.br),na=r.na,naTotal=na&&na.aulas>=dia.tempos,aulas=dia.tempos-(na?na.aulas:0);
+  const k=S.turma+'|'+dia.br,ed=CH.edit[k];
+  const head='<div class="ch-dia"><button class="iconbtn" id="chPrev"'+(i?'':' disabled')+'>‹</button>'+
+    '<select id="chSel">'+dias.map((x,j)=>{const rr=chDia(d,x.br);const ic=x.feriado?'🎌':rr.na&&rr.na.aulas>=x.tempos?'NA':rr.salvo?'✓':'•';return '<option value="'+j+'"'+(j===i?' selected':'')+'>'+DSEM[x.wd]+', '+x.br.slice(0,5)+' · '+x.tempos+(x.tempos>1?' aulas':' aula')+'  '+ic+'</option>'}).join('')+'</select>'+
+    '<button class="iconbtn" id="chNext"'+(i<dias.length-1?'':' disabled')+'>›</button>'+
+    (dia.feriado?'':'<button class="na-btn'+(na?' on':'')+'" id="chNA">NA</button>')+'</div>';
+  let corpo='';
+  if(dia.feriado)corpo='<div class="empty"><b>Feriado: '+esc(dia.feriado)+'</b><br>Não há chamada neste dia.</div>';
+  else{
+    const naPanel=CH.naAberto?'<div class="na-box"><b>Não houve aula</b>'+
+      '<div class="na-op">'+(dia.tempos>1?Array.from({length:dia.tempos},(_,j)=>j+1).map(n=>'<button data-na="'+n+'" class="'+(na&&na.aulas===n?'on':'')+'">'+(n===dia.tempos?'Dia todo ('+n+' aulas)':n+(n>1?' aulas':' aula'))+'</button>').join(''):'<button data-na="1" class="'+(na?'on':'')+'">Dia todo</button>')+'</div>'+
+      '<div class="na-op mot">'+['Professor ausente','Evento da escola','Reunião ou conselho','Paralisação','Sem energia ou água'].map(m=>'<button data-mot="'+esc(m)+'">'+esc(m)+'</button>').join('')+'</div>'+
+      '<textarea id="naObs" rows="2" class="obs-txt" placeholder="Justificativa (obrigatória para marcar NA)">'+esc(na?na.obs:'')+'</textarea>'+
+      '<div class="na-acts">'+(na?'<button id="naTirar" class="lnk">Remover NA</button>':'')+'<button id="naOk" class="obs-btn" style="margin:0">'+(na?'Atualizar':'Marcar NA')+'</button></div></div>':'';
+    if(naTotal)corpo=naPanel+'<div class="empty"><b>Sem aula neste dia.</b><br>'+esc(na.obs||'')+'</div>';
+    else{
+      const cont={P:0,F:0,FJ:0,_:0};d.alunos.forEach(n=>{const v=r.st[n];if(v)cont[v]++;else cont._++});
+      corpo=naPanel+(na?'<div class="hint">'+na.aulas+' de '+dia.tempos+' aulas não aconteceram ('+esc(na.obs||'')+'). Conta '+aulas+(aulas>1?' aulas':' aula')+' neste dia.</div>':'')+
+        '<button class="impbtn" id="chTodos" style="justify-content:center">✓ Todos presentes</button>'+
+        '<div class="list" id="chList">'+d.alunos.map((n,j)=>{const v=r.st[n]||'',s=st[n];
+          return '<div class="row ch-row"><span class="num">'+(j+1)+'</span><span class="name">'+esc(n)+
+            (s.pct!=null&&s.pct<75?'<span class="ch-al g-low">'+s.pct+'%</span>':'')+(s.seg>=3?'<span class="ch-al g-mid">'+s.seg+'F</span>':'')+'</span>'+
+            '<span class="pf">'+['P','F','FJ'].map(o=>'<button data-a="'+esc(n)+'" data-v="'+o+'" class="pf-'+o+(v===o?' on':'')+'">'+o+'</button>').join('')+'</span></div>'}).join('')+'</div>'+
+        '<div class="ch-tot"><span><b>'+cont.P+'</b> presentes</span><span><b>'+cont.F+'</b> faltas</span><span><b>'+cont.FJ+'</b> FJ</span>'+(cont._?'<span class="g-mid"><b>'+cont._+'</b> sem marcação</span>':'')+
+        '<span class="ch-st" id="chSt">'+(ed?'salvando…':r.salvo?'salvo ✓':'não registrada')+'</span></div>';
+    }
+  }
+  main.innerHTML=seg+head+corpo;
+  $('#chSel').addEventListener('change',e=>{CH.dia[S.turma]=dias[+e.target.value].iso;CH.naAberto=false;render()});
+  $('#chPrev').addEventListener('click',()=>{if(i){CH.dia[S.turma]=dias[i-1].iso;CH.naAberto=false;render()}});
+  $('#chNext').addEventListener('click',()=>{if(i<dias.length-1){CH.dia[S.turma]=dias[i+1].iso;CH.naAberto=false;render()}});
+  const nb=$('#chNA');if(nb)nb.addEventListener('click',()=>{CH.naAberto=!CH.naAberto;render()});
+  let naSel=na?na.aulas:dia.tempos;
+  main.querySelectorAll('[data-na]').forEach(b=>b.addEventListener('click',()=>{naSel=+b.dataset.na;main.querySelectorAll('[data-na]').forEach(x=>x.classList.toggle('on',x===b))}));
+  main.querySelectorAll('[data-mot]').forEach(b=>b.addEventListener('click',()=>{const t=$('#naObs');t.value=b.dataset.mot+(t.value&&!t.value.startsWith(b.dataset.mot)?' — '+t.value:'');t.focus()}));
+  const ok=$('#naOk');if(ok)ok.addEventListener('click',()=>{const obs=$('#naObs').value.trim();if(!obs){toast('Escreva a justificativa.');$('#naObs').focus();return}
+    chEditar(dia,{na:{aulas:naSel,obs}});CH.naAberto=false;render()});
+  const tr=$('#naTirar');if(tr)tr.addEventListener('click',()=>{chEditar(dia,{na:null});CH.naAberto=false;render()});
+  const td=$('#chTodos');if(td)td.addEventListener('click',()=>{const st2={};d.alunos.forEach(n=>{if(!r.st[n])st2[n]='P'});
+    if(!Object.keys(st2).length){toast('Todos já estão marcados.');return}chEditar(dia,{st:st2});render()});
+  main.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{const o={};o[b.dataset.a]=b.dataset.v;chEditar(dia,{st:o});
+    b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));chTotais(d,dia)}));
+  bindCh();
+}
+function chTotais(d,dia){
+  const r=chDia(d,dia.br),cont={P:0,F:0,FJ:0,_:0};d.alunos.forEach(n=>{const v=r.st[n];if(v)cont[v]++;else cont._++});
+  const t=document.querySelector('.ch-tot');if(!t)return;
+  t.innerHTML='<span><b>'+cont.P+'</b> presentes</span><span><b>'+cont.F+'</b> faltas</span><span><b>'+cont.FJ+'</b> FJ</span>'+(cont._?'<span class="g-mid"><b>'+cont._+'</b> sem marcação</span>':'')+'<span class="ch-st" id="chSt">salvando…</span>';
+}
+function bindCh(){
+  document.querySelectorAll('[data-ch]').forEach(b=>b.addEventListener('click',()=>{CH.sub=b.dataset.ch;render()}));
+  $('#main').insertAdjacentHTML('beforeend',foot());bindFoot();
+}
+/* guarda a mudança e salva o dia inteiro na planilha 1,2 s depois do último toque */
+function chEditar(dia,mud){
+  const k=S.turma+'|'+dia.br,e=CH.edit[k]||(CH.edit[k]={st:{},dia,turma:S.turma});
+  if(mud.st)Object.assign(e.st,mud.st);
+  if('na' in mud)e.na=mud.na;
+  setSync('salvando…','busy');
+  clearTimeout(CH.timer);CH.timer=setTimeout(chSalvarTudo,1200);
+}
+async function chSalvarTudo(){
+  const ks=Object.keys(CH.edit);
+  for(const k of ks){
+    const e=CH.edit[k],d=S.data[e.turma]&&S.data[e.turma].chamada;if(!d)continue;
+    const r=chDia(d,e.dia.br,e.turma);
+    const na=r.na&&r.na.aulas>0?r.na:null,aulas=Math.max(0,e.dia.tempos-(na?na.aulas:0));
+    const itens=aulas?d.alunos.filter(n=>r.st[n]).map(n=>({aluno:n,reg:r.st[n]})):[];
+    try{
+      S.pend=(S.pend||0)+1;
+      const nd=(await api('chamadaSalvar',{turma:e.turma,data:e.dia.br,itens,na,aulas})).chamada;
+      if(CH.edit[k]===e)delete CH.edit[k];
+      S.data[e.turma].chamada=Object.assign(nd,{fetchedAt:new Date().toISOString()});
+      setSync('salvo ✓');
+      if(S.kind==='chamada'&&S.turma===e.turma){const st=$('#chSt');if(st)st.textContent='salvo ✓';else render()}
+    }catch(err){setSync('erro','err');toast('Chamada não salva: '+err.message)}
+    finally{S.pend--}
+  }
+}
+
 /* ===== Blocos de notas (aba Notas) =====
    Nota 1 (desempenho + caderno) · Nota 2 (atividades) · Nota 3 (prova) → Média regular;
    Recuperação paralela (aulas de aprofundamento) → Final. Reconhecidos pelos cabeçalhos da planilha. */
@@ -409,6 +574,7 @@ function valBadge(row,col,extra){
 
 function render(){
   const d=cur();if(!d)return;
+  if(S.kind==='chamada')return renderChamada(d);
   if(S.priv)return renderPriv(d);
   if(S.kind==='final'){renderFinal(d);$('#main').insertAdjacentHTML('beforeend',foot());bindFoot();return}
   if(S.kind==='notas')return renderNotas(d);
@@ -552,7 +718,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.6.0',APP_DATA='2026-10-25';
+const APP_VERSAO='1.7.0',APP_DATA='2026-10-25';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';

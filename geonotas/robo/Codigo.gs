@@ -6,12 +6,17 @@
  * o app só grava em células de lançamento (sem fórmula) e lê os resultados.
  */
 
-const VERSAO_ROBO = 'v8'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
+const VERSAO_ROBO = 'v9'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
 
 const CONFIG = {
   ANO: 2026,
   PERIODO: 4, // período em lançamento: abas "NOTAS 4P" e "CADERNOS 4P"
   DIAS_SESSAO: 30, // depois disso, pede a senha de novo
+  // chamada: período letivo em curso, horário semanal (1 = segunda … 5 = sexta; cada item é um tempo de aula)
+  INICIO: '2026-10-09',
+  FIM: '2026-12-20',
+  HORARIO: { 1: ['81', '82', '91', '82', '81'], 4: ['71', '72', '71', '72'], 5: ['91', '92', '92'] },
+  FERIADOS: { '2026-11-02': 'Finados', '2026-11-15': 'Proclamação da República', '2026-11-20': 'Dia da Consciência Negra', '2026-12-25': 'Natal' },
   // pastas dos formulários de atividade do período em curso (FORMULÁRIOS › ano › período 4)
   PASTAS_FORM: {
     '7': '1z970ApbgEkh0zedIzEcUhC0ieQzCS_rl',
@@ -82,7 +87,8 @@ function doPost(e) {
         return json_({ ok: true });
       case 'config':
         sessaoValida_(q.token);
-        return json_({ ok: true, ano: CONFIG.ANO, periodo: CONFIG.PERIODO, turmas: Object.keys(CONFIG.TURMAS), robo: VERSAO_ROBO });
+        return json_({ ok: true, ano: CONFIG.ANO, periodo: CONFIG.PERIODO, turmas: Object.keys(CONFIG.TURMAS), robo: VERSAO_ROBO,
+          chamada: { inicio: CONFIG.INICIO, fim: CONFIG.FIM, horario: CONFIG.HORARIO, feriados: CONFIG.FERIADOS } });
       case 'dados':
         sessaoValida_(q.token);
         return json_({ ok: true, dados: readSheet_(sheetFor_(q.turma, q.kind), q.kind) });
@@ -104,6 +110,12 @@ function doPost(e) {
       case 'obsDel':
         sessaoValida_(q.token);
         return json_({ ok: true, lista: obsDel_(q.turma, q.nome, q.linha) });
+      case 'chamada':
+        sessaoValida_(q.token);
+        return json_({ ok: true, chamada: chamadaLer_(q.turma) });
+      case 'chamadaSalvar':
+        sessaoValida_(q.token);
+        return json_({ ok: true, chamada: chamadaSalvar_(q.turma, q.data, q.itens, q.na, q.aulas) });
       case 'salvar':
         sessaoValida_(q.token);
         return json_({ ok: true, linha: saveCell_(q.turma, q.kind, q.row, q.col, q.value, q.nome) });
@@ -403,6 +415,51 @@ function obsDel_(turma, nome, linha) {
   } finally { lock.releaseLock(); }
   return obsListar_(turma, nome);
 }
+
+/* ---------- chamada ----------
+   Aba CHAMADA da planilha da turma, uma linha por aluno por dia:
+   DATA (dd/mm/aaaa) | ALUNO | REGISTRO (P, F, FJ) | AULAS (aulas dadas no dia) | OBSERVAÇÃO.
+   Dia sem aula (todo ou parte): linha com ALUNO = "(SEM AULA)", REGISTRO = NA, AULAS = aulas não dadas, OBSERVAÇÃO = justificativa. */
+const SEM_AULA_ = '(SEM AULA)';
+function abaChamada_(turma) {
+  const ss = SpreadsheetApp.openById(CONFIG.TURMAS[turma]);
+  let sh = ss.getSheetByName('CHAMADA');
+  if (!sh) {
+    sh = ss.insertSheet('CHAMADA');
+    sh.getRange(1, 1, 1, 5).setValues([['DATA', 'ALUNO', 'REGISTRO', 'AULAS', 'OBSERVAÇÃO']]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+    sh.getRange('A:A').setNumberFormat('@');
+    sh.setColumnWidth(1, 100); sh.setColumnWidth(2, 300); sh.setColumnWidth(5, 360);
+  }
+  return sh;
+}
+function chamadaLer_(turma) {
+  if (!CONFIG.TURMAS[turma]) throw new Error('Turma não configurada: ' + turma);
+  const sh = abaChamada_(turma), n = sh.getLastRow();
+  const reg = n < 2 ? [] : sh.getRange(2, 1, n - 1, 5).getDisplayValues().filter(r => r[0] && r[1]);
+  const notas = readSheet_(sheetFor_(turma, 'notas'), 'notas');
+  return { alunos: notas.rows.map(r => r.nome), registros: reg };
+}
+function chamadaSalvar_(turma, data, itens, na, aulas) {
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(String(data))) throw new Error('Data inválida.');
+  const OK = { P: 1, F: 1, FJ: 1 };
+  const novas = [];
+  if (na && Number(na.aulas) > 0) novas.push([data, SEM_AULA_, 'NA', Number(na.aulas), String(na.obs || '').slice(0, 500)]);
+  (itens || []).forEach(x => { if (x && x.aluno && OK[x.reg]) novas.push([data, String(x.aluno).trim(), x.reg, Number(aulas) || 0, '']); });
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const sh = abaChamada_(turma), n = sh.getLastRow();
+    const atuais = n < 2 ? [] : sh.getRange(2, 1, n - 1, 5).getDisplayValues().filter(r => r[0] && r[0] !== data);
+    const todas = atuais.concat(novas).sort((a, b) => chave_(a[0]).localeCompare(chave_(b[0])));
+    if (n >= 2) sh.getRange(2, 1, n - 1, 5).clearContent();
+    if (todas.length) {
+      sh.getRange(2, 1, todas.length, 1).setNumberFormat('@');
+      sh.getRange(2, 1, todas.length, 5).setValues(todas);
+    }
+  } finally { lock.releaseLock(); }
+  return chamadaLer_(turma);
+}
+function chave_(d) { const m = String(d).split('/'); return m.length === 3 ? m[2] + m[1] + m[0] : String(d); }
 
 /* ---------- leitura genérica, guiada pelos cabeçalhos ---------- */
 
