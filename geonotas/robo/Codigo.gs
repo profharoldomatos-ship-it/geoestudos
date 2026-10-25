@@ -6,6 +6,8 @@
  * o app só grava em células de lançamento (sem fórmula) e lê os resultados.
  */
 
+const VERSAO_ROBO = 'v7'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
+
 const CONFIG = {
   ANO: 2026,
   PERIODO: 4, // período em lançamento: abas "NOTAS 4P" e "CADERNOS 4P"
@@ -66,7 +68,7 @@ function sessaoValida_(token) {
 /* ---------- ponto de entrada: a tela (no GitHub) conversa com o robô por aqui ---------- */
 
 function doGet() {
-  return json_({ ok: true, app: 'GeoNotas', msg: 'Robô do GeoNotas funcionando.' });
+  return json_({ ok: true, app: 'GeoNotas', robo: VERSAO_ROBO, msg: 'Robô do GeoNotas funcionando.' });
 }
 
 function doPost(e) {
@@ -80,7 +82,7 @@ function doPost(e) {
         return json_({ ok: true });
       case 'config':
         sessaoValida_(q.token);
-        return json_({ ok: true, ano: CONFIG.ANO, periodo: CONFIG.PERIODO, turmas: Object.keys(CONFIG.TURMAS) });
+        return json_({ ok: true, ano: CONFIG.ANO, periodo: CONFIG.PERIODO, turmas: Object.keys(CONFIG.TURMAS), robo: VERSAO_ROBO });
       case 'dados':
         sessaoValida_(q.token);
         return json_({ ok: true, dados: readSheet_(sheetFor_(q.turma, q.kind), q.kind) });
