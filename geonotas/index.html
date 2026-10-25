@@ -188,8 +188,11 @@ a.iconbtn{color:inherit}
 .ch-row .name{white-space:nowrap}
 .ch-al{font-size:11px;font-weight:700;border-radius:6px;padding:1px 5px;flex:none}
 .pf{display:flex;gap:4px;flex:none}
-.ch-mass{display:flex;gap:8px}.ch-mass .impbtn{flex:1;justify-content:center;margin-bottom:6px}
-.ch-mass .impbtn.desm{flex:0 0 auto;color:var(--low);border-color:var(--low)}
+.ch-mass{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.ch-mass .impbtn{width:auto;min-width:0;margin:0;min-height:52px;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;white-space:normal;line-height:1.2;font-size:15px;padding:10px 8px}
+.ch-mass .impbtn.desm{color:var(--low);border-color:var(--low)}
+.ch-mass .impbtn:disabled{opacity:.4;cursor:default}
+html,body{overflow-x:clip}
 .ch-row .name{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .pf button{width:46px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--field);font-weight:700;color:var(--muted);cursor:pointer;font-size:13px}
 .pf .pf-P.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
@@ -522,7 +525,7 @@ function renderChamada(d){
     else{
       const cont={P:0,F:0,FJ:0,_:0};d.alunos.forEach(n=>{const v=r.st[n];if(v)cont[v]++;else cont._++});
       corpo=naPanel+(na?'<div class="hint">'+na.aulas+' de '+dia.tempos+' aulas não aconteceram ('+esc(na.obs||'')+'). Conta '+aulas+(aulas>1?' aulas':' aula')+' neste dia.</div>':'')+
-        '<div class="ch-mass"><button class="impbtn" id="chTodos">✓ Todos presentes</button>'+(cont.P+cont.F+cont.FJ?'<button class="impbtn desm" id="chDesm">✕ Desmarcar todos</button>':'')+'</div>'+
+        '<div class="ch-mass"><button class="impbtn" id="chTodos"'+(cont._?'':' disabled')+'>✓ Todos presentes</button>'+'<button class="impbtn desm" id="chDesm"'+(cont.P+cont.F+cont.FJ?'':' disabled')+'>✕ Desmarcar todos</button>'+'</div>'+
         '<div class="hint">Toque de novo na marcação para desmarcar.</div>'+
         '<div class="list" id="chList">'+d.alunos.map((n,j)=>{const v=r.st[n]||'',s=st[n];
           return '<div class="row ch-row"><span class="num">'+(j+1)+'</span><span class="name">'+esc(n)+
@@ -807,7 +810,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.8.1',APP_DATA='2026-10-25';
+const APP_VERSAO='1.8.2',APP_DATA='2026-10-25';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
