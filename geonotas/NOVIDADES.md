@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (o mesmo do GeoEstudos):
 
 A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google Apps Script) tem numeração própria (v1, v2…): sempre que ele muda, é preciso colar o código novo e fazer uma nova versão da implantação.
 
+## Planejado para 2027
+- Chamada: registro do conteúdo do dia, a partir do planejamento mensal.
+
 ## 1.7.1 · 25/10/2026 · robô v9
 - Chamada: todas as datas do período aparecem, inclusive as futuras (marcadas como futuras). Nelas dá para registrar NA com antecedência; a presença abre no dia.
 
