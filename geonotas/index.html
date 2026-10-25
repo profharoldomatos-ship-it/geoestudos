@@ -104,6 +104,23 @@ a.iconbtn{color:inherit}
 .impok{position:sticky;bottom:0;background:var(--bg);padding:12px 0 4px;border-top:1px solid var(--line);margin-top:12px}
 .impok button{width:100%;font:inherit;font-weight:700;border:0;border-radius:12px;padding:13px;background:var(--brand);color:var(--brand-ink);cursor:pointer}
 .impok button:disabled{opacity:.5}
+.rs-head{display:grid;gap:4px;padding:0 12px 6px;font-size:11px;font-weight:700;color:var(--muted);text-align:center}
+.rs-row{padding:9px 12px;border-top:1px solid var(--line);cursor:pointer}
+.rs-row:first-child{border-top:0}
+.rs-nome{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;font-size:15px}
+.rs-vals{display:grid;gap:4px}
+.rs-vals .calc{min-width:0;font-size:14px;padding:3px 0}
+.calc.forte{outline:1.5px solid currentColor;outline-offset:-1.5px}
+.chips2{display:grid;gap:6px;margin-bottom:10px}
+.chips2 .chip{padding:8px 0;font-size:14px;border-radius:999px}
+.ctl{display:flex;gap:6px;flex:0 0 auto}
+.ctl.par .tog,.ctl.par .inp{width:54px}
+.sec-t{margin:16px 2px 4px;font-family:var(--display);font-size:17px;font-weight:700}
+.bl-head{display:flex;justify-content:space-between;align-items:center;margin:10px 2px 6px}
+.bl-head .grp{margin:0}
+.bloco{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.bloco .bl-nome{font-weight:700}
+.bloco .calc{font-size:18px;min-width:56px}
 .foot{margin:24px 0 0;text-align:center;font-size:13px;color:var(--muted)}
 .foot button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;margin:0 3px;cursor:pointer}
 .foot button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
@@ -178,7 +195,7 @@ a.iconbtn{color:inherit}
 
 <script>
 const S = {
-  cfg:null, turma:null, kind:'notas', mode:'atividade',
+  cfg:null, turma:null, kind:'notas', mode:'resumo', modeC:'atividade',
   data:{},            // data[turma][kind] = {columns, rows, fetchedAt}
   colSel:{},          // coluna escolhida por turma+kind
   pending:0, openRow:null
@@ -293,7 +310,7 @@ function patchRow(row){
     if(!cell)return;
     if(el.classList.contains('inp')){if(el!==document.activeElement){el.value=shown(cell.v)==='—'?'':cell.v;el.classList.remove('bad')}}
     else if(el.classList.contains('tog')){el.classList.toggle('on',cell.v===true);el.textContent=cell.v===true?'✓':'—'}
-    else{el.textContent=shown(cell.v);el.className='calc '+grade(cell.v)}
+    else{el.textContent=shown(cell.v);el.className=(el.classList.contains('ctx')?'ctx':'calc '+(typeof cell.v==='boolean'?'g-none':grade(cell.v)))+(el.classList.contains('forte')?' forte':'')}
   });
 }
 
@@ -335,40 +352,149 @@ const byRow=d=>id=>d.rows.find(r=>r.r==id);
 const byCol=d=>id=>d.columns.find(c=>c.c==id);
 
 /* ---------- telas ---------- */
+/* ===== Blocos de notas (aba Notas) =====
+   Nota 1 (desempenho + caderno) · Nota 2 (atividades) · Nota 3 (prova) → Média regular;
+   Recuperação paralela (aulas de aprofundamento) → Final. Reconhecidos pelos cabeçalhos da planilha. */
+const BLOCOS=[['n1','Nota 1','N1'],['n2','Nota 2','N2'],['n3','Nota 3','N3'],['mr','Média regular','MR'],['rp','Recuperação paralela','RP'],['fin','Final','FINAL'],['out','Outros','']];
+function blocoDe(c){
+  const L=c.label.toUpperCase().replace(/\s+/g,' '),top=(c.parts[0]||'').toUpperCase().trim();
+  if(/RECUP/.test(L))return 'rp';
+  if(/FINAL/.test(L))return 'fin';
+  if(/M[ÉE]DIA (REGULAR|GERAL)/.test(L))return 'mr';
+  if(/M[ÉE]DIA NOTA 2/.test(L)||top==='NOTA 2')return 'n2';
+  if(top==='NOTA 1')return 'n1';
+  if(top==='NOTA 3')return 'n3';
+  if(/^M[ÉE]DIA$/.test(L.trim()))return 'mr';
+  return 'out';
+}
+function blocos(d){
+  if(d._bl)return d._bl;
+  const m={};BLOCOS.forEach(([id,nome,sig])=>m[id]={id,nome,sig,cols:[],res:null});
+  d.columns.forEach(c=>m[blocoDe(c)].cols.push(c));
+  const ultCalc=b=>b.cols.filter(c=>c.calc).slice(-1)[0]||null;
+  m.n1.res=ultCalc(m.n1);
+  m.n2.res=m.n2.cols.find(c=>/M[ÉE]DIA/i.test(c.label)&&c.calc)||ultCalc(m.n2);
+  m.n3.res=m.n3.cols.slice(-1)[0]||null;
+  m.mr.res=m.mr.cols.slice(-1)[0]||null;
+  m.rp.res=m.rp.cols.find(c=>c.calc&&/M[ÉE]DIA/i.test(c.label))||ultCalc(m.rp);
+  m.fin.res=m.fin.cols[0]||null;
+  return d._bl=BLOCOS.map(([id])=>m[id]).filter(b=>b.cols.length);
+}
+/* unidades de lançamento: caixa de "feito" + nota ao lado formam um par */
+function unidades(b){
+  const ins=b.cols.filter(c=>!c.calc),u=[];
+  for(let i=0;i<ins.length;i++){
+    const c=ins[i],p=ins[i+1];
+    if(c.check&&p&&!p.check&&p.c===c.c+1){
+      const nome=(c.parts.length>2?c.parts[c.parts.length-2]+' · ':'')+c.leaf.replace(/^ATIV\.\s*/i,'Ativ. ');
+      u.push({nome,cols:[c,p]});i++;
+    }else u.push({nome:(c.parts.length>2?c.parts[c.parts.length-2]+' · ':'')+c.leaf,cols:[c]});
+  }
+  return u;
+}
+function valBadge(row,col,extra){
+  if(!col)return '<span class="calc g-none'+(extra||'')+'">—</span>';
+  const v=row.cells[col.c].v;
+  return '<span class="calc '+(typeof v==='boolean'?'g-none':grade(v))+(extra||'')+'" data-r="'+row.r+'" data-c="'+col.c+'">'+esc(shown(v))+'</span>';
+}
+
 function render(){
   const d=cur();if(!d)return;
   if(S.priv)return renderPriv(d);
   if(S.kind==='final'){renderFinal(d);$('#main').insertAdjacentHTML('beforeend',foot());bindFoot();return}
+  if(S.kind==='notas')return renderNotas(d);
   const main=$('#main');
-  const imp=S.kind==='notas'?'<button class="impbtn" id="impOpen">⤓ Importar notas dos formulários do '+S.cfg.periodo+'º período</button>':'';
-  const seg=imp+'<div class="seg"><button data-m="atividade" class="'+(S.mode==='atividade'?'on':'')+'">Por atividade</button><button data-m="aluno" class="'+(S.mode==='aluno'?'on':'')+'">Por aluno</button></div>';
-  if(S.mode==='aluno'){
-    main.innerHTML=seg+'<div class="hint">Toque num aluno para ver e lançar tudo do '+S.cfg.periodo+'º período.</div><div class="list">'+
-      d.rows.map(r=>{const k=keyVal(d,r);return '<div class="row tap" data-open="'+r.r+'"><span class="num">'+esc(r.n)+'</span><span class="name">'+esc(r.nome)+'</span><span class="calc '+(k?grade(k.v):'g-none')+'" data-r="'+r.r+'" data-c="key">'+(k?esc(shown(k.v)):'—')+'</span></div>'}).join('')+'</div>';
+  const seg='<div class="seg"><button data-m="atividade" class="'+(S.modeC==='atividade'?'on':'')+'">Por capítulo</button><button data-m="aluno" class="'+(S.modeC==='aluno'?'on':'')+'">Por aluno</button></div>';
+  if(S.modeC==='aluno'){
+    main.innerHTML=seg+'<div class="hint">Toque num aluno para ver todos os capítulos.</div><div class="list">'+
+      d.rows.map(r=>{const k=keyVal(d,r)||{v:(r.cells[(d.columns.find(c=>c.calc)||{}).c]||{}).v};return '<div class="row tap" data-open="'+r.r+'"><span class="num">'+esc(r.n)+'</span><span class="name">'+esc(r.nome)+'</span><span class="calc '+grade(k.v)+'">'+esc(shown(k.v))+'</span></div>'}).join('')+'</div>';
     main.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',()=>openSheet(+el.dataset.open)));
   }else{
     const cols=inputCols(d);
-    if(!cols.length){main.innerHTML=seg+'<div class="empty">Esta aba não tem colunas de lançamento.</div>';bindSeg();return}
+    if(!cols.length){main.innerHTML=seg+'<div class="empty">Esta aba não tem colunas de lançamento.</div>';bindSeg('modeC');return}
     const key=S.turma+S.kind;
     let col=d.columns.find(c=>c.c===S.colSel[key]&&!c.calc)||defaultCol(d);
     S.colSel[key]=col.c;
+    const tot=d.columns.find(c=>c.calc);
     const opts=cols.map(c=>'<option value="'+c.c+'"'+(c.c===col.c?' selected':'')+'>'+esc(c.label)+'</option>').join('');
     main.innerHTML=seg+'<select id="colSel">'+opts+'</select><div class="list" id="lst">'+
-      d.rows.map(r=>{const k=keyVal(d,r);return '<div class="row"><span class="num">'+esc(r.n)+'</span><span class="name">'+esc(r.nome)+'</span><span class="ctx" data-r="'+r.r+'" data-c="key">'+(k?esc(shown(k.v)):'—')+'</span>'+control(r,col)+'</div>'}).join('')+'</div>'+
-      '<div class="hint" style="margin-top:8px">À direita do nome: média atual calculada pela planilha.</div>';
+      d.rows.map(r=>'<div class="row"><span class="num">'+esc(r.n)+'</span><span class="name">'+esc(r.nome)+'</span>'+(tot?'<span class="ctx" data-r="'+r.r+'" data-c="'+tot.c+'">'+esc(shown(r.cells[tot.c].v))+'</span>':'')+control(r,col)+'</div>').join('')+'</div>'+
+      (tot?'<div class="hint" style="margin-top:8px">À direita do nome: nota do caderno calculada pela planilha.</div>':'');
     $('#colSel').addEventListener('change',e=>{S.colSel[key]=+e.target.value;render()});
     bindControls($('#lst'),byRow(d),byCol(d));
   }
   $('#main').insertAdjacentHTML('beforeend',foot());bindFoot();
-  bindSeg();
+  bindSeg('modeC');
 }
-function bindSeg(){const io=$('#impOpen');if(io)io.addEventListener('click',abrirImport);document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{S.mode=b.dataset.m;store.set('mode',S.mode);render()}))}
 
+/* Aba Notas: Resumo (todas as notas de todos) · Lançar (por bloco e atividade) · Por aluno (ficha) */
+function renderNotas(d){
+  const main=$('#main'),bl=blocos(d);
+  const imp='<button class="impbtn" id="impOpen">⤓ Importar notas dos formulários do '+S.cfg.periodo+'º período</button>';
+  const m=S.mode;
+  const seg=imp+'<div class="seg"><button data-m="resumo" class="'+(m==='resumo'?'on':'')+'">Resumo</button><button data-m="lancar" class="'+(m==='lancar'?'on':'')+'">Lançar</button><button data-m="aluno" class="'+(m==='aluno'?'on':'')+'">Por aluno</button></div>';
+  if(m==='resumo'){
+    const res=bl.filter(b=>b.res&&b.id!=='out');
+    const grid='grid-template-columns:repeat('+res.length+',1fr)';
+    main.innerHTML=seg+
+      '<div class="rs-head" style="'+grid+'">'+res.map(b=>'<span title="'+esc(b.nome)+'">'+esc(b.sig)+'</span>').join('')+'</div>'+
+      '<div class="list">'+d.rows.map(r=>'<div class="rs-row tap" data-open="'+r.r+'"><div class="rs-nome"><span class="num">'+esc(r.n)+'</span> '+esc(r.nome)+'</div>'+
+        '<div class="rs-vals" style="'+grid+'">'+res.map(b=>valBadge(r,b.res,(b.id==='mr'||b.id==='fin')?' forte':'')).join('')+'</div></div>').join('')+'</div>'+
+      '<div class="hint" style="margin-top:8px">N1 desempenho + caderno · N2 atividades · N3 prova · MR média regular · RP recuperação paralela. Toque num aluno para ver como cada nota foi formada.</div>';
+    main.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',()=>openSheet(+el.dataset.open)));
+  }else if(m==='lancar'){
+    const comIns=bl.filter(b=>b.cols.some(c=>!c.calc));
+    if(!comIns.length){main.innerHTML=seg+'<div class="empty">Esta aba não tem colunas de lançamento.</div>';bindSeg('mode');return}
+    const k=S.turma+'bloco';let b=comIns.find(x=>x.id===S.colSel[k])||comIns[0];S.colSel[k]=b.id;
+    const us=unidades(b),ku=S.turma+'un'+b.id;let ui=Math.min(S.colSel[ku]||0,us.length-1);S.colSel[ku]=ui;const u=us[ui];
+    main.innerHTML=seg+
+      '<div class="chips2" style="grid-template-columns:repeat('+comIns.length+',1fr)">'+comIns.map(x=>'<button class="chip'+(x===b?' on':'')+'" data-b="'+x.id+'">'+esc(x.nome.replace('Recuperação paralela','Recup.'))+'</button>').join('')+'</div>'+
+      (us.length>1?'<select id="unSel">'+us.map((x,i)=>'<option value="'+i+'"'+(i===ui?' selected':'')+'>'+esc(x.nome)+'</option>').join('')+'</select>':'<div class="hint">'+esc(u.nome)+'</div>')+
+      '<div class="list" id="lst">'+d.rows.map(r=>'<div class="row"><span class="num">'+esc(r.n)+'</span><span class="name">'+esc(r.nome)+'</span>'+
+        (b.res&&!u.cols.includes(b.res)?'<span class="ctx" data-r="'+r.r+'" data-c="'+b.res.c+'">'+esc(shown(r.cells[b.res.c].v))+'</span>':'')+
+        '<span class="ctl'+(u.cols.length>1?' par':'')+'">'+u.cols.map(c=>control(r,c)).join('')+'</span></div>').join('')+'</div>'+
+      (b.res&&!u.cols.includes(b.res)?'<div class="hint" style="margin-top:8px">À direita do nome: '+esc(b.nome)+' atual, calculada pela planilha.</div>':'');
+    main.querySelectorAll('[data-b]').forEach(x=>x.addEventListener('click',()=>{S.colSel[k]=x.dataset.b;render()}));
+    const us2=$('#unSel');if(us2)us2.addEventListener('change',e=>{S.colSel[ku]=+e.target.value;render()});
+    bindControls($('#lst'),byRow(d),byCol(d));
+  }else{
+    main.innerHTML=seg+'<div class="hint">Toque num aluno para ver e lançar tudo do '+S.cfg.periodo+'º período.</div><div class="list">'+
+      d.rows.map(r=>{const k=keyVal(d,r);return '<div class="row tap" data-open="'+r.r+'"><span class="num">'+esc(r.n)+'</span><span class="name">'+esc(r.nome)+'</span><span class="calc '+(k?grade(k.v):'g-none')+'" data-r="'+r.r+'" data-c="key">'+(k?esc(shown(k.v)):'—')+'</span></div>'}).join('')+'</div>';
+    main.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',()=>openSheet(+el.dataset.open)));
+  }
+  main.insertAdjacentHTML('beforeend',foot());bindFoot();
+  bindSeg('mode');
+}
+function bindSeg(qual){
+  const io=$('#impOpen');if(io)io.addEventListener('click',abrirImport);
+  document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{S[qual]=b.dataset.m;store.set(qual,b.dataset.m);render()}));
+}
+
+/* ficha de um aluno: na aba Notas, organizada em blocos com o resultado de cada um */
 function fieldsHtml(d,row){
-  const groups=[];
-  d.columns.forEach(c=>{const g=c.group||c.leaf;let G=groups.find(x=>x.g===g);if(!G){G={g,cols:[]};groups.push(G)}G.cols.push(c)});
-  return groups.map(G=>'<div class="grp">'+esc(G.g)+'</div><div class="list">'+
-    G.cols.map(c=>'<div class="field"><span class="lb">'+esc(c.leaf)+'</span>'+control(row,c)+'</div>').join('')+'</div>').join('');
+  if(S.kind!=='notas'){
+    const groups=[];
+    d.columns.forEach(c=>{const g=c.group||c.leaf;let G=groups.find(x=>x.g===g);if(!G){G={g,cols:[]};groups.push(G)}G.cols.push(c)});
+    return groups.map(G=>'<div class="grp">'+esc(G.g)+'</div><div class="list">'+
+      G.cols.map(c=>'<div class="field"><span class="lb">'+esc(c.leaf)+'</span>'+control(row,c)+'</div>').join('')+'</div>').join('');
+  }
+  const bl=blocos(d);
+  const card=b=>{
+    const itens=b.cols.filter(c=>c!==b.res||!c.calc);
+    const so=b.res&&(b.id==='mr'||b.id==='fin')&&itens.length<=1;
+    if(so)return '<div class="bloco destaque"><span class="bl-nome">'+esc(b.nome)+'</span>'+valBadge(row,b.res,' forte')+'</div>';
+    // atividade feita + nota da atividade na mesma linha
+    const us=unidades(b),par={},pula={};us.forEach(u=>{if(u.cols.length>1){par[u.cols[0].c]=u;pula[u.cols[1].c]=1}});
+    const linhas=itens.filter(c=>!pula[c.c]).map(c=>{
+      const u=par[c.c];
+      if(u)return '<div class="field"><span class="lb">'+esc(u.nome)+'</span><span class="ctl par">'+u.cols.map(x=>control(row,x)).join('')+'</span></div>';
+      return '<div class="field"><span class="lb">'+esc(c.parts.length>2?c.parts[c.parts.length-2]+' · '+c.leaf:c.leaf)+'</span>'+control(row,c)+'</div>';
+    });
+    return '<div class="bl-head"><span class="grp">'+esc(b.nome)+'</span>'+(b.res&&b.res.calc?valBadge(row,b.res,' forte'):'')+'</div><div class="list">'+linhas.join('')+'</div>';
+  };
+  const reg=bl.filter(b=>['n1','n2','n3'].includes(b.id)),mr=bl.find(b=>b.id==='mr');
+  return '<div class="sec-t">Média regular</div>'+reg.map(card).join('')+(mr?card(mr):'')+
+    bl.filter(b=>['rp','fin','out'].includes(b.id)).map(b=>(b.id==='out'?'<div class="sec-t">Outros</div>':'')+card(b)).join('');
 }
 
 /* Um aluno por vez: a lista fica recolhida e só aparece o aluno escolhido
@@ -417,7 +543,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.4.1',APP_DATA='2026-10-24';
+const APP_VERSAO='1.5.0',APP_DATA='2026-10-25';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
@@ -586,7 +712,7 @@ async function init(){
     S.cfg=await api('config');
     $('#sub').textContent=S.cfg.periodo+'º período · '+S.cfg.ano;
     const t=store.get('turma');S.turma=S.cfg.turmas.includes(t)?t:S.cfg.turmas[0];
-    S.mode=store.get('mode')==='aluno'?'aluno':'atividade';
+    S.mode=['resumo','lancar','aluno'].includes(store.get('mode'))?store.get('mode'):'resumo';S.modeC=store.get('modeC')==='aluno'?'aluno':'atividade';
     drawChips();ensure();
   }catch(e){$('#main').innerHTML='<div class="empty">Erro ao iniciar: '+esc(e.message||e)+'</div>'}
 }

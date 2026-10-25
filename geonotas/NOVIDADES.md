@@ -8,6 +8,12 @@ Formato **MAIOR.MENOR.CORREÇÃO** (o mesmo do GeoEstudos):
 
 A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google Apps Script) tem numeração própria (v1, v2…): sempre que ele muda, é preciso colar o código novo e fazer uma nova versão da implantação.
 
+## 1.5.0 · 25/10/2026 · robô v7
+- Aba Notas organizada por blocos: Nota 1 (desempenho + caderno), Nota 2 (atividades), Nota 3 (prova) → Média regular; Recuperação paralela → Final.
+- Novo modo Resumo: todas as notas da turma lado a lado (N1, N2, N3, MR, RP, FINAL).
+- Modo Lançar: escolha o bloco e a atividade; a marcação e a nota da atividade ficam lado a lado, com o resultado do bloco ao lado do nome.
+- Ficha do aluno (Por aluno e Um aluno por vez) mostra como cada nota foi formada, com o resultado de cada bloco.
+
 ## 1.4.1 · 24/10/2026 · robô v7
 - Importação: resposta sem aluno identificado fica na lista até você escolher o aluno; nova opção "descartar esta resposta".
 - Registro do que já foi importado passa a usar o nome do aluno (resiste à inclusão de alunos no meio da lista).
