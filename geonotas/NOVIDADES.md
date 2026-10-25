@@ -11,6 +11,17 @@ A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google A
 ## Planejado para 2027
 - Chamada: registro do conteúdo do dia, a partir do planejamento mensal.
 
+## 1.8.0 · 25/10/2026 · alinhamento com o GeoEstudos
+- Abas embaixo (Notas, Cadernos, Chamada, Resultados), como no GeoEstudos; topo limpo com "‹ GeoEstudos", "Um por vez" e ↻.
+- Cada turma ganha a cor do seu ano (7º verde, 8º laranja, 9º roxo).
+- Cores das notas só onde decidem: Média regular e Final (verde a partir de 7, vermelho ▼ abaixo). N1, N2, N3 e RP ficam neutras.
+- Ficha do aluno com seções no estilo do GeoEstudos (Média regular, Recuperação paralela, Final, Observações).
+- Nomes das colunas em linguagem de leitura: "ATIV. C12" vira "Atividade · Cap. 12".
+- Importar formulários agora fica em Lançar → Nota 2.
+- Chamada por semana: ‹ › troca a semana e cada dia mostra se está feita, pendente, futura ou sem aula.
+- Botões P/F/FJ e campos maiores (44 px), foco visível pelo teclado e "Sair do GeoNotas" no rodapé.
+- Robô continua v9 (nada a atualizar no Apps Script).
+
 ## 1.7.1 · 25/10/2026 · robô v9
 - Chamada: todas as datas do período aparecem, inclusive as futuras (marcadas como futuras). Nelas dá para registrar NA com antecedência; a presença abre no dia.
 
