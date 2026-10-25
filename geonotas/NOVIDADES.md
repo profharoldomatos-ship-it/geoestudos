@@ -11,6 +11,11 @@ A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google A
 ## Planejado para 2027
 - Chamada: registro do conteúdo do dia, a partir do planejamento mensal.
 
+## 1.9.0 · 25/10/2026 · cores liga/desliga nos Resultados
+- Botão "Cores" na aba Resultados (também no modo Um por vez): ligado, as notas de cada período e a média ficam verdes a partir de 7 e vermelhas abaixo de 7; desligado, a tabela fica neutra. A escolha fica guardada no aparelho.
+- Ao arrastar a tabela para o lado, os cabeçalhos (1º P, 2º P…) somem atrás da coluna "Aluno", no mesmo corte dos nomes, em vez de avançarem sobre ela.
+- Robô continua v9.
+
 ## 1.8.4 · 25/10/2026 · teclado não cobre mais a caixa de texto
 - Com o teclado aberto, a ficha do aluno encolhe para a parte visível da tela e a caixa de observações (ou a nota em edição) sobe para o meio.
 

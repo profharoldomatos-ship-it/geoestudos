@@ -83,7 +83,16 @@ select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1p
 table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 th{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700;position:sticky;top:0;background:var(--card)}
-td.nm,th.nm{text-align:left;position:sticky;left:0;background:var(--card);max-width:150px;overflow:hidden;text-overflow:ellipsis}
+td.nm,th.nm{text-align:left;position:sticky;left:0;background:var(--card);max-width:150px;overflow:hidden;text-overflow:ellipsis;z-index:1;box-shadow:1px 0 0 var(--line)}
+th{z-index:2} th.nm{z-index:3}
+/* liga/desliga cores (Resultados) */
+.corsw{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px;font-size:14px}
+.corsw .sw{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.corsw .sw i{width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;transition:background .15s}
+.corsw .sw i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+.corsw .sw[aria-pressed=true] i{background:var(--ok)}
+.corsw .sw[aria-pressed=true] i::after{left:16px}
+.corsw .lg{color:var(--muted);font-size:12.5px}
 /* folha do aluno */
 .sheet{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column}
 .sheet.open{display:flex}
@@ -779,14 +788,14 @@ function renderPriv(d){
   let body;
   if(S.kind==='final'){
     const tone=finalTone(d);
-    body='<div class="list">'+d.columns.map(c=>{const v=row.cells[c.c].v,t=tone(c,v);return '<div class="field"><span class="lb">'+esc(rotulo(c.leaf))+'</span>'+(t?'<span class="calc '+t+'">'+esc(shown(v))+'</span>':'<span class="calc g-none">'+esc(shown(v))+'</span>')+'</div>'}).join('')+'</div>';
+    body=coresSw()+'<div class="list">'+d.columns.map(c=>{const v=row.cells[c.c].v,t=tone(c,v);return '<div class="field"><span class="lb">'+esc(rotulo(c.leaf))+'</span>'+(t?'<span class="calc '+t+'">'+esc(shown(v))+'</span>':'<span class="calc g-none">'+esc(shown(v))+'</span>')+'</div>'}).join('')+'</div>';
   }else body=fieldsHtml(d,row);
   $('#main').innerHTML=nav+'<div id="pBody">'+body+'</div>'+foot();
   const go=r=>{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();S.privRow=r;render();window.scrollTo(0,0)};
   $('#pSel').addEventListener('change',e=>go(+e.target.value));
   $('#pPrev').addEventListener('click',()=>rows[i-1]&&go(rows[i-1].r));
   $('#pNext').addEventListener('click',()=>rows[i+1]&&go(rows[i+1].r));
-  if(S.kind!=='final')bindControls($('#pBody'),byRow(d),byCol(d));
+  if(S.kind!=='final')bindControls($('#pBody'),byRow(d),byCol(d));else bindCoresSw();
   bindFoot();
 }
 
@@ -812,7 +821,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.8.4',APP_DATA='2026-10-25';
+const APP_VERSAO='1.9.0',APP_DATA='2026-10-25';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
@@ -954,12 +963,26 @@ function stepSheet(dir){
   if(n){S.openRow=n.r;renderSheet();$('#sBody').scrollTop=0}
 }
 
+function coresOn(){return store.get('cores')!=='0'}
+/* Resultados: com as cores ligadas, cada nota de período e a média ficam
+   verdes a partir de 7 e vermelhas abaixo; desligadas, tudo neutro. */
 function finalTone(d){
   const p28=d.columns.find(c=>/PARA\s*28/i.test(c.label));
+  const on=coresOn();
   return (c,v)=>{
-    if(p28&&c.c===p28.c){const n=num(v);if(n==null)return '';return n>10?'g-low':n>7?'g-mid':'g-ok'}
-    return (c.calc&&num(v)!=null&&/PER[ÍI]ODO|M[ÉE]DIA/i.test(c.label))?grade(v):'';
+    if(!on)return '';
+    const n=num(v);if(n==null)return '';
+    if(p28&&c.c===p28.c)return n>10?'g-low':n>7?'g-mid':'g-ok';
+    return /PER[ÍI]ODO|M[ÉE]DIA/i.test(c.label)?grade(v):'';
   };
+}
+function coresSw(){
+  const on=coresOn();
+  return '<div class="corsw"><span class="lg">'+(on?'Verde: 7 ou mais · Vermelho: abaixo de 7':'Cores desligadas')+'</span>'+
+    '<button class="sw" id="corSw" aria-pressed="'+on+'"><i aria-hidden="true"></i>Cores</button></div>';
+}
+function bindCoresSw(){
+  const b=$('#corSw');if(b)b.addEventListener('click',()=>{store.set('cores',coresOn()?'0':'1');render()});
 }
 function renderFinal(d){
   const fin=d.columns.find(c=>/M[ÉE]DIA FINAL/i.test(c.label))||keyCols(d).slice(-1)[0];
@@ -967,19 +990,17 @@ function renderFinal(d){
   const vals=d.rows.map(r=>fin?num(r.cells[fin.c].v):null).filter(v=>v!=null);
   const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):null;
   const below=vals.filter(v=>v<7).length;
-  const tone=(c,v)=>{
-    if(p28&&c.c===p28.c){const n=num(v);if(n==null)return '';return n>10?'g-low':n>7?'g-mid':'g-ok'}
-    return (c.calc&&num(v)!=null&&/PER[ÍI]ODO|M[ÉE]DIA/i.test(c.label))?grade(v):'';
-  };
+  const tone=finalTone(d);
   $('#main').innerHTML=
     '<div class="stats"><div class="stat"><b>'+d.rows.length+'</b><span>alunos</span></div>'+
     '<div class="stat"><b>'+(avg==null?'—':avg.toFixed(1).replace('.',','))+'</b><span>média da turma</span></div>'+
-    '<div class="stat"><b>'+below+'</b><span>abaixo de 7</span></div></div>'+
+    '<div class="stat"><b>'+below+'</b><span>abaixo de 7</span></div></div>'+coresSw()+
     '<div class="tablewrap"><table><thead><tr><th class="nm">Aluno</th>'+d.columns.map(c=>'<th>'+esc(c.leaf.replace(/\s*PER[ÍI]ODO/i,'º P'))+'</th>').join('')+'</tr></thead><tbody>'+
     d.rows.map(r=>'<tr><td class="nm">'+esc(r.nome)+'</td>'+d.columns.map(c=>{const v=r.cells[c.c].v,t=tone(c,v);return '<td>'+(t?'<span class="calc '+t+'">'+esc(shown(v))+'</span>':esc(shown(v)))+'</td>'}).join('')+'</tr>').join('')+
     '</tbody></table></div>'+
-    (p28?'<div class="hint" style="margin-top:8px">“Para 28”: quanto falta para somar 28 (média 7). Vermelho = acima de 10, não alcança só com o 4º período.</div>':'')+
+    (p28&&coresOn()?'<div class="hint" style="margin-top:8px">“Para 28”: quanto falta para somar 28 (média 7). Vermelho = acima de 10, não alcança só com o 4º período.</div>':'')+
     '<div class="hint">Somente leitura: esta aba é calculada na planilha.</div>';
+  bindCoresSw();
 }
 
 /* ---------- navegação ---------- */
