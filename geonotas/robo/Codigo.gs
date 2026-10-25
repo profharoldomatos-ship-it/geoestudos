@@ -6,7 +6,7 @@
  * o app só grava em células de lançamento (sem fórmula) e lê os resultados.
  */
 
-const VERSAO_ROBO = 'v9'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
+const VERSAO_ROBO = 'v10'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
 
 const CONFIG = {
   ANO: 2026,
@@ -262,7 +262,11 @@ function lerRespostas_(form, turma) {
   const itNome = itens.find(i => /nome/i.test(i.getTitle())), itTurma = itens.find(i => /turma/i.test(i.getTitle()));
   if (!itNome) throw new Error('O formulário não tem uma pergunta de NOME.');
   const total = itens.reduce((s, i) => s + pontosItem_(i), 0);
-  const resp = form.getResponses().sort((a, b) => a.getTimestamp() - b.getTimestamp()).map(rp => {
+  // só respostas deste período: os formulários são reaproveitados de um ano para o outro
+  // e ainda guardam as respostas das turmas antigas (aceita até 30 dias antes do início)
+  const desde = new Date(CONFIG.INICIO + 'T00:00:00'); desde.setDate(desde.getDate() - 30);
+  const resp = form.getResponses().filter(rp => rp.getTimestamp() >= desde)
+    .sort((a, b) => a.getTimestamp() - b.getTimestamp()).map(rp => {
     const ir = rp.getItemResponses();
     const val = it => { const x = it && ir.find(y => y.getItem().getId() === it.getId()); return x ? String(x.getResponse()).trim() : ''; };
     const nome = val(itNome), tur = val(itTurma), digTur = (tur.match(/\d/g) || []).join('');

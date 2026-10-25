@@ -11,6 +11,10 @@ A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google A
 ## Planejado para 2027
 - Chamada: registro do conteúdo do dia, a partir do planejamento mensal.
 
+## Robô v10 · 25/10/2026 · ignora respostas de anos anteriores
+- Os formulários de atividades são reaproveitados e ainda guardavam as respostas de 2025. O robô agora só lê respostas enviadas a partir de 30 dias antes do início do período (09/09/2026).
+- Descrição da implantação: "v10 · ignora respostas antigas dos formulários".
+
 ## 1.9.0 · 25/10/2026 · cores liga/desliga nos Resultados
 - Botão "Cores" na aba Resultados (também no modo Um por vez): ligado, as notas de cada período e a média ficam verdes a partir de 7 e vermelhas abaixo de 7; desligado, a tabela fica neutra. A escolha fica guardada no aparelho.
 - Ao arrastar a tabela para o lado, os cabeçalhos (1º P, 2º P…) somem atrás da coluna "Aluno", no mesmo corte dos nomes, em vez de avançarem sobre ela.
