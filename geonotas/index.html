@@ -88,6 +88,22 @@ a.iconbtn{color:inherit}
 .privnav select{margin:0;flex:1;font-weight:700}
 .privnav .iconbtn{width:44px;height:44px;flex:none;font-size:20px}
 .privtag{display:flex;align-items:center;gap:8px;background:var(--card);border:1px dashed var(--brand);color:var(--brand);border-radius:12px;padding:8px 12px;font-size:13px;font-weight:700;margin-bottom:10px}
+ .impbtn{display:flex;align-items:center;gap:10px;width:100%;border:1px dashed var(--brand);background:var(--card);color:var(--brand);border-radius:12px;padding:10px 12px;font-weight:700;margin-bottom:10px;cursor:pointer;text-align:left}
+.formbtn{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;border:0;border-top:1px solid var(--line);background:none;padding:12px;text-align:left;cursor:pointer}
+.formbtn:first-child{border-top:0}
+.formbtn b{display:block}.formbtn span{font-size:13px;color:var(--muted)}
+.improw{padding:10px 12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.improw:first-child{border-top:0}
+.improw.off{opacity:.5}
+.imp-t{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.imp-t b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imp-m{font-size:12px;color:var(--muted)}
+.improw select{margin:0;padding:8px 10px;font-size:15px}
+.tag{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.tag.certo{background:var(--ok-bg);color:var(--ok)}.tag.duvida{background:var(--mid-bg);color:var(--mid)}.tag.nenhum{background:var(--low-bg);color:var(--low)}
+.impok{position:sticky;bottom:0;background:var(--bg);padding:12px 0 4px;border-top:1px solid var(--line);margin-top:12px}
+.impok button{width:100%;font:inherit;font-weight:700;border:0;border-radius:12px;padding:13px;background:var(--brand);color:var(--brand-ink);cursor:pointer}
+.impok button:disabled{opacity:.5}
 .foot{margin:24px 0 0;text-align:center;font-size:13px;color:var(--muted)}
 .foot button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;margin:0 3px;cursor:pointer}
 .foot button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
@@ -139,6 +155,13 @@ a.iconbtn{color:inherit}
     <button class="iconbtn" id="sNext" aria-label="Próximo">›</button>
   </header>
   <div class="body" id="sBody"></div>
+</div>
+<div class="sheet" id="imp">
+  <header>
+    <button class="iconbtn" id="impClose" aria-label="Fechar">✕</button>
+    <div class="t"><b id="impTit">Importar dos formulários</b><span id="impSub"></span></div>
+  </header>
+  <div class="body" id="impBody"></div>
 </div>
 <div class="toast" id="toast"></div>
 <div class="login" id="login">
@@ -317,7 +340,8 @@ function render(){
   if(S.priv)return renderPriv(d);
   if(S.kind==='final'){renderFinal(d);$('#main').insertAdjacentHTML('beforeend',foot());bindFoot();return}
   const main=$('#main');
-  const seg='<div class="seg"><button data-m="atividade" class="'+(S.mode==='atividade'?'on':'')+'">Por atividade</button><button data-m="aluno" class="'+(S.mode==='aluno'?'on':'')+'">Por aluno</button></div>';
+  const imp=S.kind==='notas'?'<button class="impbtn" id="impOpen">⤓ Importar notas dos formulários do '+S.cfg.periodo+'º período</button>':'';
+  const seg=imp+'<div class="seg"><button data-m="atividade" class="'+(S.mode==='atividade'?'on':'')+'">Por atividade</button><button data-m="aluno" class="'+(S.mode==='aluno'?'on':'')+'">Por aluno</button></div>';
   if(S.mode==='aluno'){
     main.innerHTML=seg+'<div class="hint">Toque num aluno para ver e lançar tudo do '+S.cfg.periodo+'º período.</div><div class="list">'+
       d.rows.map(r=>{const k=keyVal(d,r);return '<div class="row tap" data-open="'+r.r+'"><span class="num">'+esc(r.n)+'</span><span class="name">'+esc(r.nome)+'</span><span class="calc '+(k?grade(k.v):'g-none')+'" data-r="'+r.r+'" data-c="key">'+(k?esc(shown(k.v)):'—')+'</span></div>'}).join('')+'</div>';
@@ -338,7 +362,7 @@ function render(){
   $('#main').insertAdjacentHTML('beforeend',foot());bindFoot();
   bindSeg();
 }
-function bindSeg(){document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{S.mode=b.dataset.m;store.set('mode',S.mode);render()}))}
+function bindSeg(){const io=$('#impOpen');if(io)io.addEventListener('click',abrirImport);document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{S.mode=b.dataset.m;store.set('mode',S.mode);render()}))}
 
 function fieldsHtml(d,row){
   const groups=[];
@@ -387,6 +411,69 @@ function setPriv(on){
   S.priv=!!on;store.set('priv',S.priv?'1':'');
   const b=$('#privBtn');b.classList.toggle('on',S.priv);b.setAttribute('aria-pressed',S.priv);
   b.title=S.priv?'Mostrar a lista completa':'Um aluno por vez';
+}
+
+/* ===== Importação das notas dos Google Formulários =====
+   Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
+const IMP={};
+function impFechar(){$('#imp').classList.remove('open')}
+async function abrirImport(){
+  $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
+  $('#impBody').innerHTML='<div class="loading">Procurando os formulários…</div>';
+  try{
+    const l=(await api('formularios',{turma:S.turma})).lista;
+    if(!l.length){$('#impBody').innerHTML='<div class="empty">Nenhum formulário na pasta do período deste ano.</div>';return}
+    $('#impBody').innerHTML='<div class="list">'+l.map(f=>'<button class="formbtn" data-f="'+esc(f.id)+'"><span><b>'+esc(f.cap?'Capítulo '+f.cap:'Sem capítulo no título')+'</b><span>'+esc(f.titulo)+'</span></span>›</button>').join('')+'</div>';
+    $('#impBody').querySelectorAll('[data-f]').forEach(b=>b.addEventListener('click',()=>previa(b.dataset.f)));
+  }catch(e){$('#impBody').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
+}
+async function previa(formId){
+  $('#impBody').innerHTML='<div class="loading">Lendo as respostas e conferindo os nomes…</div>';
+  try{
+    const p=(await api('previa',{turma:S.turma,form:formId})).previa;
+    IMP.p=p;IMP.sel=p.respostas.map(x=>x.r||'');
+    $('#impTit').textContent='Capítulo '+p.cap+' · turma '+S.turma;
+    $('#impSub').textContent=p.titulo;
+    renderPrevia();
+  }catch(e){$('#impBody').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
+}
+function impValidos(){ // vale o primeiro envio de cada aluno (respostas já vêm em ordem de envio)
+  const visto={},ok=[];
+  IMP.p.respostas.forEach((x,i)=>{const r=+IMP.sel[i];if(!r||visto[r]){return}visto[r]=1;ok.push(i)});
+  return ok;
+}
+function renderPrevia(){
+  const p=IMP.p,ok=new Set(impValidos());
+  const nomeDe=r=>(p.alunos.find(a=>a.r===+r)||{}).nome||'';
+  const opts=r=>'<option value="">— não importar —</option>'+p.alunos.map(a=>'<option value="'+a.r+'"'+(+r===a.r?' selected':'')+'>'+esc(a.nome)+'</option>').join('');
+  const enviaram=new Set(impValidos().map(i=>+IMP.sel[i]));
+  const sem=p.alunos.filter(a=>!enviaram.has(a.r)).length;
+  const info='<div class="hint">Grava em <b>'+esc(p.cols.marca.label)+'</b>'+(p.cols.nota?' e a nota em <b>'+esc(p.cols.nota.label)+'</b>':' (só marca quem fez)')+'. Nota = pontos ÷ '+p.total+' × 10. Vale o primeiro envio.</div>';
+  const linhas=p.respostas.map((x,i)=>{
+    const r=+IMP.sel[i],dup=r&&!ok.has(i),at=r?p.atual[r]:null;
+    const tag=dup?'<span class="tag duvida">repetido: vale o 1º envio</span>':!r?'<span class="tag nenhum">'+(x.certeza==='nenhum'?'não encontrado':'não importar')+'</span>':x.certeza==='certo'&&r===x.r?'<span class="tag certo">confere</span>':'<span class="tag duvida">confira</span>';
+    const atual=at&&p.cols.nota&&at.nota&&String(at.nota)!==''?' · na planilha: '+esc(at.nota):'';
+    return '<div class="improw'+(dup||!r?' off':'')+'"><div class="imp-t"><b>'+esc(x.nome||'(sem nome)')+'</b><span class="calc '+grade(x.nota==null?'':String(x.nota).replace('.',','))+'">'+(x.nota==null?'—':String(x.nota).replace('.',','))+'</span></div>'+
+      '<div class="imp-m">'+new Date(x.quando).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(x.mesmaTurma===null?' · turma não informada ('+esc(x.turma||'vazio')+')':'')+atual+' '+tag+'</div>'+
+      '<select data-i="'+i+'">'+opts(r)+'</select></div>';
+  }).join('');
+  const n=ok.size;
+  $('#impBody').innerHTML=info+(p.respostas.length?'<div class="list">'+linhas+'</div>':'<div class="empty">Ainda não há respostas desta turma.</div>')+
+    '<div class="hint" style="margin-top:8px">'+sem+' aluno(s) da turma sem envio.</div>'+
+    '<div class="impok"><button id="impGo"'+(n?'':' disabled')+'>Gravar '+n+' '+(n===1?'nota':'notas')+' na planilha</button></div>';
+  $('#impBody').querySelectorAll('select[data-i]').forEach(sl=>sl.addEventListener('change',()=>{IMP.sel[+sl.dataset.i]=sl.value;const y=$('#impBody').scrollTop;renderPrevia();$('#impBody').scrollTop=y}));
+  const go=$('#impGo');if(go)go.addEventListener('click',gravarImport);
+}
+async function gravarImport(){
+  const p=IMP.p,b=$('#impGo');b.disabled=true;b.textContent='Gravando…';
+  const itens=impValidos().map(i=>{const r=+IMP.sel[i];return {r,nome:(p.alunos.find(a=>a.r===r)||{}).nome,nota:p.respostas[i].nota}});
+  try{
+    const n=(await api('importar',{turma:S.turma,cols:p.cols,itens})).gravadas;
+    impFechar();toast(n+(n===1?' nota gravada':' notas gravadas')+' na planilha da '+S.turma+'.');
+    if(S.data[S.turma]){delete S.data[S.turma].notas;delete S.data[S.turma].final}
+    S.colSel[S.turma+'notas']=p.cols.nota?p.cols.nota.c:p.cols.marca.c;
+    load(S.turma,'notas');
+  }catch(e){toast(e.message);b.disabled=false;b.textContent='Tentar de novo'}
 }
 
 function openSheet(r){S.openRow=r;renderSheet();$('#sheet').classList.add('open')}
@@ -443,6 +530,7 @@ document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
 $('#refresh').addEventListener('click',()=>{if(S.data[S.turma])S.data[S.turma]={};load(S.turma,S.kind)});
 $('#sClose').addEventListener('click',()=>{if(document.activeElement)document.activeElement.blur();$('#sheet').classList.remove('open');S.openRow=null;render()});
 $('#sPrev').addEventListener('click',()=>stepSheet(-1));
+$('#impClose').addEventListener('click',impFechar);
 $('#sNext').addEventListener('click',()=>stepSheet(1));
 
 /* ao voltar para o app, puxa o que foi mudado direto na planilha */

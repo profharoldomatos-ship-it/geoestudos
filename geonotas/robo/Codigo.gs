@@ -10,6 +10,12 @@ const CONFIG = {
   ANO: 2026,
   PERIODO: 4, // período em lançamento: abas "NOTAS 4P" e "CADERNOS 4P"
   DIAS_SESSAO: 30, // depois disso, pede a senha de novo
+  // pastas dos formulários de atividade do período em curso (FORMULÁRIOS › ano › período 4)
+  PASTAS_FORM: {
+    '7': '1z970ApbgEkh0zedIzEcUhC0ieQzCS_rl',
+    '8': '14ZZcg9T-JVZEnCoN40raShLMRIKQ4r2K',
+    '9': '1aNJVfoW2M246ghRdqWxOT6AArexNu7Cs'
+  },
   TURMAS: {
     '71': '19SK9aXF8Lg76aKwuIfs4Yqp9kouH3sSpPB-tx4hXUHg',
     '72': '1XhOcxuW0EKI3okjfiHzf_umGNcPfMoYwDi9keM5McBE',
@@ -78,6 +84,15 @@ function doPost(e) {
       case 'dados':
         sessaoValida_(q.token);
         return json_({ ok: true, dados: readSheet_(sheetFor_(q.turma, q.kind), q.kind) });
+      case 'formularios':
+        sessaoValida_(q.token);
+        return json_({ ok: true, lista: listarFormularios_(q.turma) });
+      case 'previa':
+        sessaoValida_(q.token);
+        return json_({ ok: true, previa: previaImport_(q.turma, q.form) });
+      case 'importar':
+        sessaoValida_(q.token);
+        return json_({ ok: true, gravadas: gravarImport_(q.turma, q.cols, q.itens) });
       case 'salvar':
         sessaoValida_(q.token);
         return json_({ ok: true, linha: saveCell_(q.turma, q.kind, q.row, q.col, q.value, q.nome) });
@@ -136,6 +151,121 @@ function saveCell_(turma, kind, row, col, value, expectedName) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/* ---------- importação das notas dos formulários (Google Formulários) ---------- */
+
+/** Rode uma vez no editor depois de colar este código, para autorizar a leitura dos formulários. */
+function autorizarFormularios() {
+  Object.keys(CONFIG.PASTAS_FORM).forEach(a => Logger.log(a + 'º ano: ' + DriveApp.getFolderById(CONFIG.PASTAS_FORM[a]).getName()));
+  const f = DriveApp.getFolderById(CONFIG.PASTAS_FORM['9']).getFilesByType(MimeType.GOOGLE_FORMS);
+  if (f.hasNext()) Logger.log('Formulário lido: ' + FormApp.openById(f.next().getId()).getTitle());
+}
+
+function anoDaTurma_(turma) { return String(turma).charAt(0); }
+
+/** Formulários de atividade do ano da turma (só a pasta, sem subpastas). */
+function listarFormularios_(turma) {
+  const pasta = CONFIG.PASTAS_FORM[anoDaTurma_(turma)];
+  if (!pasta) throw new Error('Pasta de formulários não configurada para a turma ' + turma + '.');
+  const it = DriveApp.getFolderById(pasta).getFilesByType(MimeType.GOOGLE_FORMS), lista = [];
+  while (it.hasNext()) {
+    const f = it.next(), t = f.getName(), m = t.match(/\bC\s*(\d{1,2})\b/i);
+    lista.push({ id: f.getId(), titulo: t, cap: m ? Number(m[1]) : null });
+  }
+  return lista.sort((a, b) => (a.cap || 99) - (b.cap || 99));
+}
+
+function norm_(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+const LIGA_ = { de: 1, da: 1, do: 1, das: 1, dos: 1, e: 1 };
+function tokens_(s) { return norm_(s).split(' ').filter(t => t && !LIGA_[t]); }
+
+/** Compara o nome digitado com a lista: devolve o aluno mais provável e o grau de certeza. */
+function casarNome_(digitado, alunos) {
+  const tk = tokens_(digitado);
+  if (!tk.length) return { r: null, certeza: 'nenhum' };
+  const pont = alunos.map(a => {
+    const at = tokens_(a.nome);
+    let hit = 0;
+    tk.forEach(t => { if (at.some(x => x === t || (t.length >= 3 && x.indexOf(t) === 0) || (x.length >= 3 && t.indexOf(x) === 0))) hit++; });
+    const primeiro = at[0] === tk[0] || (tk[0].length >= 3 && at[0] && at[0].indexOf(tk[0]) === 0);
+    return { r: a.r, s: hit / tk.length + (primeiro ? 0.5 : 0) + hit * 0.01 };
+  }).sort((a, b) => b.s - a.s);
+  const m = pont[0], seg = pont[1] || { s: 0 };
+  if (!m || m.s < 0.5) return { r: null, certeza: 'nenhum' };
+  // certo: primeiro nome confere, todas as palavras batem e nenhum colega empata
+  const certo = m.s >= 1.5 && m.s - seg.s >= 0.3;
+  return { r: m.r, certeza: certo ? 'certo' : 'duvida' };
+}
+
+function pontosItem_(item) {
+  const T = FormApp.ItemType, t = item.getType();
+  const conv = { MULTIPLE_CHOICE: 'asMultipleChoiceItem', CHECKBOX: 'asCheckboxItem', LIST: 'asListItem', TEXT: 'asTextItem',
+    PARAGRAPH_TEXT: 'asParagraphTextItem', SCALE: 'asScaleItem', DATE: 'asDateItem', TIME: 'asTimeItem', GRID: null };
+  for (const k in conv) { if (t === T[k] && conv[k]) { try { return item[conv[k]]().getPoints() || 0; } catch (e) { return 0; } } }
+  return 0;
+}
+
+/** Colunas da aba de notas do período para um capítulo: a marcação da atividade e, se houver, a nota. */
+function colunasCap_(dados, cap) {
+  const re = new RegExp('\\bC(AP\\.?)?\\s*' + cap + '\\b', 'i');
+  const marca = dados.columns.find(c => !c.calc && re.test(c.leaf) && !/^NOTA/i.test(c.leaf));
+  if (!marca) return null;
+  const i = dados.columns.indexOf(marca), prox = dados.columns[i + 1];
+  const nota = prox && !prox.calc && !prox.check && /^NOTA/i.test(prox.leaf) ? prox : null;
+  return { marca: { c: marca.c, label: marca.label, check: marca.check }, nota: nota ? { c: nota.c, label: nota.label } : null };
+}
+
+function previaImport_(turma, formId) {
+  const form = FormApp.openById(formId), titulo = form.getTitle();
+  const m = titulo.match(/\bC\s*(\d{1,2})\b/i);
+  if (!m) throw new Error('Não achei o capítulo (ex.: C13) no título do formulário.');
+  const cap = Number(m[1]);
+  const sh = sheetFor_(turma, 'notas'), dados = readSheet_(sh, 'notas');
+  const cols = colunasCap_(dados, cap);
+  if (!cols) throw new Error('Não achei na aba ' + sh.getName() + ' da turma ' + turma + ' a coluna da atividade do capítulo ' + cap + '.');
+  const itens = form.getItems();
+  const itNome = itens.find(i => /nome/i.test(i.getTitle())), itTurma = itens.find(i => /turma/i.test(i.getTitle()));
+  if (!itNome) throw new Error('O formulário não tem uma pergunta de NOME.');
+  const total = itens.reduce((s, i) => s + pontosItem_(i), 0);
+  const alunos = dados.rows.map(r => ({ r: r.r, nome: r.nome }));
+  const resp = form.getResponses().sort((a, b) => a.getTimestamp() - b.getTimestamp()).map(rp => {
+    const ir = rp.getItemResponses();
+    const val = it => { const x = it && ir.find(y => y.getItem().getId() === it.getId()); return x ? String(x.getResponse()).trim() : ''; };
+    const nome = val(itNome), tur = val(itTurma), digTur = (tur.match(/\d/g) || []).join('');
+    let pts = 0; rp.getGradableItemResponses().forEach(g => pts += Number(g.getScore()) || 0);
+    return { nome, turma: tur, mesmaTurma: digTur === String(turma) ? true : (digTur.length >= 2 ? false : null),
+      quando: rp.getTimestamp().toISOString(), nota: total ? Math.round(pts / total * 100) / 10 : null, pontos: pts };
+  }).filter(x => x.mesmaTurma !== false);
+  resp.forEach(x => { const c = casarNome_(x.nome, alunos); x.r = c.r; x.certeza = x.mesmaTurma === null && c.certeza === 'certo' ? 'duvida' : c.certeza; });
+  // valores atuais na planilha, para mostrar o que já foi lançado
+  const atual = {};
+  dados.rows.forEach(r => atual[r.r] = { marca: r.cells[cols.marca.c].v, nota: cols.nota ? r.cells[cols.nota.c].v : null });
+  return { titulo, cap, total, cols, alunos, respostas: resp, atual };
+}
+
+/** Grava as notas confirmadas pelo professor: marca a atividade e, se houver coluna, a nota. */
+function gravarImport_(turma, cols, itens) {
+  if (!cols || !cols.marca || !Array.isArray(itens)) throw new Error('Pedido inválido.');
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const sh = sheetFor_(turma, 'notas'); let n = 0;
+    itens.forEach(x => {
+      const r = Number(x.r); if (!(r > 0)) return;
+      if (String(sh.getRange(r, 2).getDisplayValue()).trim() !== x.nome) throw new Error('A planilha mudou (linha ' + r + '). Atualize o app e importe de novo.');
+      const m = sh.getRange(r, Number(cols.marca.c));
+      if (!m.getFormula()) m.setValue(cols.marca.check ? true : x.nota);
+      if (cols.nota && typeof x.nota === 'number') {
+        const c = sh.getRange(r, Number(cols.nota.c));
+        if (!c.getFormula()) c.setValue(x.nota);
+      }
+      n++;
+    });
+    SpreadsheetApp.flush();
+    return n;
+  } finally { lock.releaseLock(); }
 }
 
 /* ---------- leitura genérica, guiada pelos cabeçalhos ---------- */
