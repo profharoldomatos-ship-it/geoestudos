@@ -421,17 +421,24 @@ async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
   $('#impBody').innerHTML='<div class="loading">Procurando os formulários…</div>';
   try{
-    const l=(await api('formularios',{turma:S.turma})).lista;
+    const j=await api('formularios',{turma:S.turma}),l=j.lista;
     if(!l.length){$('#impBody').innerHTML='<div class="empty">Nenhum formulário na pasta do período deste ano.</div>';return}
-    $('#impBody').innerHTML='<div class="list">'+l.map(f=>'<button class="formbtn" data-f="'+esc(f.id)+'"><span><b>'+esc(f.cap?'Capítulo '+f.cap:'Sem capítulo no título')+'</b><span>'+esc(f.titulo)+'</span></span>›</button>').join('')+'</div>';
+    const badge=f=>f.novas==null?'':f.novas?'<span class="tag duvida">'+f.novas+(f.novas===1?' nova':' novas')+'</span>':'<span class="tag certo">em dia</span>';
+    $('#impBody').innerHTML=autoInfo(j.auto)+'<div class="list">'+l.map(f=>'<button class="formbtn" data-f="'+esc(f.id)+'"><span><b>'+esc(f.cap?'Capítulo '+f.cap:'Sem capítulo no título')+' '+badge(f)+'</b><span>'+esc(f.titulo)+'</span></span>›</button>').join('')+'</div>';
     $('#impBody').querySelectorAll('[data-f]').forEach(b=>b.addEventListener('click',()=>previa(b.dataset.f)));
   }catch(e){$('#impBody').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
 }
-async function previa(formId){
+function autoInfo(a){
+  if(!a||!a.quando)return '<div class="hint">A importação automática ainda não rodou. Respostas com nome conferido entram sozinhas de hora em hora; as duvidosas ficam aqui para você conferir.</div>';
+  const q=new Date(a.quando).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  return '<div class="hint">Importação automática: última em <b>'+q+'</b>'+(a.log&&a.log.length?' · '+esc(a.log.join(' · ')):' · nada novo')+'. Aqui ficam as respostas que precisam da sua conferência.</div>';
+}
+async function previa(formId,todas){
+  IMP.form=formId;
   $('#impBody').innerHTML='<div class="loading">Lendo as respostas e conferindo os nomes…</div>';
   try{
-    const p=(await api('previa',{turma:S.turma,form:formId})).previa;
-    IMP.p=p;IMP.sel=p.respostas.map(x=>x.r||'');
+    const p=(await api('previa',{turma:S.turma,form:formId,todas:!!todas})).previa;
+    IMP.p=p;IMP.sel=p.respostas.map(x=>x.feita||x.certeza==='repetido'?'':(x.r||''));
     $('#impTit').textContent='Capítulo '+p.cap+' · turma '+S.turma;
     $('#impSub').textContent=p.titulo;
     renderPrevia();
@@ -447,29 +454,34 @@ function renderPrevia(){
   const nomeDe=r=>(p.alunos.find(a=>a.r===+r)||{}).nome||'';
   const opts=r=>'<option value="">— não importar —</option>'+p.alunos.map(a=>'<option value="'+a.r+'"'+(+r===a.r?' selected':'')+'>'+esc(a.nome)+'</option>').join('');
   const enviaram=new Set(impValidos().map(i=>+IMP.sel[i]));
-  const sem=p.alunos.filter(a=>!enviaram.has(a.r)).length;
+  const temNaPlanilha=r=>{const at=p.atual[r]||{};return at.marca===true||(p.cols.nota&&at.nota!=null&&String(at.nota)!=='')};
+  const sem=p.alunos.filter(a=>!enviaram.has(a.r)&&!temNaPlanilha(a.r)).length;
   const info='<div class="hint">Grava em <b>'+esc(p.cols.marca.label)+'</b>'+(p.cols.nota?' e a nota em <b>'+esc(p.cols.nota.label)+'</b>':' (só marca quem fez)')+'. Nota = pontos ÷ '+p.total+' × 10. Vale o primeiro envio.</div>';
   const linhas=p.respostas.map((x,i)=>{
     const r=+IMP.sel[i],dup=r&&!ok.has(i),at=r?p.atual[r]:null;
-    const tag=dup?'<span class="tag duvida">repetido: vale o 1º envio</span>':!r?'<span class="tag nenhum">'+(x.certeza==='nenhum'?'não encontrado':'não importar')+'</span>':x.certeza==='certo'&&r===x.r?'<span class="tag certo">confere</span>':'<span class="tag duvida">confira</span>';
+    const tag=x.feita&&!r?'<span class="tag certo">já importada</span>':x.certeza==='repetido'&&!r?'<span class="tag duvida">aluno já tem nota · vale o 1º envio</span>':dup?'<span class="tag duvida">repetido: vale o 1º envio</span>':!r?'<span class="tag nenhum">'+(x.certeza==='nenhum'?'não encontrado':'não importar')+'</span>':x.certeza==='certo'&&r===x.r?'<span class="tag certo">confere</span>':'<span class="tag duvida">confira</span>';
     const atual=at&&p.cols.nota&&at.nota&&String(at.nota)!==''?' · na planilha: '+esc(at.nota):'';
     return '<div class="improw'+(dup||!r?' off':'')+'"><div class="imp-t"><b>'+esc(x.nome||'(sem nome)')+'</b><span class="calc '+grade(x.nota==null?'':String(x.nota).replace('.',','))+'">'+(x.nota==null?'—':String(x.nota).replace('.',','))+'</span></div>'+
       '<div class="imp-m">'+new Date(x.quando).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(x.mesmaTurma===null?' · turma não informada ('+esc(x.turma||'vazio')+')':'')+atual+' '+tag+'</div>'+
       '<select data-i="'+i+'">'+opts(r)+'</select></div>';
   }).join('');
-  const n=ok.size;
-  $('#impBody').innerHTML=info+(p.respostas.length?'<div class="list">'+linhas+'</div>':'<div class="empty">Ainda não há respostas desta turma.</div>')+
-    '<div class="hint" style="margin-top:8px">'+sem+' aluno(s) da turma sem envio.</div>'+
-    '<div class="impok"><button id="impGo"'+(n?'':' disabled')+'>Gravar '+n+' '+(n===1?'nota':'notas')+' na planilha</button></div>';
+  const n=ok.size,pend=p.respostas.filter(x=>!x.feita).length;
+  const vazio=p.jaImportadas&&!p.todas?'<div class="empty"><b>Não há respostas novas.</b><br>A última lista já foi importada ('+p.jaImportadas+(p.jaImportadas===1?' resposta':' respostas')+').</div>':'<div class="empty">Ainda não há respostas desta turma.</div>';
+  const verTodas=p.jaImportadas&&!p.todas?'<button class="impbtn" id="impTodas" style="justify-content:center">Ver também as já importadas</button>':'';
+  $('#impBody').innerHTML=info+(p.respostas.length?'<div class="list">'+linhas+'</div>':vazio)+verTodas+
+    '<div class="hint" style="margin-top:8px">'+sem+' aluno(s) da turma ainda sem esta atividade na planilha.</div>'+
+    (pend?'<div class="impok"><button id="impGo">'+(n?'Gravar '+n+' '+(n===1?'nota':'notas')+' na planilha':'Marcar estas respostas como conferidas')+'</button><div class="hint" style="margin:6px 2px 0">As respostas desta lista não aparecerão de novo.</div></div>':'');
   $('#impBody').querySelectorAll('select[data-i]').forEach(sl=>sl.addEventListener('change',()=>{IMP.sel[+sl.dataset.i]=sl.value;const y=$('#impBody').scrollTop;renderPrevia();$('#impBody').scrollTop=y}));
   const go=$('#impGo');if(go)go.addEventListener('click',gravarImport);
+  const vt=$('#impTodas');if(vt)vt.addEventListener('click',()=>previa(IMP.form,true));
 }
 async function gravarImport(){
   const p=IMP.p,b=$('#impGo');b.disabled=true;b.textContent='Gravando…';
   const itens=impValidos().map(i=>{const r=+IMP.sel[i];return {r,nome:(p.alunos.find(a=>a.r===r)||{}).nome,nota:p.respostas[i].nota}});
   try{
-    const n=(await api('importar',{turma:S.turma,cols:p.cols,itens})).gravadas;
-    impFechar();toast(n+(n===1?' nota gravada':' notas gravadas')+' na planilha da '+S.turma+'.');
+    const processados=p.respostas.filter(x=>!x.feita).map(x=>x.id);
+    const n=(await api('importar',{turma:S.turma,cols:p.cols,itens,form:IMP.form,processados})).gravadas;
+    impFechar();toast(n?(n+(n===1?' nota gravada':' notas gravadas')+' na planilha da '+S.turma+'.'):'Respostas marcadas como conferidas.');
     if(S.data[S.turma]){delete S.data[S.turma].notas;delete S.data[S.turma].final}
     S.colSel[S.turma+'notas']=p.cols.nota?p.cols.nota.c:p.cols.marca.c;
     load(S.turma,'notas');

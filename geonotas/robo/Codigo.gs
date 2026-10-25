@@ -86,13 +86,13 @@ function doPost(e) {
         return json_({ ok: true, dados: readSheet_(sheetFor_(q.turma, q.kind), q.kind) });
       case 'formularios':
         sessaoValida_(q.token);
-        return json_({ ok: true, lista: listarFormularios_(q.turma) });
+        return json_({ ok: true, lista: listarFormularios_(q.turma), auto: ultimaAutomatica_() });
       case 'previa':
         sessaoValida_(q.token);
-        return json_({ ok: true, previa: previaImport_(q.turma, q.form) });
+        return json_({ ok: true, previa: previaImport_(q.turma, q.form, q.todas), auto: ultimaAutomatica_() });
       case 'importar':
         sessaoValida_(q.token);
-        return json_({ ok: true, gravadas: gravarImport_(q.turma, q.cols, q.itens) });
+        return json_({ ok: true, gravadas: gravarImport_(q.turma, q.cols, q.itens, q.form, q.processados) });
       case 'salvar':
         sessaoValida_(q.token);
         return json_({ ok: true, linha: saveCell_(q.turma, q.kind, q.row, q.col, q.value, q.nome) });
@@ -164,20 +164,35 @@ function autorizarFormularios() {
 
 function anoDaTurma_(turma) { return String(turma).charAt(0); }
 
-/** Formulários de atividade do ano da turma (só a pasta, sem subpastas). */
+/* Registro do que já foi importado, por formulário:
+   ids = respostas já processadas (não aparecem de novo); rs = alunos que já receberam a nota (por turma). */
+function registro_(formId) {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('imp_' + formId) || '') || { ids: {}, rs: {} }; }
+  catch (e) { return { ids: {}, rs: {} }; }
+}
+function salvarRegistro_(formId, reg) {
+  PropertiesService.getScriptProperties().setProperty('imp_' + formId, JSON.stringify(reg));
+}
+
+/** Formulários de atividade do ano da turma (só a pasta, sem subpastas), com quantas respostas novas há. */
 function listarFormularios_(turma) {
   const pasta = CONFIG.PASTAS_FORM[anoDaTurma_(turma)];
   if (!pasta) throw new Error('Pasta de formulários não configurada para a turma ' + turma + '.');
   const it = DriveApp.getFolderById(pasta).getFilesByType(MimeType.GOOGLE_FORMS), lista = [];
   while (it.hasNext()) {
     const f = it.next(), t = f.getName(), m = t.match(/\bC\s*(\d{1,2})\b/i);
-    lista.push({ id: f.getId(), titulo: t, cap: m ? Number(m[1]) : null });
+    let novas = null;
+    try {
+      const reg = registro_(f.getId());
+      novas = lerRespostas_(FormApp.openById(f.getId()), turma).resp.filter(x => !reg.ids[x.id]).length;
+    } catch (e) {}
+    lista.push({ id: f.getId(), titulo: t, cap: m ? Number(m[1]) : null, novas });
   }
   return lista.sort((a, b) => (a.cap || 99) - (b.cap || 99));
 }
 
 function norm_(s) {
-  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 const LIGA_ = { de: 1, da: 1, do: 1, das: 1, dos: 1, e: 1 };
 function tokens_(s) { return norm_(s).split(' ').filter(t => t && !LIGA_[t]); }
@@ -218,7 +233,25 @@ function colunasCap_(dados, cap) {
   return { marca: { c: marca.c, label: marca.label, check: marca.check }, nota: nota ? { c: nota.c, label: nota.label } : null };
 }
 
-function previaImport_(turma, formId) {
+/** Respostas da turma (em ordem de envio), com nota 0–10. */
+function lerRespostas_(form, turma) {
+  const itens = form.getItems();
+  const itNome = itens.find(i => /nome/i.test(i.getTitle())), itTurma = itens.find(i => /turma/i.test(i.getTitle()));
+  if (!itNome) throw new Error('O formulário não tem uma pergunta de NOME.');
+  const total = itens.reduce((s, i) => s + pontosItem_(i), 0);
+  const resp = form.getResponses().sort((a, b) => a.getTimestamp() - b.getTimestamp()).map(rp => {
+    const ir = rp.getItemResponses();
+    const val = it => { const x = it && ir.find(y => y.getItem().getId() === it.getId()); return x ? String(x.getResponse()).trim() : ''; };
+    const nome = val(itNome), tur = val(itTurma), digTur = (tur.match(/\d/g) || []).join('');
+    let pts = 0; rp.getGradableItemResponses().forEach(g => pts += Number(g.getScore()) || 0);
+    return { id: rp.getId(), nome, turma: tur, mesmaTurma: digTur === String(turma) ? true : (digTur.length >= 2 ? false : null),
+      quando: rp.getTimestamp().toISOString(), nota: total ? Math.round(pts / total * 100) / 10 : null, pontos: pts };
+  }).filter(x => x.mesmaTurma !== false);
+  return { total, resp };
+}
+
+/** Prévia da importação. Por padrão traz só as respostas ainda não processadas (todas=true traz tudo). */
+function previaImport_(turma, formId, todas) {
   const form = FormApp.openById(formId), titulo = form.getTitle();
   const m = titulo.match(/\bC\s*(\d{1,2})\b/i);
   if (!m) throw new Error('Não achei o capítulo (ex.: C13) no título do formulário.');
@@ -226,46 +259,93 @@ function previaImport_(turma, formId) {
   const sh = sheetFor_(turma, 'notas'), dados = readSheet_(sh, 'notas');
   const cols = colunasCap_(dados, cap);
   if (!cols) throw new Error('Não achei na aba ' + sh.getName() + ' da turma ' + turma + ' a coluna da atividade do capítulo ' + cap + '.');
-  const itens = form.getItems();
-  const itNome = itens.find(i => /nome/i.test(i.getTitle())), itTurma = itens.find(i => /turma/i.test(i.getTitle()));
-  if (!itNome) throw new Error('O formulário não tem uma pergunta de NOME.');
-  const total = itens.reduce((s, i) => s + pontosItem_(i), 0);
   const alunos = dados.rows.map(r => ({ r: r.r, nome: r.nome }));
-  const resp = form.getResponses().sort((a, b) => a.getTimestamp() - b.getTimestamp()).map(rp => {
-    const ir = rp.getItemResponses();
-    const val = it => { const x = it && ir.find(y => y.getItem().getId() === it.getId()); return x ? String(x.getResponse()).trim() : ''; };
-    const nome = val(itNome), tur = val(itTurma), digTur = (tur.match(/\d/g) || []).join('');
-    let pts = 0; rp.getGradableItemResponses().forEach(g => pts += Number(g.getScore()) || 0);
-    return { nome, turma: tur, mesmaTurma: digTur === String(turma) ? true : (digTur.length >= 2 ? false : null),
-      quando: rp.getTimestamp().toISOString(), nota: total ? Math.round(pts / total * 100) / 10 : null, pontos: pts };
-  }).filter(x => x.mesmaTurma !== false);
-  resp.forEach(x => { const c = casarNome_(x.nome, alunos); x.r = c.r; x.certeza = x.mesmaTurma === null && c.certeza === 'certo' ? 'duvida' : c.certeza; });
-  // valores atuais na planilha, para mostrar o que já foi lançado
+  const lidas = lerRespostas_(form, turma), reg = registro_(formId), jaRs = reg.rs[turma] || {};
+  let resp = lidas.resp;
+  const jaImportadas = resp.filter(x => reg.ids[x.id]).length;
+  resp.forEach(x => {
+    x.feita = !!reg.ids[x.id];
+    const c = casarNome_(x.nome, alunos);
+    x.r = c.r;
+    x.certeza = x.mesmaTurma === null && c.certeza === 'certo' ? 'duvida' : c.certeza;
+    // aluno que já recebeu a nota desta atividade: um envio novo dele é repetido (vale o primeiro)
+    if (!x.feita && x.r && jaRs[x.r]) x.certeza = 'repetido';
+  });
+  if (!todas) resp = resp.filter(x => !x.feita);
   const atual = {};
   dados.rows.forEach(r => atual[r.r] = { marca: r.cells[cols.marca.c].v, nota: cols.nota ? r.cells[cols.nota.c].v : null });
-  return { titulo, cap, total, cols, alunos, respostas: resp, atual };
+  return { titulo, cap, total: lidas.total, cols, alunos, respostas: resp, atual, jaImportadas, todas: !!todas };
 }
 
-/** Grava as notas confirmadas pelo professor: marca a atividade e, se houver coluna, a nota. */
-function gravarImport_(turma, cols, itens) {
+/** Grava as notas: marca a atividade e, se houver coluna, a nota. Registra as respostas processadas. */
+function gravarImport_(turma, cols, itens, formId, processados) {
   if (!cols || !cols.marca || !Array.isArray(itens)) throw new Error('Pedido inválido.');
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     const sh = sheetFor_(turma, 'notas'); let n = 0;
+    const reg = formId ? registro_(formId) : null;
+    if (reg && !reg.rs[turma]) reg.rs[turma] = {};
     itens.forEach(x => {
       const r = Number(x.r); if (!(r > 0)) return;
       if (String(sh.getRange(r, 2).getDisplayValue()).trim() !== x.nome) throw new Error('A planilha mudou (linha ' + r + '). Atualize o app e importe de novo.');
+      if (x.soRegistro) { if (reg) reg.rs[turma][r] = 1; return; }
       const m = sh.getRange(r, Number(cols.marca.c));
       if (!m.getFormula()) m.setValue(cols.marca.check ? true : x.nota);
       if (cols.nota && typeof x.nota === 'number') {
         const c = sh.getRange(r, Number(cols.nota.c));
         if (!c.getFormula()) c.setValue(x.nota);
       }
+      if (reg) reg.rs[turma][r] = 1;
       n++;
     });
     SpreadsheetApp.flush();
+    if (reg) { (processados || []).forEach(id => { if (id) reg.ids[id] = 1; }); salvarRegistro_(formId, reg); }
     return n;
   } finally { lock.releaseLock(); }
+}
+
+/* ---------- importação automática (de hora em hora) ----------
+   Grava sozinha só as respostas com nome conferido com segurança e turma informada.
+   As duvidosas ficam esperando a conferência no app. */
+function importarAutomatico() {
+  const log = [];
+  Object.keys(CONFIG.TURMAS).forEach(turma => {
+    let forms = [];
+    try { forms = listarFormularios_(turma).filter(f => f.cap && f.novas); } catch (e) { log.push(turma + ': ' + e.message); }
+    forms.forEach(f => {
+      try {
+        const p = previaImport_(turma, f.id, false), visto = {}, itens = [], proc = [];
+        p.respostas.forEach(x => {
+          if (x.certeza !== 'certo' || x.mesmaTurma !== true || !x.r || visto[x.r]) return;
+          visto[x.r] = 1;
+          // se já há nota (ou marcação) na planilha, não sobrescreve: só registra como processada
+          const at = p.atual[x.r] || {}, temValor = p.cols.nota ? String(at.nota || '') !== '' : at.marca === true;
+          itens.push({ r: x.r, nome: p.alunos.find(a => a.r === x.r).nome, nota: x.nota, soRegistro: temValor });
+          proc.push(x.id);
+        });
+        if (itens.length) {
+          gravarImport_(turma, p.cols, itens, f.id, proc);
+          const novas = itens.filter(x => !x.soRegistro).length;
+          if (novas) log.push(turma + ' · cap. ' + f.cap + ': ' + novas + ' nota(s)');
+        }
+      } catch (e) { log.push(turma + ' · cap. ' + f.cap + ': ' + e.message); }
+    });
+  });
+  PropertiesService.getScriptProperties().setProperty('auto_ultima', JSON.stringify({ quando: new Date().toISOString(), log: log.slice(0, 40) }));
+  Logger.log(log.join('\n') || 'Nada novo para importar.');
+}
+
+/** Rode uma vez no editor para ligar a importação automática de hora em hora. */
+function ligarImportacaoAutomatica() {
+  desligarImportacaoAutomatica();
+  ScriptApp.newTrigger('importarAutomatico').timeBased().everyHours(1).create();
+  Logger.log('Importação automática ligada: de hora em hora.');
+}
+function desligarImportacaoAutomatica() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'importarAutomatico').forEach(t => ScriptApp.deleteTrigger(t));
+}
+function ultimaAutomatica_() {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('auto_ultima') || 'null'); } catch (e) { return null; }
 }
 
 /* ---------- leitura genérica, guiada pelos cabeçalhos ---------- */
