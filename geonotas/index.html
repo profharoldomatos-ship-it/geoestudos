@@ -16,7 +16,7 @@
   --y7:#2F7A4E; --y8:#B4531A; --y9:#5541A8; --year:#2B4A8A;
   --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
   --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
-  --ok:#1F7A45; --ok-bg:#E3F3E8; --mid:#8A5A00; --mid-bg:#F6E3A6;
+  --ok:#1F7A45; --ok-bg:#E3F3E8; --blue:#1D4E89; --blue-bg:#E1EBF7; --mid:#8A5A00; --mid-bg:#F6E3A6;
   --shadow:0 1px 2px rgba(0,0,0,.05),0 2px 8px rgba(0,0,0,.04); color-scheme:light;
 }
 /* mesmas cores dos modos Sépia e Claro do GeoEstudos */
@@ -71,7 +71,9 @@ select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1p
 .tog.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
 .tog.saving{opacity:.55}
 .calc{min-width:44px;text-align:center;font-weight:700;border-radius:8px;padding:4px 6px;flex:0 0 auto}
-.g-ok{background:var(--ok-bg);color:var(--ok)} .g-low{background:var(--low-bg);color:var(--low)} .g-mid{background:var(--mid-bg);color:var(--mid)}
+.g-ok{background:var(--ok-bg);color:var(--ok)} .g-blue{background:var(--blue-bg);color:var(--blue)}
+.ctx.g-ok,.ctx.g-low{background:none;font-weight:700}.ctx.g-ok{color:var(--ok)}.ctx.g-low{color:var(--low)}
+.inp.v-ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}.inp.v-low{background:var(--low-bg);border-color:var(--low);color:var(--low)} .g-low{background:var(--low-bg);color:var(--low)} .g-mid{background:var(--mid-bg);color:var(--mid)}
 .g-none{color:var(--muted)}
 .hint{color:var(--muted);font-size:13px;margin:4px 2px 10px}
 .empty,.loading{padding:40px 16px;text-align:center;color:var(--muted)}
@@ -402,20 +404,21 @@ function patchRow(row){
     if(!cell)return;
     if(el.classList.contains('inp')){if(el!==document.activeElement){el.value=shown(cell.v)==='—'?'':cell.v;el.classList.remove('bad')}}
     else if(el.classList.contains('tog')){el.classList.toggle('on',cell.v===true);el.textContent=cell.v===true?'✓':'—'}
-    else{el.textContent=shown(cell.v);el.className=(el.classList.contains('ctx')?'ctx':'calc '+(typeof cell.v==='boolean'||num(cell.v)==null?'g-none':el.dataset.neutro?'neutro':grade(cell.v)))+(el.classList.contains('forte')?' forte':'')}
+    else{el.textContent=shown(cell.v);el.className=(el.classList.contains('ctx')?'ctx '+grade(cell.v):'calc '+(typeof cell.v==='boolean'||num(cell.v)==null?'g-none':el.dataset.neutro?'neutro':grade(cell.v)))+(el.classList.contains('forte')?' forte':'')}
   });
 }
 
 /* ---------- controles de lançamento ---------- */
 const nn=v=>String(v).replace(/[,.]0+$/,'');
+document.addEventListener('input',e=>{const t=e.target;if(!t.classList||!t.classList.contains('inp'))return;const n=num(t.value);t.classList.toggle('v-ok',n!=null&&n>=7);t.classList.toggle('v-low',n!=null&&n<7)});
 function control(row,col){
   const cell=row.cells[col.c];
   const attrs='data-r="'+row.r+'" data-c="'+col.c+'"';
-  if(!cell.ed){const neu=S.kind==='notas'&&!['mr','fin'].includes(blocoDe(col));
+  if(!cell.ed){const neu=false;
     return '<span class="calc '+(num(cell.v)==null?'g-none':neu?'neutro':grade(cell.v))+'" '+attrs+(neu?' data-neutro="1"':'')+'>'+esc(shown(cell.v))+'</span>'}
   if(col.check)return '<button class="tog'+(cell.v===true?' on':'')+'" '+attrs+'>'+(cell.v===true?'✓':'—')+'</button>';
   const val=shown(cell.v)==='—'?'':cell.v;
-  return '<input class="inp" inputmode="decimal" enterkeyhint="next" autocomplete="off" value="'+esc(val)+'" '+attrs+'>';
+  return '<input class="inp'+(num(val)==null?'':num(val)>=7?' v-ok':' v-low')+'" inputmode="decimal" enterkeyhint="next" autocomplete="off" value="'+esc(val)+'" '+attrs+'>';
 }
 function bindControls(root,rowsById,colsById){
   root.querySelectorAll('.tog').forEach(b=>b.addEventListener('click',e=>{
@@ -665,7 +668,7 @@ const ICS={
 function secH(tit,sub,ic,cor){
   return '<div class="sec" style="--sc:'+(cor||'var(--year)')+'"><span class="sec-ic"><svg viewBox="0 0 24 24" aria-hidden="true">'+(ICS[ic]||'')+'</svg></span><span class="sec-tx"><b>'+esc(tit)+'</b>'+(sub?'<span>'+esc(sub)+'</span>':'')+'</span></div>';
 }
-function valBadge(row,col,extra,neutro){
+function valBadge(row,col,extra,neutro){neutro=false;
   if(!col)return '<span class="calc g-none'+(extra||'')+'">—</span>';
   const v=row.cells[col.c].v,cls=typeof v==='boolean'||num(v)==null?'g-none':neutro?'neutro':grade(v);
   return '<span class="calc '+cls+(extra||'')+'" data-r="'+row.r+'" data-c="'+col.c+'"'+(neutro?' data-neutro="1"':'')+'>'+esc(shown(v))+'</span>';
@@ -692,7 +695,7 @@ function render(){
     const tot=d.columns.find(c=>c.calc);
     const opts=cols.map(c=>'<option value="'+c.c+'"'+(c.c===col.c?' selected':'')+'>'+esc(rotulo(c.parts.slice().reverse().join(' · ')))+'</option>').join('');
     main.innerHTML=seg+'<select id="colSel">'+opts+'</select><div class="list" id="lst">'+
-      d.rows.map(r=>'<div class="row"><span class="num">'+esc(nn(r.n))+'</span><span class="name">'+esc(r.nome)+'</span>'+(tot?'<span class="ctx" data-r="'+r.r+'" data-c="'+tot.c+'">'+esc(shown(r.cells[tot.c].v))+'</span>':'')+control(r,col)+'</div>').join('')+'</div>'+
+      d.rows.map(r=>'<div class="row"><span class="num">'+esc(nn(r.n))+'</span><span class="name">'+esc(r.nome)+'</span>'+(tot?'<span class="ctx '+grade(r.cells[tot.c].v)+'" data-r="'+r.r+'" data-c="'+tot.c+'">'+esc(shown(r.cells[tot.c].v))+'</span>':'')+control(r,col)+'</div>').join('')+'</div>'+
       (tot?'<div class="hint" style="margin-top:8px">À direita do nome: nota do caderno calculada pela planilha.</div>':'');
     $('#colSel').addEventListener('change',e=>{S.colSel[key]=+e.target.value;render()});
     bindControls($('#lst'),byRow(d),byCol(d));
@@ -713,7 +716,7 @@ function renderNotas(d){
       '<div class="rs-head" style="'+grid+'">'+res.map(b=>'<span title="'+esc(b.nome)+'">'+esc(b.sig)+'</span>').join('')+'</div>'+
       '<div class="list">'+d.rows.map(r=>'<div class="rs-row tap" data-open="'+r.r+'"><div class="rs-nome"><span class="num">'+esc(nn(r.n))+'</span> '+esc(r.nome)+'</div>'+
         '<div class="rs-vals" style="'+grid+'">'+res.map(b=>valBadge(r,b.res,(b.id==='mr'||b.id==='fin')?' forte':'',!(b.id==='mr'||b.id==='fin'))).join('')+'</div></div>').join('')+'</div>'+
-      '<div class="hint" style="margin-top:8px">N1 desempenho + caderno · N2 atividades · N3 prova · MR média regular · RP recuperação paralela. Cores (verde a partir de 7, vermelho ▼ abaixo) só na média regular e na final. Toque num aluno para ver como cada nota foi formada.</div>';
+      '<div class="hint" style="margin-top:8px">N1 desempenho + caderno · N2 atividades · N3 prova · MR média regular · RP recuperação paralela. Verde a partir de 7, vermelho ▼ abaixo. Toque num aluno para ver como cada nota foi formada.</div>';
     main.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',()=>openSheet(+el.dataset.open)));
   }else if(m==='lancar'){
     const comIns=bl.filter(b=>b.cols.some(c=>!c.calc));
@@ -725,7 +728,7 @@ function renderNotas(d){
       (b.id==='n2'?'<button class="impbtn" id="impOpen">⤓ Importar dos formulários do '+S.cfg.periodo+'º período</button>':'')+
       (us.length>1?'<select id="unSel" aria-label="Atividade">'+us.map((x,i)=>'<option value="'+i+'"'+(i===ui?' selected':'')+'>'+esc(rotulo(x.nome))+'</option>').join('')+'</select>':'<div class="hint">'+esc(rotulo(u.nome))+'</div>')+
       '<div class="list" id="lst">'+d.rows.map(r=>'<div class="row"><span class="num">'+esc(nn(r.n))+'</span><span class="name">'+esc(r.nome)+'</span>'+
-        (b.res&&!u.cols.includes(b.res)?'<span class="ctx" data-r="'+r.r+'" data-c="'+b.res.c+'">'+esc(shown(r.cells[b.res.c].v))+'</span>':'')+
+        (b.res&&!u.cols.includes(b.res)?'<span class="ctx '+grade(r.cells[b.res.c].v)+'" data-r="'+r.r+'" data-c="'+b.res.c+'">'+esc(shown(r.cells[b.res.c].v))+'</span>':'')+
         '<span class="ctl'+(u.cols.length>1?' par':'')+'">'+u.cols.map(c=>control(r,c)).join('')+'</span></div>').join('')+'</div>'+
       (b.res&&!u.cols.includes(b.res)?'<div class="hint" style="margin-top:8px">À direita do nome: '+esc(b.nome)+' atual, calculada pela planilha.</div>':'');
     main.querySelectorAll('[data-b]').forEach(x=>x.addEventListener('click',()=>{S.colSel[k]=x.dataset.b;render()}));
@@ -823,7 +826,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.10.0',APP_DATA='2026-10-26';
+const APP_VERSAO='1.11.0',APP_DATA='2026-10-26';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
@@ -1013,7 +1016,9 @@ function finalTone(d){
   return (c,v)=>{
     if(!on)return '';
     const n=num(v);if(n==null)return '';
-    if(p28&&c.c===p28.c)return n>10?'g-low':n>7?'g-mid':'g-ok';
+    const r1=Math.round(n*10)/10;
+    if(p28&&c.c===p28.c)return r1>7?'g-low':r1===7?'g-mid':'g-ok';
+    if(/^SOMA/i.test(c.leaf))return r1>=28?'g-ok':r1>=21?'g-blue':'g-low';
     return /PER[ÍI]ODO|M[ÉE]DIA/i.test(c.label)?grade(v):'';
   };
 }
@@ -1041,7 +1046,7 @@ function renderFinal(d0){
     '<div class="tablewrap"><table><thead><tr><th class="nm">Aluno</th>'+d.columns.map(c=>'<th>'+esc(c.leaf.replace(/\s*PER[ÍI]ODO/i,'º P'))+'</th>').join('')+'</tr></thead><tbody>'+
     d.rows.map(r=>'<tr><td class="nm">'+esc(r.nome)+'</td>'+d.columns.map(c=>{const v=r.cells[c.c].v,t=tone(c,v);return '<td>'+(t?'<span class="calc '+t+'">'+esc(shown(v))+'</span>':esc(shown(v)))+'</td>'}).join('')+'</tr>').join('')+
     '</tbody></table></div>'+
-    (p28?'<div class="hint" style="margin-top:8px">'+(p4On()?'“Para 28”: quanto falta para somar 28 (média 7), já contando o 4º período parcial.':'“Precisa no 4º”: nota que o aluno precisa tirar no 4º período para somar 28 (média 7). 0 = já garantido.')+(coresOn()?' Vermelho = acima de 10, não alcança só com o 4º período.':'')+'</div>':'')+
+    (p28?'<div class="hint" style="margin-top:8px">'+(p4On()?'“Para 28”: quanto falta para somar 28 (média 7), já contando o 4º período parcial.':'“Precisa no 4º”: nota que o aluno precisa tirar no 4º período para somar 28 (média 7). 0 = já garantido.')+(coresOn()?' Verde abaixo de 7, amarelo igual a 7, vermelho acima de 7 (acima de 10 não alcança só com o 4º). Soma: verde a partir de 28, azul de 21 a 27,9, vermelho abaixo de 21.':'')+'</div>':'')+
     '<div class="hint">Somente leitura: os períodos vêm da planilha; soma, “para 28” e média são recalculados aqui conforme o botão do 4º período. A planilha não muda.</div>';
   bindCoresSw();bindP4Sw();
 }

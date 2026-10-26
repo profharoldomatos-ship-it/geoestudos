@@ -11,6 +11,12 @@ A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google A
 ## Planejado para 2027
 - Chamada: registro do conteúdo do dia, a partir do planejamento mensal.
 
+## 1.11.0 · 26/10/2026 · cores iguais às da planilha
+- Notas (NOTAS 4P): todas as notas, inclusive N1, N2, N3, recuperação e os campos de digitação, ficam verdes a partir de 7 e vermelhas abaixo de 7.
+- Cadernos: a nota do caderno segue o mesmo verde/vermelho.
+- Resultados: períodos e média final em verde/vermelho; Soma verde a partir de 28, azul de 21 a 27,9, vermelha abaixo de 21; "Para 28" verde abaixo de 7, amarelo igual a 7, vermelho acima de 7.
+- Robô continua v10.
+
 ## 1.10.0 · 26/10/2026 · 4º período liga/desliga nos Resultados
 - Botão "4º período" na aba Resultados (também no modo Um por vez).
 - Ligado: a nota parcial do 4º entra na soma, no "Para 28" e na média, para acompanhar a dedicação no período.
