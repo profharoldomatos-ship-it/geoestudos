@@ -11,6 +11,13 @@ A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google A
 ## Planejado para 2027
 - Chamada: registro do conteúdo do dia, a partir do planejamento mensal.
 
+## 1.10.0 · 26/10/2026 · 4º período liga/desliga nos Resultados
+- Botão "4º período" na aba Resultados (também no modo Um por vez).
+- Ligado: a nota parcial do 4º entra na soma, no "Para 28" e na média, para acompanhar a dedicação no período.
+- Desligado: o 4º fica fora da conta e a coluna vira "Precisa no 4º": a nota que falta para somar 28 (média 7). 0 = já garantido; acima de 10 = não alcança só com o 4º.
+- Se a planilha deixar o 4º em branco até o fim do ano, o parcial vem da Final da aba NOTAS 4P.
+- A planilha não muda. Robô continua v10.
+
 ## Robô v10 · 25/10/2026 · ignora respostas de anos anteriores
 - Os formulários de atividades são reaproveitados e ainda guardavam as respostas de 2025. O robô agora só lê respostas enviadas a partir de 30 dias antes do início do período (09/09/2026).
 - Descrição da implantação: "v10 · ignora respostas antigas dos formulários".

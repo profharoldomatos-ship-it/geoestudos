@@ -87,7 +87,7 @@ td.nm,th.nm{text-align:left;position:sticky;left:0;background:var(--card);max-wi
 th{z-index:2} th.nm{z-index:3}
 /* liga/desliga cores (Resultados) */
 .corsw{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px;font-size:14px}
-.corsw .sw{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.corsw .sw{white-space:nowrap;flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
 .corsw .sw i{width:34px;height:20px;border-radius:999px;background:var(--line);position:relative;transition:background .15s}
 .corsw .sw i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
 .corsw .sw[aria-pressed=true] i{background:var(--ok)}
@@ -650,7 +650,8 @@ function rotulo(t){
      .replace(/\bATIV\.?\s*SITE\b/gi,'Atividade do site')
      .replace(/\bATIV\.(?=\s|$)/gi,'Atividade')
      .replace(/\bCAP\.?\s*(\d+)/gi,'Cap. $1')
-     .replace(/\bRECUP\.?\s*PARAL\.?/gi,'recuperação paralela');
+     .replace(/\bRECUP\.?\s*PARAL\.?/gi,'recuperação paralela')
+     .replace(/^(\d)\s*PER[ÍI]ODO/i,'$1º período');
   return s.split(' ').map((w,i)=>/^[A-ZÀ-Ý.]{2,}$/.test(w)?(i===0?w.charAt(0)+w.slice(1).toLowerCase():w.toLowerCase()):w).join(' ').replace(/^./,c=>c.toUpperCase());
 }
 const ICS={
@@ -787,15 +788,16 @@ function renderPriv(d){
     '<button class="iconbtn" id="pNext" aria-label="Próximo aluno"'+(i<rows.length-1?'':' disabled')+'>›</button></div>';
   let body;
   if(S.kind==='final'){
-    const tone=finalTone(d);
-    body=coresSw()+'<div class="list">'+d.columns.map(c=>{const v=row.cells[c.c].v,t=tone(c,v);return '<div class="field"><span class="lb">'+esc(rotulo(c.leaf))+'</span>'+(t?'<span class="calc '+t+'">'+esc(shown(v))+'</span>':'<span class="calc g-none">'+esc(shown(v))+'</span>')+'</div>'}).join('')+'</div>';
+    const tone=finalTone(d),V=finalVista(d),vr=V.d.rows.find(x=>x.r===row.r)||row;
+    if(V.precisaNotas&&!S._ldN)(S._ldN=1,load(S.turma,'notas',true)).then(()=>{S._ldN=0;if(S.kind==='final')render()});
+    body=(V.ok?p4Sw():'')+coresSw()+'<div class="list">'+V.d.columns.map(c=>{const v=vr.cells[c.c].v,t=tone(c,v);return '<div class="field"><span class="lb">'+esc(rotulo(c.leaf))+'</span>'+(t?'<span class="calc '+t+'">'+esc(shown(v))+'</span>':'<span class="calc g-none">'+esc(shown(v))+'</span>')+'</div>'}).join('')+'</div>';
   }else body=fieldsHtml(d,row);
   $('#main').innerHTML=nav+'<div id="pBody">'+body+'</div>'+foot();
   const go=r=>{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();S.privRow=r;render();window.scrollTo(0,0)};
   $('#pSel').addEventListener('change',e=>go(+e.target.value));
   $('#pPrev').addEventListener('click',()=>rows[i-1]&&go(rows[i-1].r));
   $('#pNext').addEventListener('click',()=>rows[i+1]&&go(rows[i+1].r));
-  if(S.kind!=='final')bindControls($('#pBody'),byRow(d),byCol(d));else bindCoresSw();
+  if(S.kind!=='final')bindControls($('#pBody'),byRow(d),byCol(d));else{bindCoresSw();bindP4Sw()}
   bindFoot();
 }
 
@@ -821,7 +823,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.9.0',APP_DATA='2026-10-25';
+const APP_VERSAO='1.10.0',APP_DATA='2026-10-26';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
@@ -964,6 +966,45 @@ function stepSheet(dir){
 }
 
 function coresOn(){return store.get('cores')!=='0'}
+/* Resultados: 4º período ligado (parcial entra na conta) ou desligado (mostra o que falta no 4º) */
+function p4On(){return store.get('p4')!=='0'}
+const fmt1=n=>n==null?'':(Math.round(n*10)/10).toFixed(1).replace('.',',');
+function finalVista(d){
+  const per=k=>d.columns.find(c=>new RegExp('^\\s*'+k+'\\s*º?\\s*PER','i').test(c.leaf));
+  const P=[1,2,3,4].map(per),soma=d.columns.find(c=>/^SOMA/i.test(c.leaf)),p28=d.columns.find(c=>/PARA\s*28/i.test(c.label)),
+        mf=d.columns.find(c=>/M[ÉE]DIA FINAL/i.test(c.label));
+  if(!P[0]||!P[3])return {d,ok:false};
+  const on=p4On(),notas=(S.data[S.turma]||{}).notas,fin=notas&&blocos(notas).find(b=>b.id==='fin');
+  const parcial=row=>{let v=num(row.cells[P[3].c].v);
+    if(v==null&&fin&&fin.res){const nr=notas.rows.find(x=>x.nome===row.nome);if(nr)v=num(nr.cells[fin.res.c].v)}return v};
+  let precisaNotas=false;
+  const rows=d.rows.map(row=>{
+    const cells={};for(const k in row.cells)cells[k]=Object.assign({},row.cells[k]);
+    const ps=P.slice(0,3).map(c=>num(row.cells[c.c].v));
+    let p4=on?parcial(row):null;if(on&&p4==null&&!notas)precisaNotas=true;
+    const usa=ps.concat(on?[p4]:[]).filter(v=>v!=null),sm=usa.reduce((a,b)=>a+b,0),vazio=!usa.length;
+    cells[P[3].c].v=on?(p4==null?'':fmt1(p4)):'—';
+    if(soma)cells[soma.c].v=vazio?'':fmt1(sm);
+    if(p28)cells[p28.c].v=vazio?'':fmt1(Math.max(0,28-sm));
+    if(mf)cells[mf.c].v=vazio?'':fmt1(sm/usa.length);
+    return Object.assign({},row,{cells});
+  });
+  const columns=d.columns.filter(c=>on||c!==P[3]).map(c=>{
+    if(on)return c;
+    const x=Object.assign({},c);
+    if(c===soma)x.leaf='Soma 1º–3º';
+    if(c===p28)x.leaf='Precisa no 4º';
+    if(c===mf)x.leaf='Média até o 3º';
+    return x;
+  });
+  return {d:Object.assign({},d,{rows,columns}),ok:true,precisaNotas};
+}
+function p4Sw(){
+  const on=p4On();
+  return '<div class="corsw"><span class="lg">'+(on?'4º período parcial incluído na conta':'Sem o 4º: quanto falta para a média 7')+'</span>'+
+    '<button class="sw" id="p4Sw" aria-pressed="'+on+'"><i aria-hidden="true"></i>4º período</button></div>';
+}
+function bindP4Sw(){const b=$('#p4Sw');if(b)b.addEventListener('click',()=>{store.set('p4',p4On()?'0':'1');render()})}
 /* Resultados: com as cores ligadas, cada nota de período e a média ficam
    verdes a partir de 7 e vermelhas abaixo; desligadas, tudo neutro. */
 function finalTone(d){
@@ -984,7 +1025,9 @@ function coresSw(){
 function bindCoresSw(){
   const b=$('#corSw');if(b)b.addEventListener('click',()=>{store.set('cores',coresOn()?'0':'1');render()});
 }
-function renderFinal(d){
+function renderFinal(d0){
+  const V=finalVista(d0),d=V.d;
+  if(V.precisaNotas&&!S._ldN)(S._ldN=1,load(S.turma,'notas',true)).then(()=>{S._ldN=0;if(S.kind==='final')render()});
   const fin=d.columns.find(c=>/M[ÉE]DIA FINAL/i.test(c.label))||keyCols(d).slice(-1)[0];
   const p28=d.columns.find(c=>/PARA\s*28/i.test(c.label));
   const vals=d.rows.map(r=>fin?num(r.cells[fin.c].v):null).filter(v=>v!=null);
@@ -994,13 +1037,13 @@ function renderFinal(d){
   $('#main').innerHTML=
     '<div class="stats"><div class="stat"><b>'+d.rows.length+'</b><span>alunos</span></div>'+
     '<div class="stat"><b>'+(avg==null?'—':avg.toFixed(1).replace('.',','))+'</b><span>média da turma</span></div>'+
-    '<div class="stat"><b>'+below+'</b><span>abaixo de 7</span></div></div>'+coresSw()+
+    '<div class="stat"><b>'+below+'</b><span>abaixo de 7</span></div></div>'+(V.ok?p4Sw():'')+coresSw()+
     '<div class="tablewrap"><table><thead><tr><th class="nm">Aluno</th>'+d.columns.map(c=>'<th>'+esc(c.leaf.replace(/\s*PER[ÍI]ODO/i,'º P'))+'</th>').join('')+'</tr></thead><tbody>'+
     d.rows.map(r=>'<tr><td class="nm">'+esc(r.nome)+'</td>'+d.columns.map(c=>{const v=r.cells[c.c].v,t=tone(c,v);return '<td>'+(t?'<span class="calc '+t+'">'+esc(shown(v))+'</span>':esc(shown(v)))+'</td>'}).join('')+'</tr>').join('')+
     '</tbody></table></div>'+
-    (p28&&coresOn()?'<div class="hint" style="margin-top:8px">“Para 28”: quanto falta para somar 28 (média 7). Vermelho = acima de 10, não alcança só com o 4º período.</div>':'')+
-    '<div class="hint">Somente leitura: esta aba é calculada na planilha.</div>';
-  bindCoresSw();
+    (p28?'<div class="hint" style="margin-top:8px">'+(p4On()?'“Para 28”: quanto falta para somar 28 (média 7), já contando o 4º período parcial.':'“Precisa no 4º”: nota que o aluno precisa tirar no 4º período para somar 28 (média 7). 0 = já garantido.')+(coresOn()?' Vermelho = acima de 10, não alcança só com o 4º período.':'')+'</div>':'')+
+    '<div class="hint">Somente leitura: os períodos vêm da planilha; soma, “para 28” e média são recalculados aqui conforme o botão do 4º período. A planilha não muda.</div>';
+  bindCoresSw();bindP4Sw();
 }
 
 /* ---------- navegação ---------- */
