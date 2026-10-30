@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.9.4 · 30/10/2026
+- Abertura: depois de parar no Brasil, os pontos do globo se desfazem suavemente e a marca original do GeoEstudos aparece limpa.
+
 ## 1.9.3 · 30/10/2026
 - Nova animação de abertura: no lugar dos meridianos, o globo mostra os continentes em pontos e gira de leste para oeste (Ásia, África, Atlântico) até parar com o Brasil no centro.
 
