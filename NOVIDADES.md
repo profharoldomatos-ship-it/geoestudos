@@ -8,6 +8,14 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.9.0 · 30/10/2026
+- Página inicial mais direta: sai o quadro azul e entra “Escolha o seu ano”, com os três anos em botões da mesma altura.
+- Menu ☰ no canto de cima: Início, Guia do estudante, Instalar, Sobre o Prof. Haroldo Matos, Sobre o GeoEstudos e privacidade, Fale com o professor, Compartilhar e Cores do app. Os textos que estavam na página inicial e no rodapé foram mantidos, agora no menu.
+- Quem fixou a turma (“Sim, sou da turma”) abre o app direto nela, já na unidade em andamento. Celular compartilhado continua abrindo na escolha de ano.
+- O botão de cores saiu do topo: agora fica no “Aa” da leitura (“Cores do app”) e no menu.
+- Rodapé enxuto: só a versão.
+- Conteúdo Geográfico do Dia suspenso (o recurso e a planilha continuam guardados para voltar depois).
+
 ## 1.8.0 · 24/10/2026
 - Painel do professor: botão para o GeoNotas, que agora funciona como uma página do próprio GeoEstudos (pasta geonotas/), protegida por senha própria. No GeoNotas, botão de volta ao painel.
 

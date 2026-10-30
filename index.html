@@ -295,6 +295,29 @@ h2.r-h{letter-spacing:0} h3.r-h2{letter-spacing:0}
 .foot-ini{margin:0;font-size:.84rem;line-height:1.5}
 .foot-contato{margin:0}
 .foot-home{display:flex;flex-direction:column;gap:8px}
+.topc{display:grid;grid-template-columns:44px 1fr 44px;align-items:center}
+.topc .brand{justify-self:center;padding:4px 6px}
+.menubtn{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--pen);display:grid;place-items:center;cursor:pointer;padding:0}
+.menubtn:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+.menubtn-esp{width:44px}
+.drw-ov{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,0);transition:background .2s}
+.drw-ov.on{background:rgba(0,0,0,.42)}
+.drw{position:absolute;top:0;left:0;bottom:0;width:84%;max-width:330px;background:var(--bg);color:var(--ink);transform:translateX(-102%);transition:transform .2s ease-out;padding:max(14px,env(safe-area-inset-top)) 10px 14px;display:flex;flex-direction:column;gap:2px;box-shadow:4px 0 24px rgba(0,0,0,.25);overflow:auto}
+.drw-ov.on .drw{transform:none}
+.drw-h{display:flex;flex-direction:column;gap:4px;padding:8px 52px 14px 10px;border-bottom:1px solid var(--line);margin-bottom:6px;position:relative}
+.drw-h b{font-family:var(--display);font-size:1.25rem;color:var(--pen);line-height:1}
+.drw-x{position:absolute;right:4px;top:2px}
+.drw-i{display:flex;gap:14px;align-items:center;text-align:left;background:none;border:0;padding:12px 10px;border-radius:10px;color:var(--ink);font:inherit;cursor:pointer;width:100%}
+.drw-i:hover,.drw-i:focus-visible{background:var(--surface-2)}
+.drw-i svg{color:var(--pen);flex:none}
+.drw-i b{display:block;font-size:1rem;font-weight:600}.drw-i small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px;word-break:break-all}
+.drw hr{border:0;border-top:1px solid var(--line);margin:6px 8px;width:auto}
+.drw-v{margin:auto 10px 4px;padding-top:14px;font-size:.78rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.drw,.drw-ov{transition:none}}
+.esc-t{font-size:1.45rem;margin:4px 0 0}
+.yeq .yf-h{height:88px;min-height:88px;padding:12px 16px}
+.yeq .yf-tx b{font-size:1.5rem}
+.yeq .yf-tx span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 body.fora-inicio .foot-home{display:none}
 .foot-sep{border:0;border-top:1px solid var(--line);margin:6px 0;width:100%}
 .foot-sobre-w{display:flex;flex-direction:column;gap:8px}.foot-sobre-w[hidden]{display:none}
@@ -1143,33 +1166,15 @@ if((st&&!sessionStorage.getItem('geo:abriu'))||q){sessionStorage.setItem('geo:ab
 var rm=matchMedia('(prefers-reduced-motion: reduce)').matches,fim=function(){if(!a.parentNode)return;a.classList.add('sai');setTimeout(function(){a.remove();document.documentElement.classList.remove('abrindo')},380)};
 setTimeout(fim,rm?1600:3300);a.addEventListener('click',fim)}}catch(e){}})();</script>
 <div class="app" id="app">
-  <header class="top">
-    <div style="display:flex;flex-direction:column">
-            <button type="button" class="brand" data-go="home" aria-label="GeoEstudos: voltar à página inicial" title="Voltar à página inicial"><svg class="brand-ic" viewBox="196 214 640 640" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M808.52,426.51v283.65c0,18.9-15.31,34.24-34.24,34.24h-158.64c-31.47,0-59.65,14.04-78.65,36.16l-.03.03c-.55.65-1.1,1.27-1.61,1.95-.07.1-.17.21-.27.31-5.68,6.3-13.94,10.24-23.08,10.24s-17.36-3.94-23.08-10.24c-.1-.1-.17-.21-.27-.31-.41-.55-.89-1.1-1.37-1.64-18.97-22.32-47.29-36.5-78.92-36.5h-158.64c-18.9,0-34.24-15.34-34.24-34.24v-280.22c0-20.82,16.85-37.66,37.66-37.66h155.21c57.25,0,103.65,46.4,103.65,103.61,0-57.22,46.4-103.61,103.65-103.61h158.64c18.93,0,34.24,15.31,34.24,34.24Z"/><circle cx="512.01" cy="433.78" r="188.21" fill="currentColor" stroke="var(--bg)" stroke-width="25"/></svg><span class="brand-tx"><b>GeoEstudos</b><span class="eyebrow">Prof. Haroldo Matos</span></span></button>
-    </div>
-    <button class="modebtn" id="modeBtn" aria-label="Escolha o tema do app" aria-haspopup="dialog"><span class="mb-ic" aria-hidden="true"></span><span class="mb-t">Escolha o tema<br>do app</span></button>
+  <header class="top topc">
+    <button type="button" class="menubtn" id="menuBtn" aria-label="Abrir o menu" aria-haspopup="dialog"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <button type="button" class="brand" data-go="home" aria-label="GeoEstudos: voltar à página inicial" title="Voltar à página inicial"><svg class="brand-ic" viewBox="196 214 640 640" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M808.52,426.51v283.65c0,18.9-15.31,34.24-34.24,34.24h-158.64c-31.47,0-59.65,14.04-78.65,36.16l-.03.03c-.55.65-1.1,1.27-1.61,1.95-.07.1-.17.21-.27.31-5.68,6.3-13.94,10.24-23.08,10.24s-17.36-3.94-23.08-10.24c-.1-.1-.17-.21-.27-.31-.41-.55-.89-1.1-1.37-1.64-18.97-22.32-47.29-36.5-78.92-36.5h-158.64c-18.9,0-34.24-15.34-34.24-34.24v-280.22c0-20.82,16.85-37.66,37.66-37.66h155.21c57.25,0,103.65,46.4,103.65,103.61,0-57.22,46.4-103.61,103.65-103.61h158.64c18.93,0,34.24,15.31,34.24,34.24Z"/><circle cx="512.01" cy="433.78" r="188.21" fill="currentColor" stroke="var(--bg)" stroke-width="25"/></svg><span class="brand-tx"><b>GeoEstudos</b><span class="eyebrow">Prof. Haroldo Matos</span></span></button>
+    <span class="menubtn-esp" aria-hidden="true"></span>
   </header>
   <div id="foraBanner" hidden></div>
   <div id="offBanner" role="status" aria-live="polite" hidden></div>
   <main id="view"></main>
   <footer class="foot">
-    <div class="foot-home">
-    <div class="foot-id">
-      <span class="foot-mark" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg></span>
-      <b class="foot-nome">GeoEstudos</b>
-    </div>
-    <p class="foot-ini">GeoEstudos é uma iniciativa exclusiva do Prof. Haroldo Matos, o que não obriga a Rede Municipal de São Luís a disseminar seu uso mais ampliado.</p>
-    <div class="foot-sobre-w">
-      <hr class="foot-sep">
-      <button class="foot-sobre" data-go="sobre"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Sobre o GeoEstudos e privacidade</span><span aria-hidden="true" class="fs-ch">›</span></button>
-    </div>
-    <hr class="foot-sep">
-    <p class="foot-contato">Em caso de dúvidas, problemas técnicos, problemas com os conteúdos de aula ou envio de atividades e trabalhos, comunique-se, via e-mail, com o Prof. Haroldo Matos.</p>
-    <p class="foot-mail">E-mail: <a href="mailto:prof.haroldomatos@gmail.com">prof.haroldomatos@gmail.com</a></p>
-    <button class="copy" id="copyMail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/></svg>Copiar e-mail</button>
-    <hr class="foot-sep">
-    </div>
-    <button class="foot-share" id="shareApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg><span>Compartilhar o GeoEstudos com um colega</span></button>
     <p class="foot-ver" id="appVersao"></p>
   </footer>
 </div>
@@ -1481,8 +1486,8 @@ function readSheet(){
   const modes=[['auto','Automático'],['claro','Claro'],['sepia','Sépia'],['escuro','Escuro']];
   sheet(`<h2>Leitura</h2>
     <div><span class="eyebrow">Tamanho do texto</span><div class="sizer" style="margin-top:6px"><button id="szMinus" aria-label="Diminuir texto">A−</button><b id="szVal">${Math.round(S.size*100)}%</b><button id="szPlus" aria-label="Aumentar texto">A+</button></div></div>
-    <div><span class="eyebrow">Modo</span><div class="seg" style="margin-top:6px">${modes.map(m=>`<button data-mode="${m[0]}" aria-pressed="${S.mode===m[0]}">${m[1]}</button>`).join('')}</div>
-    <p class="meta" style="margin:8px 0 0">Sépia cansa menos a vista em leituras longas. Escuro é melhor à noite. Automático segue o celular.</p></div>
+    <div><span class="eyebrow">Cores do app</span><div class="seg" style="margin-top:6px">${modes.map(m=>`<button data-mode="${m[0]}" aria-pressed="${S.mode===m[0]}">${m[1]}</button>`).join('')}</div>
+    <p class="meta" style="margin:8px 0 0">Vale para o app todo. Sépia cansa menos a vista em leituras longas. Escuro é melhor à noite. Automático segue o modo do celular.</p></div>
     <div><span class="eyebrow">Fonte do texto</span><div class="seg" style="margin-top:6px"><button data-fonte="padrao" aria-pressed="${S.fonte!=='dis'}">Padrão</button><button data-fonte="dis" aria-pressed="${S.fonte==='dis'}" class="f-dis-prev">Para dislexia</button></div>
     <p class="meta" style="margin:8px 0 0">A fonte para dislexia (OpenDyslexic) tem letras com a base mais pesada e mais espaço entre letras, palavras e linhas, o que facilita a leitura para muitas pessoas.</p></div>
     <button class="btn btn-ghost" data-close>Pronto</button>`,
@@ -2187,7 +2192,7 @@ const TOURS={
     {centro:true,t:'Pronto!',x:'Quando você abrir um resumo pela primeira vez, mostro as ferramentas de leitura. O guia completo fica na página inicial, em “Guia do estudante”.',ok:'Começar a estudar'}
   ],
   leitura:[
-    {alvo:'.read-tools',t:'Ferramentas de leitura',x:'Ouvir lê o resumo em voz alta. Aa muda o tamanho e o tipo da letra. Marcações mostra os trechos que você destacou.'},
+    {alvo:'.read-tools',t:'Ferramentas de leitura',x:'Ouvir lê o resumo em voz alta. Aa muda o tamanho e o tipo da letra e as cores do app. Marcações mostra os trechos que você destacou.'},
     {alvo:'.paper',t:'Destaque e comente',x:'Selecione um trecho do texto (toque e segure numa palavra) para destacar, sublinhar ou escrever um comentário. Fica salvo só no seu celular.'},
     {alvo:'#copyBtn',t:'Copiou no caderno? Marque aqui',x:'Assim você acompanha o seu progresso. Lembre: quem confere de verdade é o professor, no seu caderno.'},
     {alvo:'.revcard',t:'Revisão rápida: é opcional',x:'Perguntas sobre o resumo, só para reforçar o aprendizado. Não vale nota: faça se quiser, quantas vezes quiser. O app corrige e explica cada resposta.',opcional:true},
@@ -2328,13 +2333,14 @@ function vGuia(){
     <div class="sbsecs">
     ${bloco('pen','globo','Primeiros passos','Ano, turma e unidade',ol([
       'Na página inicial, toque no seu <b>ano</b> e depois na sua <b>turma</b>.',
-      'O app pergunta se você é daquela turma. Toque em <b>“Sim, sou da turma”</b> para o app abrir sempre nela e mostrar os avisos dela.',
+      'O app pergunta se você é daquela turma. Toque em <b>“Sim, sou da turma”</b> para o app abrir sempre nela, já na unidade em andamento, e mostrar os avisos dela.',
       'Se o celular é usado por mais de um estudante (irmãos, colegas), escolha <b>“Celular compartilhado”</b>.',
       'Depois, escolha a <b>unidade</b>. Só a unidade em andamento fica aberta; as outras abrem e fecham conforme o calendário da escola.',
-      'Para mudar de turma, volte à página inicial (toque no logo GeoEstudos, no topo).']))}
+      'Para mudar de turma, toque em <b>Trocar de turma</b>, no fim da página da turma, ou em <b>Início</b>, na barra de baixo.',
+      'No <b>menu ☰</b>, no canto de cima, ficam o Guia, a instalação, o contato com o professor, as cores do app e as informações sobre o GeoEstudos.']))}
     ${bloco('ano','livro','Resumos','Ler, ouvir, destacar e copiar no caderno',ol([
       'Abra a sua turma e toque em <b>Resumos</b>. Escolha o capítulo.',
-      '<b>Ouvir</b> lê o resumo em voz alta. <b>Aa</b> muda o tamanho e o tipo da letra, inclusive uma letra própria para dislexia.',
+      '<b>Ouvir</b> lê o resumo em voz alta. <b>Aa</b> muda o tamanho e o tipo da letra, inclusive uma letra própria para dislexia, e as cores do app (claro, sépia ou escuro).',
       'Para <b>destacar, sublinhar ou comentar</b> um trecho, toque e segure numa palavra e ajuste a seleção. <b>Marcações</b> mostra tudo o que você marcou.',
       'O botão de <b>tela cheia</b> esconde o resto do app para você se concentrar na leitura.',
       'Copie o resumo no caderno e toque em <b>“Já copiei este resumo no caderno”</b>.',
@@ -2375,7 +2381,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.8.0',APP_DATA='2026-10-24';
+const APP_VERSAO='1.9.0',APP_DATA='2026-10-30';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2398,6 +2404,8 @@ function diaCorpo(d){
 const diaVistos=()=>store.get('diaVisto',[])||[];
 function diaMarcar(id){const v=diaVistos();if(!v.includes(id)){v.push(id);store.set('diaVisto',v.slice(-200))}}
 const diaNovo=()=>{const d=diaLista()[0];return d&&!diaVistos().includes(d.id)?d:null};
+/* Conteúdo Geográfico do Dia: suspenso em 30/10/2026 (a pedido do professor). Para reativar, DIA_ATIVO=true. */
+const DIA_ATIVO=false;
 function diaHome(){
   const l=diaLista();
   if(!l.length)return `<details class="dia dia-vazio" id="dia"${diaAberta(false)?' open':''}>${diaCab('Em breve',false,true)}
@@ -2438,26 +2446,69 @@ function irParaDia(id){
 function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
-    <div class="home-head hh2">${GLOBO_HH}<h1 class="home-t">GeoEstudos</h1><p class="hh-saud">Estudante, seja bem-vinda(o)!</p><hr class="hh-sep"><p class="hh-inf"><span>UI Prof. Carlos Cunha</span><span>Geografia | <span class="nw">Ensino Fundamental - Anos Finais</span></span><span>Aplicação desenvolvida pelo <span class="nw">Prof. Me. Haroldo Matos</span></span></p></div>
     ${fixosHtml(null)}
-    <details class="fold mini"><summary>Sobre o Prof. Haroldo Matos ${CHEVD}</summary><div class="fold-body">
-      <p>Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
-      <p>Atuo como professor na rede pública municipal de São Luís. Nesta rede, ministro a disciplina de Geografia para estudantes dos anos finais do Ensino Fundamental.</p>
-    </div></details>
-    <details class="fold mini"><summary>Sobre este aplicativo ${CHEVD}</summary><div class="fold-body">
-      <p>Este aplicativo foi desenvolvido para dar suporte às minhas aulas e, aqui, os estudantes encontrarão materiais de apoio, de pesquisa e atividades.</p>
-      <button class="privmini" style="margin-top:8px;width:100%" data-go="sobre"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Sobre o GeoEstudos e privacidade</span><span aria-hidden="true" class="pm-ch">›</span></button>
-    </div></details>
-    ${msg?`<div class="banner">${esc(msg)}</div>`:''}
-    <div><h2>Navegue por ano e turma</h2><p class="meta" style="margin:4px 0 0">Toque no seu ano e escolha a sua turma para ver os resumos e as atividades.</p></div>
-    ${DATA?`<div class="yfolds">${Object.values(YEARS).map(y=>{const minhaAqui=MINHA&&y.turmas.includes(MINHA),ab=(store.get('anosAbertos',{})||{})[y.ano],aberto=ab===undefined?!!minhaAqui:ab;
+    <div><h1 class="esc-t">Escolha o seu ano</h1><p class="meta" style="margin:4px 0 0">Toque no seu ano e depois na sua turma.</p></div>
+    ${DATA?`<div class="yfolds yeq">${Object.values(YEARS).map(y=>{const minhaAqui=MINHA&&y.turmas.includes(MINHA),ab=(store.get('anosAbertos',{})||{})[y.ano],aberto=ab===undefined?!!minhaAqui:ab;
       return `<details class="yfold" data-ano="${y.ano}" style="--yc:${y.color}"${aberto?' open':''}><summary class="yf-h"><span class="yf-tx"><b>${y.label}</b><span>Unidade ${y.atual} · ${esc(y.unit)}</span></span>${minhaAqui?`<span class="yf-minha">Turma ${esc(MINHA)}</span>`:''}${SF_CHEV}</summary>
       <div class="yf-body"><div class="choice">${y.turmas.map(t=>`<button data-turma="${t}" aria-pressed="${MINHA===t}"><span>Turma</span>${t}${MINHA===t?'<small>Minha turma</small>':''}</button>`).join('')}</div></div></details>`}).join('')}</div>`:semDados()}
     ${celularCard()}
-    ${diaHome()}
+    ${msg?`<div class="banner">${esc(msg)}</div>`:''}
+    ${DIA_ATIVO?diaHome():''}
     ${guiaBtn()}
     ${installCard()}
   </section>`;
+}
+
+/* Menu lateral (☰): o que é acessório sai da página inicial e fica aqui */
+const MNIC={inicio:'<path d="M3 11l9-7 9 7v9H3z"/>',guia:'<circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-4 1 2-5z"/>',inst:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 7v7m-3-3l3 3 3-3"/>',prof:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',sobre:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 11l7.6-4M8.2 13l7.6 4"/>',cores:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',painel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h3M8 16h6"/>'};
+function menuAbrir(){
+  if(document.querySelector('.drw-ov'))return;
+  const it=(k,ic,t,sub)=>`<button class="drw-i" data-mn="${k}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MNIC[ic]}</svg><span><b>${t}</b>${sub?`<small>${sub}</small>`:''}</span></button>`;
+  const o=document.createElement('div');o.className='drw-ov';
+  o.innerHTML=`<nav class="drw" role="dialog" aria-modal="true" aria-label="Menu"><div class="drw-h"><b>GeoEstudos</b><span class="eyebrow">Prof. Haroldo Matos</span><button class="iconbtn drw-x" data-mn="fechar" aria-label="Fechar o menu">✕</button></div>
+    ${it('inicio','inicio','Início')}
+    ${it('guia','guia','Guia do estudante','Como usar o app, passo a passo')}
+    ${standalone()?'':it('instalar','inst','Instalar no celular')}
+    ${PROF()?it('prof','painel','Painel do professor'):''}
+    <hr>
+    ${it('sobreprof','prof','Sobre o Prof. Haroldo Matos')}
+    ${it('sobre','sobre','Sobre o GeoEstudos e privacidade')}
+    ${it('contato','mail','Fale com o professor',esc(EMAIL))}
+    ${it('compartilhar','share','Compartilhar com um colega')}
+    <hr>
+    ${it('cores','cores','Cores do app','Automático, claro, sépia ou escuro')}
+    <p class="drw-v">${esc(versaoTexto())}</p></nav>`;
+  const fechar=()=>{o.classList.remove('on');document.removeEventListener('keydown',k);setTimeout(()=>o.remove(),200);const b=$('#menuBtn');if(b)b.focus({preventScroll:true})};
+  const k=e=>{if(e.key==='Escape')fechar()};document.addEventListener('keydown',k);
+  o.addEventListener('click',e=>{
+    if(e.target===o)return fechar();
+    const b=e.target.closest('[data-mn]');if(!b)return;const a=b.dataset.mn;fechar();
+    if(a==='inicio'){S.cap=null;go('home')}
+    else if(a==='guia')go('guia');
+    else if(a==='sobre')go('sobre');
+    else if(a==='prof')go('prof');
+    else if(a==='instalar'){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(()=>{deferredPrompt=null})}else installHelp()}
+    else if(a==='sobreprof')sobreProf();
+    else if(a==='contato')faleProf();
+    else if(a==='compartilhar')shareApp();
+    else if(a==='cores')modeSheet();
+  });
+  document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('on'));
+  o.querySelector('.drw-i').focus({preventScroll:true});
+}
+function sobreProf(){
+  sheet(`<h2>Sobre o Prof. Haroldo Matos</h2>
+    <p style="margin:0">Eu me chamo Haroldo Matos, sou historiador por formação (UFMA, 2020), especialista em Ciências Humanas e Sociais e o Mundo do Trabalho (UFPI, 2022), especialista em Gestão Escolar e Coordenação Pedagógica (CENES, 2025), mestre em História (UFMA, 2024) e doutorando em História (UFMA).</p>
+    <p style="margin:0">Atuo como professor na rede pública municipal de São Luís. Nesta rede, ministro a disciplina de Geografia para estudantes dos anos finais do Ensino Fundamental.</p>
+    <p style="margin:0">Este aplicativo foi desenvolvido para dar suporte às minhas aulas e, aqui, os estudantes encontrarão materiais de apoio, de pesquisa e atividades.</p>
+    <button class="btn btn-ghost" data-close>Fechar</button>`);
+}
+function faleProf(){
+  sheet(`<h2>Fale com o professor</h2>
+    <p style="margin:0">Em caso de dúvidas, problemas técnicos, problemas com os conteúdos de aula ou envio de atividades e trabalhos, comunique-se, via e-mail, com o Prof. Haroldo Matos.</p>
+    <p style="margin:0">E-mail: <a href="mailto:${esc(EMAIL)}"><b>${esc(EMAIL)}</b></a></p>
+    <p class="meta" style="margin:0">Dúvidas sobre o conteúdo da aula também podem ser enviadas pela caixa <b>Dúvidas</b>, na página da sua turma.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="copyMail">Copiar e-mail</button><button class="btn btn-ghost" data-close>Fechar</button></div>`);
 }
 
 function unitChips(active){
@@ -2547,7 +2598,7 @@ function vTurma(){
     ${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}
     ${MINHA&&S.turma!==MINHA?`<div class="outra"><span>Você está vendo a <b>Turma ${esc(S.turma)}</b>. Sua turma é a <b>${esc(MINHA)}</b>.</span><div class="outra-b"><button class="btn btn-primary" data-turma="${esc(MINHA)}">Voltar para a ${esc(MINHA)}</button><button class="link" id="mudarMinha">Esta é a minha turma</button></div></div>`:''}
     ${fixosHtml(S.turma)}
-    ${diaTeaser()}
+    ${DIA_ATIVO?diaTeaser():''}
     <button class="u-voltar" data-uescolha><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Unidades</button>
     <div class="card hello">${GLOBO_HH}
       <span class="eyebrow">Turma ${esc(S.turma)} · ${y.label}${S.turma===MINHA?' · minha turma':''}</span>
@@ -2577,7 +2628,7 @@ function vTurma(){
 }
 
 function bannersTurma(){
-  return `${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}${fixosHtml(S.turma)}${diaTeaser()}`;
+  return `${COMP?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}${fixosHtml(S.turma)}${DIA_ATIVO?diaTeaser():''}`;
 }
 function vEscolhaUnidade(){
   const y=Y();
@@ -3356,6 +3407,16 @@ addEventListener('popstate',e=>{
 
 /* Baixa os dados do robô */
 let fetching=false,lastFetch=0,pendingRender=false;
+/* Quem fixou a turma ("Sim, sou da turma") abre o app direto nela, já na unidade em andamento.
+   Celular compartilhado continua abrindo na escolha de ano. Só na abertura do app. */
+let abriuMinha=false;
+function abrirMinha(){
+  if(abriuMinha||!DATA)return;
+  abriuMinha=true;if(COMP||!MINHA||!TURMAS.includes(MINHA))return;
+  S.turma=MINHA;S.unit=null;
+  const y=YEARS[T2A[MINHA]];S.uAberta=!!(y&&y.atual&&liberada(y.atual,y));
+  go('turma');
+}
 async function carregar(){
   if(!CFG.DATA_URL){if(!DATA){LOAD='sem-url';render()}return}
   if(fetching)return;fetching=true;lastFetch=Date.now();
@@ -3366,6 +3427,7 @@ async function carregar(){
       const mudou=!DATA||DATA.versao!==j.versao;
       DATA=j;store.set('dados',j);LOAD='ok';semRede=false;atualizarOff();aplicarDados();setTimeout(avReenviar,1500);
       if(S.turma&&!TURMAS.includes(S.turma)){S.turma=null;S.tab='home';S.cap=null}
+      if(!abriuMinha){if(S.tab==='home'&&!S.cap)abrirMinha();else abriuMinha=true}
       if(mudou){if(S.cap||adjusting||pending||editing)pendingRender=true;else{const y=scrollY;render();scrollTo(0,y)}}
     }
   }catch(e){semRede=true;atualizarOff();if(!DATA){LOAD='offline';render()}}
@@ -3415,6 +3477,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
   if(t.closest('#modeBtn'))return modeSheet();
+  if(t.closest('#menuBtn'))return menuAbrir();
   if(t.closest('#ttsBtn'))return TTS.on?ttsParar():ttsIniciar();
   const av=t.closest('[data-aviso]');if(av){abrirAviso(av.dataset.aviso);return}
   if(t.closest('#muralTodos')){muralTodosSheet();return}
@@ -3477,6 +3540,7 @@ function abrirDeAviso(o){
       if(l.tab!=='turma'||S.turma){go(l.tab,l.cap!=null?capId(l.cap):null);const y=l.y||0;requestAnimationFrame(()=>setTimeout(()=>scrollTo(0,y),80))}
     }catch(e){}
   }
+  if(S.tab==='home'&&!S.cap&&!location.search)abrirMinha();else abriuMinha=true;
   lugarPronto=true;salvarLugar();
   try{history.replaceState(navFoto(),'')}catch(e){}
 })();
