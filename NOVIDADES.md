@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.9.1 · 30/10/2026
+- Barra do topo azul e fixa, de ponta a ponta da tela (como a barra de baixo), com o menu ☰ e a marca em branco.
+- Na marca do topo ficam só o ícone e o nome GeoEstudos.
+
 ## 1.9.0 · 30/10/2026
 - Página inicial mais direta: sai o quadro azul e entra “Escolha o seu ano”, com os três anos em botões da mesma altura.
 - Menu ☰ no canto de cima: Início, Guia do estudante, Instalar, Sobre o Prof. Haroldo Matos, Sobre o GeoEstudos e privacidade, Fale com o professor, Compartilhar e Cores do app. Os textos que estavam na página inicial e no rodapé foram mantidos, agora no menu.

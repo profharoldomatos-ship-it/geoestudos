@@ -296,6 +296,16 @@ h2.r-h{letter-spacing:0} h3.r-h2{letter-spacing:0}
 .foot-contato{margin:0}
 .foot-home{display:flex;flex-direction:column;gap:8px}
 .topc{display:grid;grid-template-columns:44px 1fr 44px;align-items:center}
+:root{--barra:#1D3F8F}body.m-sepia{--barra:#2B4A8A}body.m-escuro{--barra:#1E3466}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body:not(.m-claro):not(.m-sepia){--barra:#1E3466}}
+html{scroll-padding-top:76px}body{overflow-x:hidden}
+.top.topc{position:sticky;top:0;z-index:15;background:var(--barra);color:#fff;margin:calc(-12px - 8px) calc(50% - 50vw) 12px;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,calc(50vw - 214px)) 8px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.topc .brand b,.topc .brand-ic{color:#fff}
+.topc .brand b{font-size:1.3rem}
+.topc .brand-ic circle{stroke:var(--barra)}
+.topc .brand:focus-visible{outline-color:#fff}
+.topc .menubtn{background:transparent;border-color:rgba(255,255,255,.45);color:#fff}
+.topc .menubtn:focus-visible{outline-color:#fff}
 .topc .brand{justify-self:center;padding:4px 6px}
 .menubtn{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--pen);display:grid;place-items:center;cursor:pointer;padding:0}
 .menubtn:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
@@ -1168,7 +1178,7 @@ setTimeout(fim,rm?1600:3300);a.addEventListener('click',fim)}}catch(e){}})();</s
 <div class="app" id="app">
   <header class="top topc">
     <button type="button" class="menubtn" id="menuBtn" aria-label="Abrir o menu" aria-haspopup="dialog"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <button type="button" class="brand" data-go="home" aria-label="GeoEstudos: voltar à página inicial" title="Voltar à página inicial"><svg class="brand-ic" viewBox="196 214 640 640" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M808.52,426.51v283.65c0,18.9-15.31,34.24-34.24,34.24h-158.64c-31.47,0-59.65,14.04-78.65,36.16l-.03.03c-.55.65-1.1,1.27-1.61,1.95-.07.1-.17.21-.27.31-5.68,6.3-13.94,10.24-23.08,10.24s-17.36-3.94-23.08-10.24c-.1-.1-.17-.21-.27-.31-.41-.55-.89-1.1-1.37-1.64-18.97-22.32-47.29-36.5-78.92-36.5h-158.64c-18.9,0-34.24-15.34-34.24-34.24v-280.22c0-20.82,16.85-37.66,37.66-37.66h155.21c57.25,0,103.65,46.4,103.65,103.61,0-57.22,46.4-103.61,103.65-103.61h158.64c18.93,0,34.24,15.31,34.24,34.24Z"/><circle cx="512.01" cy="433.78" r="188.21" fill="currentColor" stroke="var(--bg)" stroke-width="25"/></svg><span class="brand-tx"><b>GeoEstudos</b><span class="eyebrow">Prof. Haroldo Matos</span></span></button>
+    <button type="button" class="brand" data-go="home" aria-label="GeoEstudos: voltar à página inicial" title="Voltar à página inicial"><svg class="brand-ic" viewBox="196 214 640 640" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M808.52,426.51v283.65c0,18.9-15.31,34.24-34.24,34.24h-158.64c-31.47,0-59.65,14.04-78.65,36.16l-.03.03c-.55.65-1.1,1.27-1.61,1.95-.07.1-.17.21-.27.31-5.68,6.3-13.94,10.24-23.08,10.24s-17.36-3.94-23.08-10.24c-.1-.1-.17-.21-.27-.31-.41-.55-.89-1.1-1.37-1.64-18.97-22.32-47.29-36.5-78.92-36.5h-158.64c-18.9,0-34.24-15.34-34.24-34.24v-280.22c0-20.82,16.85-37.66,37.66-37.66h155.21c57.25,0,103.65,46.4,103.65,103.61,0-57.22,46.4-103.61,103.65-103.61h158.64c18.93,0,34.24,15.31,34.24,34.24Z"/><circle cx="512.01" cy="433.78" r="188.21" fill="currentColor" stroke="var(--bg)" stroke-width="25"/></svg><span class="brand-tx"><b>GeoEstudos</b></span></button>
     <span class="menubtn-esp" aria-hidden="true"></span>
   </header>
   <div id="foraBanner" hidden></div>
@@ -2272,7 +2282,7 @@ function tourMostrar(){
     if(k==='pular')return tourPularTudo();
     if(k==='voltar'){TOUR.i--;return tourMostrar()}
     if(TOUR.i<TOUR.passos.length-1){TOUR.i++;tourMostrar()}else tourFim()});
-  if(a&&!p.fixo){const r=a.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight-260){const alvoY=r.height>innerHeight*.45?r.top+scrollY-80:r.top+scrollY-Math.max(80,(innerHeight-260-r.height)/2);scrollTo({top:Math.max(0,alvoY),behavior:'auto'})}}
+  if(a&&!p.fixo){const r=a.getBoundingClientRect();if(r.top<90||r.bottom>innerHeight-260){const alvoY=r.height>innerHeight*.45?r.top+scrollY-96:r.top+scrollY-Math.max(96,(innerHeight-260-r.height)/2);scrollTo({top:Math.max(0,alvoY),behavior:'auto'})}}
   tourPos();setTimeout(tourPos,380);clearInterval(tourIv);if(p.espera)tourIv=setInterval(tourPos,300);
   const bt=el.querySelector('[data-tr="prox"]');if(bt)bt.focus({preventScroll:true});
 }
@@ -2381,7 +2391,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.9.0',APP_DATA='2026-10-30';
+const APP_VERSAO='1.9.1',APP_DATA='2026-10-30';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
