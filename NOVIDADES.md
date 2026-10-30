@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.9.2 · 30/10/2026
+- Atividade avaliativa: o nome do aluno, lembrado só no próprio celular depois da primeira atividade, ganha a opção “Não é você? Apagar o nome”. No celular compartilhado o nome não é guardado.
+
 ## 1.9.1 · 30/10/2026
 - Barra do topo azul e fixa, de ponta a ponta da tela (como a barra de baixo), com o menu ☰ e a marca em branco.
 - Na marca do topo ficam só o ícone e o nome GeoEstudos.

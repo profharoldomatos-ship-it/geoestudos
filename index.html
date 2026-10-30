@@ -2391,7 +2391,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.9.1',APP_DATA='2026-10-30';
+const APP_VERSAO='1.9.2',APP_DATA='2026-10-30';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2987,6 +2987,7 @@ function avRender(){
       <label class="fld"><span>Ano</span><input value="${esc(y.label)}" disabled></label>
       <label class="fld"><span>Sua turma *</span><select id="avTurma"><option value="">Escolha</option>${ts.map(t=>`<option${t===tur?' selected':''}>${t}</option>`).join('')}</select></label>
       <label class="fld"><span>Seu nome completo *</span><input id="avNome" maxlength="70" autocomplete="name" value="${esc(nm)}"></label>
+      ${nm?`<p class="meta" style="margin:-4px 0 0">Nome lembrado neste celular. <button class="link" data-av="naosoueu">Não é você? Apagar o nome</button></p>`:''}
       <div class="duv-regra"><b>Atenção</b><span>Você só pode fazer esta atividade <b>uma vez</b>. Ela tem ${a.qtd} questões, e cada uma vale 1 ponto. Faça a atividade com o seu próprio nome: usar o nome de um colega é uma falta grave.</span></div>
       ${AV.erro?`<p class="avl-err" role="alert">${esc(AV.erro)}</p>`:''}
       <div class="qz-btns"><button class="btn btn-primary" data-av="comecar"${AV.busy?' disabled':''}>${AV.busy?'Conferindo…':'Começar'}</button><button class="btn btn-ghost" data-av="sair">Agora não</button></div>`;
@@ -3043,6 +3044,7 @@ async function avClique(e){
   if(a==='revisar'){AV.etapa='rev';AV.conf=false;AV.erro='';return avRender()}
   if(a==='confirmar'){AV.conf=true;return avRender()}
   if(a==='naoenv'){AV.conf=false;return avRender()}
+  if(a==='naosoueu'){store.set('avNome','');store.set('duvNome','');AV.erro='';avRender();const i=document.querySelector('#avNome');if(i)i.focus();return}
   if(a==='comecar'){
     const o=document.querySelector('.avl-o'),turma=o.querySelector('#avTurma').value,nome=o.querySelector('#avNome').value.replace(/\s+/g,' ').trim();
     if(!turma){AV.erro='Escolha a sua turma.';return avRender()}
