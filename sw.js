@@ -1,6 +1,6 @@
 /* GeoEstudos: guarda o aplicativo no celular para abrir sem internet.
    Os resumos ficam guardados pelo próprio app (armazenamento do navegador). */
-const VERSAO = 'geo-v115';
+const VERSAO = 'geo-v116';
 const BASE = ['./', 'index.html', 'config.js', 'manifest.webmanifest',
   'qrcode.min.js', 'icones/geoestudos.svg', 'icones/geoestudos-96.png', 'icones/geoestudos-192.png', 'icones/geoestudos-512.png'];
 
@@ -28,7 +28,8 @@ self.addEventListener('fetch', e => {
   if (url.origin !== location.origin) return; // dados do robô: o app cuida
   // Páginas e config: tenta a internet primeiro (pega atualizações), senão usa o guardado
   if (req.mode === 'navigate' || url.pathname.endsWith('config.js') || url.pathname.endsWith('index.html')) {
-    e.respondWith(fetch(req).then(res => { const cp = res.clone(); caches.open(VERSAO).then(c => c.put(req, cp)); return res; })
+    // cache: 'no-cache' faz o celular sempre conferir com o site, sem usar a cópia de até 10 min do GitHub Pages
+    e.respondWith(fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then(res => { const cp = res.clone(); caches.open(VERSAO).then(c => c.put(req, cp)); return res; })
       .catch(() => caches.match(req).then(r => r || caches.match('index.html'))));
     return;
   }

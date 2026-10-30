@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.9.5 · 30/10/2026
+- Atualizações chegam mais rápido: ao abrir o app com internet, o celular sempre confere a versão mais nova no site, sem usar a cópia guardada por alguns minutos.
+
 ## 1.9.4 · 30/10/2026
 - Abertura: depois de parar no Brasil, os pontos do globo se desfazem suavemente e a marca original do GeoEstudos aparece limpa.
 
