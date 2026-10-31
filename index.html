@@ -1986,7 +1986,7 @@ function turmasSheet(){
   (o,close)=>{o.querySelector('#tchkOk').onclick=()=>{const ts=[...o.querySelectorAll('input:checked')].map(i=>i.value);if(!ts.length){o.querySelector('#tchkErr').hidden=false;return}close();ativarPush(ts)}});
 }
 function perguntarTurma(t){
-  sheet(`<h2>Você é da turma ${esc(t)}?</h2><p style="margin:0">Se for, o app passa a abrir nela, a barra de menus fica na cor do seu ano e os avisos serão os da sua turma.</p>
+  sheet(`<h2>Você é da turma ${esc(t)}?</h2><p style="margin:0">Se for, o app passa a abrir direto nela, já na unidade em andamento, a barra de baixo fica na cor do seu ano e os avisos serão os da sua turma.</p>
     <div class="modes"><button class="mode-opt" id="ptSim"><span class="mo-prev" style="background:${YEARS[T2A[t]].color};color:#fff;font-family:var(--display);font-weight:700">${esc(t)}</span><span><b>Sim, sou da turma ${esc(t)}</b><br><span class="meta">Fixar como minha turma</span></span></button>
     <button class="mode-opt" id="ptComp"><span class="mo-prev" aria-hidden="true" style="background:var(--surface-2)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18 19a5 5 0 0 0-2.5-4.3"/></svg></span><span><b>Celular compartilhado</b><br><span class="meta">Irmãos, vizinhos ou amigos de turmas diferentes usam este aparelho. Não fixar turma.</span></span></button></div>`,
   (o,close)=>{
@@ -2214,12 +2214,15 @@ const TOURS={
   turma:[
     {alvo:'.card.hello',t:'3. A página da sua turma',x:'Aqui você acompanha quantos resumos já copiou no caderno e quantas atividades já enviou nesta unidade.'},
     {alvo:'.pushhero, .pushcard, [data-push]',t:'Avisos no celular',x:'Ative os avisos para receber lembretes das entregas e as novidades da sua turma.',opcional:true},
+    {alvo:'.rec > summary',t:'Recados',x:'As novidades da sua turma: resumo novo, data marcada ou dúvida respondida. Toque para ver. Os que você já leu ficam em “Recados anteriores”, no menu ☰.',opcional:true},
     {alvo:'[data-sfold="resumos"] > summary',t:'Resumos',x:'Os resumos de cada capítulo, para ler e copiar no caderno. Toque para abrir a lista.'},
     {alvo:'[data-sfold="temas"] > summary',t:'Aulas de aprofundamento',x:'Aulas extras que valem ponto e ajudam a melhorar a sua média.',opcional:true},
     {alvo:'[data-sfold="datas"] > summary',t:'Próximas datas',x:'Entregas do caderno, prazos das atividades e avaliações da sua turma.'},
+    {alvo:'[data-sfold="mural"] > summary',t:'Mural de avisos',x:'Avisos importantes do professor, como feriados, mudanças de data e avaliações previstas.',opcional:true},
     {alvo:'[data-sfold="duvidas"] > summary',t:'Dúvidas',x:'Ficou com dúvida sobre o conteúdo? Pergunte ao professor por aqui.',opcional:true},
     {alvo:'.tabs',t:'A barra de baixo',x:'Use a barra para ir, a qualquer momento, ao Início, à sua Turma, aos Resumos, às Atividades e ao Calendário.',fixo:true},
-    {centro:true,t:'Pronto!',x:'Quando você abrir um resumo pela primeira vez, mostro as ferramentas de leitura. O guia completo fica na página inicial, em “Guia do estudante”.',ok:'Começar a estudar'}
+    {alvo:'#menuBtn',t:'O menu ☰',x:'No canto de cima ficam o Guia do estudante, a instalação, o contato com o professor, os recados anteriores e as cores do app.',fixo:true},
+    {centro:true,t:'Pronto!',x:'Se você fixou a sua turma, da próxima vez o app já abre nela. Quando você abrir um resumo pela primeira vez, mostro as ferramentas de leitura. O guia completo fica no menu ☰, em “Guia do estudante”.',ok:'Começar a estudar'}
   ],
   leitura:[
     {alvo:'.read-tools',t:'Ferramentas de leitura',x:'Ouvir lê o resumo em voz alta. Aa muda o tamanho e o tipo da letra e as cores do app. Marcações mostra os trechos que você destacou.'},
@@ -2411,7 +2414,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.11.3',APP_DATA='2026-10-31';
+const APP_VERSAO='1.11.4',APP_DATA='2026-10-31';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
