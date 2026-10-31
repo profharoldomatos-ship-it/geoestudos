@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.11.1 · 31/10/2026
+- Página inicial: o título passa a ser “Escolha o seu ano e a sua turma”, com o texto “Para ver os resumos, as atividades e as datas.” O título se ajusta para caber numa linha na maioria dos celulares.
+
 ## 1.11.0 · 30/10/2026
 - Nova ordem na página da turma: a cabeça da unidade, logo abaixo os **Recados** (só quando há recado novo) e depois os Resumos.
 - "Continuar de onde parei" passou para dentro dos **Resumos da Unidade**, como primeiro item em destaque. A caixa dos Resumos vem aberta.
