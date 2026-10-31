@@ -8,6 +8,12 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.11.0 · 30/10/2026
+- Nova ordem na página da turma: a cabeça da unidade, logo abaixo os **Recados** (só quando há recado novo) e depois os Resumos.
+- "Continuar de onde parei" passou para dentro dos **Resumos da Unidade**, como primeiro item em destaque. A caixa dos Resumos vem aberta.
+- Recados somem depois de lidos: ao abrir a faixa, eles ficam esmaecidos com a marca "Lido"; ao fechar ou sair da página, vão para **Recados anteriores** (no menu ☰ e no rodapé dos Recados).
+- A linha "Avisos ativados…" saiu da página da turma. O ajuste agora fica no menu ☰, em **Avisos no celular**, com atalho "Gerenciar avisos" no rodapé dos Recados. Quem ainda não ativou vê o convite no fim da página.
+
 ## 1.10.0 · 30/10/2026
 - "Novidades" virou **Recados**: uma faixa recolhível, fechada por padrão, com contador. O sininho balança ao abrir a página e o amarelo pulsa até o aluno tocar. Depois de "Marcar como vistos", a faixa some. Vale para todas as turmas. Quem pede menos animação no celular vê a faixa parada.
 
