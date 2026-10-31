@@ -2411,7 +2411,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.11.1',APP_DATA='2026-10-31';
+const APP_VERSAO='1.11.2',APP_DATA='2026-10-31';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2477,7 +2477,7 @@ function vHome(){
   const msg=DATA&&DATA.app&&DATA.app.mensagem;
   return `<section class="section">
     ${fixosHtml(null)}
-    <div><h1 class="esc-t">Escolha o seu ano e a sua turma</h1><p class="meta" style="margin:4px 0 0">Para ver os resumos, as atividades e as datas.</p></div>
+    <div><h1 class="esc-t">Escolha o seu ano e a sua turma</h1><p class="meta" style="margin:4px 0 0">Veja resumos, atividades e o calendário para sua turma.</p></div>
     ${DATA?`<div class="yfolds yeq">${Object.values(YEARS).map(y=>{const minhaAqui=MINHA&&y.turmas.includes(MINHA),ab=(store.get('anosAbertos',{})||{})[y.ano],aberto=ab===undefined?!!minhaAqui:ab;
       return `<details class="yfold" data-ano="${y.ano}" style="--yc:${y.color}"${aberto?' open':''}><summary class="yf-h"><span class="yf-tx"><b>${y.label}</b><span>Unidade ${y.atual} · ${esc(y.unit)}</span></span>${minhaAqui?`<span class="yf-minha">Turma ${esc(MINHA)}</span>`:''}${SF_CHEV}</summary>
       <div class="yf-body"><div class="choice">${y.turmas.map(t=>`<button data-turma="${t}" aria-pressed="${MINHA===t}"><span>Turma</span>${t}${MINHA===t?'<small>Minha turma</small>':''}</button>`).join('')}</div></div></details>`}).join('')}</div>`:semDados()}
