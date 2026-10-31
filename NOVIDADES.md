@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.11.3 · 31/10/2026
+- Página inicial: texto abaixo do título encurtado para “Veja resumos, atividades e o calendário.”
+
 ## 1.11.2 · 31/10/2026
 - Página inicial: texto abaixo do título passa a ser “Veja resumos, atividades e o calendário para sua turma.”
 
