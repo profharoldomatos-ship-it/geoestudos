@@ -597,6 +597,18 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .sfold:not([open]) .sf-badge{background:#fff;color:var(--sc)}
 .sfold>summary.sec{transition:background-color .15s}
 @media (prefers-reduced-motion:reduce){.sfold>summary.sec{transition:none}}
+/* Recados: faixa recolhível que chama atenção (sininho balança, fundo pulsa) até o aluno abrir; some quando não há recados */
+.sfold.rec:not([open])>summary.sec{background:var(--hl);border-left-color:#C99A1E}
+.sfold.rec:not([open])>summary.sec h2,.sfold.rec:not([open])>summary.sec .sec-sub,.sfold.rec:not([open]) .sf-ch{color:#1E2430}
+.sfold.rec:not([open])>summary .sec-ic{background:var(--hl-soft);color:#1E2430}
+.rec .sec-ic{position:relative}
+.rec-n{position:absolute;top:-6px;right:-7px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#B42318;color:#fff;font-size:.68rem;font-weight:700;line-height:18px;text-align:center}
+.rec-ok{align-self:flex-end;margin-top:2px}
+@media (prefers-reduced-motion:no-preference){
+.sfold.rec:not([open])>summary.sec{animation:recPulso 2.2s ease-in-out infinite}
+.sfold.rec:not([open]) .sec-ic svg{animation:recSino 1.4s ease-in-out 3;transform-origin:50% 12%}
+@keyframes recPulso{0%,100%{background:var(--hl)}50%{background:var(--hl-soft)}}
+@keyframes recSino{0%,50%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%,40%{transform:rotate(-16deg)}}}
 /* Atividades: cabeçalhos no tom forte do ano, cartões brancos com borda na cor do ano */
 .atv-top{background:var(--year);color:#fff;border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px}
 .atv-top+.atv-regra,.atv-top+.atvlist{margin-top:-2px}
@@ -2390,7 +2402,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.9.5',APP_DATA='2026-10-30';
+const APP_VERSAO='1.10.0',APP_DATA='2026-10-30';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2597,7 +2609,8 @@ function duvidaSheet(sobre){
 }
 function avisosHtml(){
   const av=avisosNovos();if(!av.length)return '';
-  return `<div class="avisos">${sec('Novidades','nov','sino','<button class="meta link" id="avisosOk">Marcar como vistas</button>')}${av.slice(0,5).map(a=>`<div class="aviso"><span class="av-ic" aria-hidden="true">${a.tipo==='resumo'?'✎':a.tipo==='duvida'?'?':'◷'}</span><span style="min-width:0"><b>${esc(a.titulo)}</b><br><span>${esc(a.texto)}</span></span>${a.cap&&capOf(a.cap)&&capOf(a.cap).resumo?`<button class="av-go" data-cap="${a.cap}" data-aviso="${a.id}" aria-label="Abrir">${CHEVR}</button>`:''}</div>`).join('')}</div>`;
+  const n=av.length,itens=av.slice(0,5).map(a=>`<div class="aviso"><span class="av-ic" aria-hidden="true">${a.tipo==='resumo'?'✎':a.tipo==='duvida'?'?':'◷'}</span><span style="min-width:0"><b>${esc(a.titulo)}</b><br><span>${esc(a.texto)}</span></span>${a.cap&&capOf(a.cap)&&capOf(a.cap).resumo?`<button class="av-go" data-cap="${a.cap}" data-aviso="${a.id}" aria-label="Abrir">${CHEVR}</button>`:''}</div>`).join('');
+  return `<details class="sfold rec"><summary class="sec sec-nov"><span class="sec-ic" aria-hidden="true">${SECIC.sino}<span class="rec-n">${n}</span></span><span class="sec-tx"><h2>Recados</h2><span class="sec-sub">${n} ${n===1?'novo':'novos'} · toque para ver</span></span>${SF_CHEV}</summary><div class="sfold-body"><div class="avisos">${itens}</div><button class="meta link rec-ok" id="avisosOk">Marcar como vistos</button></div></details>`;
 }
 function vTurma(){
   if(!S.uAberta)return vEscolhaUnidade();
