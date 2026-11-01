@@ -312,17 +312,36 @@ html{scroll-padding-top:76px}body{overflow-x:hidden}
 .menubtn-esp{width:44px}
 .drw-ov{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,0);transition:background .2s}
 .drw-ov.on{background:rgba(0,0,0,.42)}
-.drw{position:absolute;top:0;left:0;bottom:0;width:84%;max-width:330px;background:var(--bg);color:var(--ink);transform:translateX(-102%);transition:transform .2s ease-out;padding:max(14px,env(safe-area-inset-top)) 10px 14px;display:flex;flex-direction:column;gap:2px;box-shadow:4px 0 24px rgba(0,0,0,.25);overflow:auto}
+.drw{position:absolute;top:0;left:0;bottom:0;width:86%;max-width:330px;background:var(--bg);color:var(--ink);transform:translateX(-102%);transition:transform .2s ease-out;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(0,0,0,.25)}
 .drw-ov.on .drw{transform:none}
-.drw-h{display:flex;flex-direction:column;gap:4px;padding:8px 52px 14px 10px;border-bottom:1px solid var(--line);margin-bottom:6px;position:relative}
-.drw-h b{font-family:var(--display);font-size:1.25rem;color:var(--pen);line-height:1}
-.drw-x{position:absolute;right:4px;top:2px}
-.drw-i{display:flex;gap:14px;align-items:center;text-align:left;background:none;border:0;padding:12px 10px;border-radius:10px;color:var(--ink);font:inherit;cursor:pointer;width:100%}
+.drw-h{display:flex;align-items:center;gap:10px;background:var(--barra);color:#fff;padding:calc(12px + env(safe-area-inset-top,0px)) 8px 12px 16px;min-height:60px}
+.drw-h>span{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.drw-h b{font-family:var(--display);font-size:1.25rem;line-height:1}
+.drw-hs{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85;line-height:1}
+.drw-logo{flex:none;color:#fff}
+.drw-x{flex:none;width:44px;height:44px;border:0;background:transparent;color:#fff;font-size:1.2rem;border-radius:12px;cursor:pointer}
+.drw-x:focus-visible{outline:3px solid #fff;outline-offset:-3px}
+.drw-c{flex:1;overflow:auto;padding:10px 10px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column}
+.drw-prof{display:flex;align-items:center;gap:12px;margin:2px 0 8px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--pen);background:var(--pen-soft);color:var(--pen);font:inherit;font-weight:700;cursor:pointer;text-align:left}
+.drw-prof span:first-of-type{flex:1}
+.drw-g{display:flex;flex-direction:column;padding:8px 0;border-top:1px solid var(--line)}
+.drw-g1{border-top:0;padding-top:0}
+.drw-gt{margin:4px 10px 4px;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.drw-i{display:flex;gap:14px;align-items:center;text-align:left;background:none;border:0;padding:11px 10px;border-radius:10px;color:var(--ink);font:inherit;cursor:pointer;width:100%}
 .drw-i:hover,.drw-i:focus-visible{background:var(--surface-2)}
+.drw-i[aria-current]{background:var(--pen-soft)}
+.drw-i[aria-current] b{color:var(--pen)}
 .drw-i svg{color:var(--pen);flex:none}
-.drw-i b{display:block;font-size:1rem;font-weight:600}.drw-i small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px;word-break:break-all}
-.drw hr{border:0;border-top:1px solid var(--line);margin:6px 8px;width:auto}
-.drw-v{margin:auto 10px 4px;padding-top:14px;font-size:.78rem;color:var(--muted)}
+.drw-tx{flex:1;min-width:0}
+.drw-i b{display:block;font-size:1rem;font-weight:600;line-height:1.25}.drw-i small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px;line-height:1.3}
+.drw-chip{flex:none;font-size:.7rem;font-weight:700;border-radius:999px;padding:3px 8px;line-height:1.2}
+.drw-chip.off{background:var(--hl-soft);color:var(--hl-ink)}
+.drw-chip.ok{background:#DDF0E3;color:#1F6B3A}
+body.m-escuro .drw-chip.ok{background:#1E3A28;color:#9FDDB1}
+.drw-l{display:flex;gap:12px;align-items:center;background:none;border:0;padding:9px 10px;border-radius:10px;color:var(--ink);font:inherit;font-size:.92rem;cursor:pointer;width:100%;text-align:left}
+.drw-l svg{width:18px;height:18px;color:var(--muted);flex:none}
+.drw-l:hover,.drw-l:focus-visible{background:var(--surface-2)}
+.drw-v{margin:auto 10px 0;padding-top:14px;font-size:.75rem;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.drw,.drw-ov{transition:none}}
 .esc-t{font-size:clamp(1.2rem,5.6vw,1.45rem);margin:4px 0 0;text-wrap:balance}
 .yeq .yf-h{height:88px;min-height:88px;padding:12px 16px}
@@ -2414,7 +2433,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.11.4',APP_DATA='2026-10-31';
+const APP_VERSAO='1.12.0',APP_DATA='2026-11-01';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2493,26 +2512,31 @@ function vHome(){
 }
 
 /* Menu lateral (☰): o que é acessório sai da página inicial e fica aqui */
+const BRAND_D="M808.52,426.51v283.65c0,18.9-15.31,34.24-34.24,34.24h-158.64c-31.47,0-59.65,14.04-78.65,36.16l-.03.03c-.55.65-1.1,1.27-1.61,1.95-.07.1-.17.21-.27.31-5.68,6.3-13.94,10.24-23.08,10.24s-17.36-3.94-23.08-10.24c-.1-.1-.17-.21-.27-.31-.41-.55-.89-1.1-1.37-1.64-18.97-22.32-47.29-36.5-78.92-36.5h-158.64c-18.9,0-34.24-15.34-34.24-34.24v-280.22c0-20.82,16.85-37.66,37.66-37.66h155.21c57.25,0,103.65,46.4,103.65,103.61,0-57.22,46.4-103.61,103.65-103.61h158.64c18.93,0,34.24,15.31,34.24,34.24Z";
 const MNIC={hist:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',sino:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',inicio:'<path d="M3 11l9-7 9 7v9H3z"/>',guia:'<circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-4 1 2-5z"/>',inst:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 7v7m-3-3l3 3 3-3"/>',prof:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',sobre:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 11l7.6-4M8.2 13l7.6 4"/>',cores:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',painel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h3M8 16h6"/>'};
 function menuAbrir(){
   if(document.querySelector('.drw-ov'))return;
-  const it=(k,ic,t,sub)=>`<button class="drw-i" data-mn="${k}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MNIC[ic]}</svg><span><b>${t}</b>${sub?`<small>${sub}</small>`:''}</span></button>`;
+  const ico=ic=>`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MNIC[ic]}</svg>`;
+  const it=(k,ic,t,sub,extra,cur)=>`<button class="drw-i" data-mn="${k}"${cur?' aria-current="page"':''}>${ico(ic)}<span class="drw-tx"><b>${t}</b>${sub?`<small>${sub}</small>`:''}</span>${extra||''}</button>`;
+  const lk=(k,ic,t)=>`<button class="drw-l" data-mn="${k}">${ico(ic)}<span>${t}</span></button>`;
+  const grp=(t,h)=>h.trim()?`<div class="drw-g"><p class="drw-gt">${t}</p>${h}</div>`:'';
+  const pt=DATA&&DATA.push&&DATA.push.chave?pushTurmas():null;
+  const avisoChip=pt?(pt.length?'<span class="drw-chip ok">Ativados</span>':'<span class="drw-chip off">Desativados</span>'):'';
+  const modo=(MODOS.find(m=>m[0]===S.mode)||MODOS[0])[1];
+  const naHome=S.tab==='home'&&!S.cap,naGuia=S.tab==='guia';
   const o=document.createElement('div');o.className='drw-ov';
-  o.innerHTML=`<nav class="drw" role="dialog" aria-modal="true" aria-label="Menu"><div class="drw-h"><b>GeoEstudos</b><span class="eyebrow">Prof. Haroldo Matos</span><button class="iconbtn drw-x" data-mn="fechar" aria-label="Fechar o menu">✕</button></div>
-    ${it('inicio','inicio','Início')}
-    ${it('guia','guia','Guia do estudante','Como usar o app, passo a passo')}
-    ${standalone()?'':it('instalar','inst','Instalar no celular')}
-    ${PROF()?it('prof','painel','Painel do professor'):''}
-    <hr>
-    ${it('sobreprof','prof','Sobre o Prof. Haroldo Matos')}
-    ${it('sobre','sobre','Sobre o GeoEstudos e privacidade')}
-    ${it('contato','mail','Fale com o professor',esc(EMAIL))}
-    ${it('compartilhar','share','Compartilhar com um colega')}
-    <hr>
-    ${S.turma?it('recados','hist','Recados anteriores','Turma '+esc(S.turma)):''}
-    ${DATA&&DATA.push&&DATA.push.chave?it('avisos','sino','Avisos no celular',pushTurmas().length?(pushTurmas().length>1?'Ativados · turmas ':'Ativados · turma ')+esc(listaT(pushTurmas())):'Desativados · toque para ativar'):''}
-    ${it('cores','cores','Cores do app','Automático, claro, sépia ou escuro')}
-    <p class="drw-v">${esc(versaoTexto())}</p></nav>`;
+  o.innerHTML=`<nav class="drw" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="drw-h"><svg class="drw-logo" viewBox="196 214 640 640" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="${BRAND_D}"/><circle cx="512.01" cy="433.78" r="188.21" fill="currentColor" stroke="var(--barra)" stroke-width="25"/></svg><span><b>GeoEstudos</b><span class="drw-hs">Prof. Haroldo Matos</span></span><button class="drw-x" data-mn="fechar" aria-label="Fechar o menu">✕</button></div>
+    <div class="drw-c">
+    ${PROF()?`<button class="drw-prof" data-mn="prof">${ico('painel')}<span>Painel do professor</span><span aria-hidden="true">›</span></button>`:''}
+    <div class="drw-g drw-g1">
+      ${it('inicio','inicio','Início','','',naHome)}
+      ${it('guia','guia','Guia do estudante','Como usar o app, passo a passo','',naGuia)}
+    </div>
+    ${grp(S.turma?'Sua turma · '+esc(S.turma):'',(S.turma?it('recados','hist','Recados anteriores','Os que você já leu'):'')+(pt?it('avisos','sino','Avisos no celular',pt.length?'Turma'+(pt.length>1?'s ':' ')+esc(listaT(pt)):'Toque para ativar',avisoChip):''))}
+    ${grp('Ajustes',it('cores','cores','Cores do app',modo)+(standalone()?'':it('instalar','inst','Instalar no celular','Ícone na tela e uso sem internet')))}
+    ${grp('Sobre e contato',lk('contato','mail','Fale com o professor')+lk('compartilhar','share','Compartilhar com um colega')+lk('sobreprof','prof','Sobre o Prof. Haroldo Matos')+lk('sobre','sobre','Sobre o GeoEstudos e privacidade'))}
+    <p class="drw-v">${esc(versaoTexto())}</p></div></nav>`;
   const fechar=()=>{o.classList.remove('on');document.removeEventListener('keydown',k);setTimeout(()=>o.remove(),200);const b=$('#menuBtn');if(b)b.focus({preventScroll:true})};
   const k=e=>{if(e.key==='Escape')fechar()};document.addEventListener('keydown',k);
   o.addEventListener('click',e=>{
@@ -2531,7 +2555,7 @@ function menuAbrir(){
     else if(a==='avisos')avisosSheet();
   });
   document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('on'));
-  o.querySelector('.drw-i').focus({preventScroll:true});
+  (o.querySelector('[aria-current]')||o.querySelector('.drw-i')).focus({preventScroll:true});
 }
 function sobreProf(){
   sheet(`<h2>Sobre o Prof. Haroldo Matos</h2>

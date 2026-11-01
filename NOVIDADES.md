@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.12.0 · 01/11/2026
+- Menu ☰ reorganizado: cabeçalho azul como a barra do topo; Início e Guia primeiro (o item da tela atual fica destacado); grupos com título (Sua turma, Ajustes, Sobre e contato); etiqueta “Ativados/Desativados” nos avisos; itens de Sobre e contato menores; no modo professor, o Painel vira um botão de destaque no alto.
+
 ## 1.11.4 · 31/10/2026
 - Tour guiado atualizado: novos passos para os Recados, o Mural de avisos e o menu ☰; o “Pronto!” agora indica o Guia no menu e avisa que o app abre direto na turma fixada.
 - Pergunta “Você é da turma…?”: explica que o app passa a abrir direto na turma, já na unidade em andamento.
