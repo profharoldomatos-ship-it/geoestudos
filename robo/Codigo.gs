@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-10-24 · registro de envios v19';
+const VERSAO_ROBO = '2026-11-01 · avisos pelo painel v20';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -70,6 +70,12 @@ function doGet(e) {
     let b = {};
     try { b = JSON.parse(p.prof); } catch (err) {}
     return ContentService.createTextOutput(JSON.stringify(entrarProfessor_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.profaviso !== undefined) {
+    // Painel do professor: escrever, listar e tirar do ar avisos do Mural (sem abrir a planilha)
+    let b = {};
+    try { b = JSON.parse(p.profaviso); } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify(avisoProfessor_(b))).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.profdados !== undefined) {
     return ContentService.createTextOutput(JSON.stringify(dadosProfessor_(String(p.profdados)))).setMimeType(ContentService.MimeType.JSON);
@@ -1297,6 +1303,80 @@ function lerMural_(dados) {
       sh.getRange(2, 10, out.length, 1).setValues(out);
     }
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* Avisos escritos no Painel do professor. Cada aviso vira uma linha    */
+/* da aba "Mural de avisos" (a planilha continua sendo o registro) e    */
+/* o robô se atualiza em seguida para publicar e notificar.            */
+/* ------------------------------------------------------------------ */
+function avisoProfessor_(b) {
+  try {
+    if (!tokenValido_(String(b.tok || ''))) return { ok: false, sair: true, erro: 'Sua entrada de professor expirou. Entre de novo no modo professor.' };
+    const sh = abaMural_();
+    const acao = String(b.acao || 'novo');
+    if (acao === 'lista') {
+      const ult = sh.getLastRow();
+      if (ult < 2) return { ok: true, lista: [] };
+      const ini = Math.max(2, ult - 39);
+      const v = sh.getRange(ini, 1, ult - ini + 1, COLS_MURAL.length).getValues();
+      const lista = [];
+      v.forEach(l => {
+        const titulo = String(l[1] || '').trim();
+        if (!titulo) return;
+        lista.push({ id: String(l[10] || ''), titulo: titulo.slice(0, 120), para: String(l[3] || 'Todas as turmas'), destaque: String(l[4] || 'Normal'),
+          notificar: sim_(l[6]), publicado: sim_(l[8]), situacao: String(l[9] || ''),
+          data: (l[0] instanceof Date && !isNaN(l[0])) ? Utilities.formatDate(l[0], GEO.FUSO, 'dd/MM/yyyy') : '' });
+      });
+      return { ok: true, lista: lista.reverse().slice(0, 8) };
+    }
+    const lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    let id = '';
+    try {
+      if (acao === 'tirar') {
+        id = String(b.id || '');
+        const ult = sh.getLastRow();
+        const ids = ult > 1 ? sh.getRange(2, 11, ult - 1, 1).getValues() : [];
+        const k = ids.findIndex(r => String(r[0]) === id);
+        if (!id || k < 0) return { ok: false, erro: 'Não encontrei este aviso na planilha.' };
+        sh.getRange(k + 2, 9).setValue('Não');
+        sh.getRange(k + 2, 10).setValue('Tirado do ar pelo painel em ' + Utilities.formatDate(new Date(), GEO.FUSO, 'dd/MM HH:mm'));
+      } else {
+        const titulo = String(b.titulo || '').trim().slice(0, 120), texto = String(b.texto || '').trim().slice(0, 1500);
+        if (!titulo || !texto) return { ok: false, erro: 'Escreva o título e a mensagem.' };
+        const conf = lerConfig_();
+        const validas = [].concat.apply([], Object.keys(conf.turmas).map(k => conf.turmas[k]));
+        const para = [].concat(b.para || []).map(String);
+        let paraTxt = 'Todas as turmas';
+        if (para.length && para.indexOf('todas') < 0) {
+          const partes = para.filter(x => /^[789]$/.test(x)).map(x => x + 'º ano').concat(para.filter(x => validas.indexOf(x) >= 0));
+          if (!partes.length) return { ok: false, erro: 'Escolha para quem é o aviso.' };
+          paraTxt = partes.join('; ');
+        }
+        const dest = { normal: 'Normal', popup: 'Pop-up', fixo: 'Fixo no topo', popupfixo: 'Pop-up e fixo no topo' }[String(b.destaque || 'normal')] || 'Normal';
+        const dia = iso => /^\d{4}-\d{2}-\d{2}$/.test(String(iso || '')) ? new Date(String(iso) + 'T12:00:00') : '';
+        id = 'm' + Utilities.getUuid().replace(/-/g, '').slice(0, 10);
+        sh.appendRow([dia(b.data), titulo, texto, paraTxt, dest, dest.indexOf('Fixo') >= 0 || dest.indexOf('fixo') >= 0 ? dia(b.fixoAte) : '',
+          b.notificar ? 'Sim' : 'Não', '', 'Sim', 'Enviado pelo painel do professor', id]);
+      }
+    } finally { lock.releaseLock(); }
+    agendarAtualizacaoPainel_();
+    return { ok: true, id: id, versao: VERSAO_ROBO };
+  } catch (err) {
+    return { ok: false, erro: 'O robô não conseguiu gravar o aviso: ' + err };
+  }
+}
+/** Atualiza o app logo depois de um aviso do painel (em ~20 s), sem esperar a rodada de 5 minutos. */
+function agendarAtualizacaoPainel_() {
+  try {
+    ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'atualizarPeloPainel').forEach(t => ScriptApp.deleteTrigger(t));
+    ScriptApp.newTrigger('atualizarPeloPainel').timeBased().after(20 * 1000).create();
+  } catch (e) { Logger.log('Atualização pelo painel: ' + e); }
+}
+function atualizarPeloPainel() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'atualizarPeloPainel').forEach(t => ScriptApp.deleteTrigger(t));
+  atualizar();
 }
 
 /* ================================================================== */

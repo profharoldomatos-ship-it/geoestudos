@@ -1096,6 +1096,27 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .pf-notas>svg{color:var(--pen);flex:none}
 .pf-sit.tem-prob{border-color:var(--rust)}
 .pf-h{display:flex;justify-content:space-between;align-items:center}
+.pf-av{display:flex;align-items:center;gap:12px;border-left:5px solid #B42B2B;width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.pf-av-ic{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#FBE4E1;color:#B42B2B;flex:none}
+body.m-escuro .pf-av-ic{background:#4A2320;color:#F5A59C}
+.pf-av-tx{flex:1;min-width:0}.pf-av-tx b,.pf-av-tx .meta{display:block}.pf-av-ch{font-size:1.3rem;color:var(--muted)}
+.pf-avl ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.pf-avl li{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:.9rem;border-top:1px solid var(--line);padding-top:8px}
+.pf-avl li>span{min-width:0}.pf-avl li b,.pf-avl li .meta{display:block}.pf-avl li .link{flex:none;white-space:nowrap}
+.pf-avl-off{flex:none;white-space:nowrap}
+.pav-chs{display:flex;flex-wrap:wrap;gap:6px}
+.pav-chs button{border:1.5px solid var(--line);border-radius:999px;padding:7px 12px;font:inherit;font-size:.86rem;font-weight:700;background:var(--bg);color:var(--ink);cursor:pointer}
+.pav-chs button[aria-pressed="true"]{border-color:var(--pen);background:var(--pen-soft);color:var(--pen)}
+.pav-seg3{grid-template-columns:repeat(3,minmax(0,1fr))}.pav-seg2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pav-dica{font-weight:400;margin-top:2px}
+.pav-tg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.pav-tg b,.pav-tg .meta{display:block}
+.pav-tg i{width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;flex:none;transition:background .15s}
+.pav-tg i:after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.pav-tg[aria-pressed="true"] i{background:var(--pen)}.pav-tg[aria-pressed="true"] i:after{left:21px}
+.pav-prev{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;padding:12px;background:var(--surface)}
+.pav-prev img{border-radius:9px;flex:none}.pav-prev b,.pav-prev .meta{display:block}
+.pav-bts{display:flex;gap:10px}.pav-bts .btn-primary{flex:1}
 .pf-alerta{margin:0;color:var(--rust)}
 .pf-prob{margin:0;padding-left:1.1em;font-size:.88rem;display:flex;flex-direction:column;gap:3px}
 .pf-ok{margin:0;color:var(--ok);font-weight:700;display:flex;gap:6px;align-items:center}
@@ -2433,7 +2454,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.12.1',APP_DATA='2026-11-01';
+const APP_VERSAO='1.13.0',APP_DATA='2026-11-01';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2982,6 +3003,106 @@ function enviosProfHtml(P){
       <button class="btn btn-ghost" id="pushTurmas">${meus.length?'Escolher turmas':'Escolher turmas'}</button></div>
   </div>`;
 }
+/* ---------- Avisos aos alunos pelo painel (vão para a aba Mural de avisos) ---------- */
+const MEGAIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+let PAV={lista:null,em:0,carregando:false,f:null};
+function pavChamar(o){
+  const t=store.get('profTok',null);
+  const b=Object.assign({tok:t&&t.token||''},o);
+  return fetch(CFG.DATA_URL+(CFG.DATA_URL.includes('?')?'&':'?')+'profaviso='+encodeURIComponent(JSON.stringify(b))+'&t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    if(j&&j.ok===undefined&&j.anos)return {ok:false,erro:'Atualize o robô para a versão 20 para enviar avisos pelo painel.'};
+    if(j&&j.sair){profSair();}
+    return j||{ok:false,erro:'Resposta vazia do robô.'};
+  });
+}
+function pavCard(){
+  if(Date.now()-PAV.em>60e3&&!PAV.carregando)setTimeout(pavCarregar,80);
+  return `<button class="card pf-av" id="pavNovo"><span class="pf-av-ic">${MEGAIC}</span><span class="pf-av-tx"><b>Enviar aviso aos alunos</b><span class="meta">Mural e notificação no celular, sem abrir a planilha</span></span><span aria-hidden="true" class="pf-av-ch">›</span></button>
+    <div id="pavLista">${pavListaHtml()}</div>`;
+}
+function pavListaHtml(){
+  const L=PAV.lista;
+  if(!L)return '';
+  if(L.erro)return `<div class="card pf-avl"><p class="meta" style="margin:0">${esc(L.erro)}</p></div>`;
+  if(!L.length)return '';
+  return `<div class="card pf-avl"><div class="pf-h"><b>Avisos recentes</b><button class="meta link" id="pavAtual">Atualizar</button></div><ul>${L.map(a=>`<li><span><b>${esc(a.titulo)}</b><span class="meta">${esc(a.para)} · ${esc(a.destaque)}${a.notificar?' · com notificação':''}${a.situacao?' · '+esc(a.situacao.replace(/^No ar desde [\d/]+ · /,'no ar · ')):''}</span></span>${a.publicado&&a.id?`<button class="meta link" data-pavtirar="${esc(a.id)}" data-pavtit="${esc(a.titulo)}">Tirar do ar</button>`:'<span class="meta pf-avl-off">fora do ar</span>'}</li>`).join('')}</ul></div>`;
+}
+async function pavCarregar(){
+  PAV.carregando=true;
+  try{const j=await pavChamar({acao:'lista'});PAV.lista=j.ok?(j.lista||[]):{erro:j.erro||'Não foi possível ler os avisos.'};PAV.em=Date.now()}
+  catch(e){PAV.lista={erro:'Sem conexão para ler os avisos recentes.'}}
+  finally{PAV.carregando=false;const el=document.getElementById('pavLista');if(el)el.innerHTML=pavListaHtml()}
+}
+function pavForm(){
+  const T=Object.values(YEARS);
+  const f=PAV.f||(PAV.f={titulo:'',texto:'',para:['todas'],destaque:'normal',notificar:true,quando:'agora',data:'',fixoAte:''});
+  const amanha=ISO(new Date(TODAY.getTime()+864e5)),em7=ISO(new Date(TODAY.getTime()+7*864e5));
+  const ch=(v,l)=>`<button type="button" data-pavpara="${v}" aria-pressed="${f.para.includes(v)}">${l}</button>`;
+  sheet(`<h2>Novo aviso</h2>
+    <label class="fld"><span>Título *</span><input id="pavTit" maxlength="120" value="${esc(f.titulo)}" placeholder="Ex.: Não haverá aula na segunda (02/11)"></label>
+    <label class="fld"><span>Mensagem *</span><textarea id="pavTx" maxlength="1500" rows="3" placeholder="O texto completo do aviso.">${esc(f.texto)}</textarea></label>
+    <div class="fld"><span>Para quem</span><div class="pav-chs">${ch('todas','Todas as turmas')}${T.map(y=>ch(y.ano,y.label)).join('')}${T.map(y=>y.turmas.map(t=>ch(t,t)).join('')).join('')}</div></div>
+    <div class="fld"><span>Destaque</span><div class="seg pav-seg3">${[['normal','Só no mural'],['popup','Pop-up'],['fixo','Fixo no topo']].map(([v,l])=>`<button type="button" data-pavdest="${v}" aria-pressed="${f.destaque===v}">${l}</button>`).join('')}</div>
+      <span class="meta pav-dica">${f.destaque==='popup'?'Aparece na frente da tela uma vez, quando o aluno abrir o app.':f.destaque==='fixo'?'Faixa vermelha no alto da página da turma até a data abaixo.':'Fica no Mural de avisos da página da turma.'}</span></div>
+    ${f.destaque==='fixo'?`<label class="fld"><span>Fixo no topo até</span><input type="date" id="pavFixo" min="${HOJE}" value="${esc(f.fixoAte||em7)}"></label>`:''}
+    <button type="button" class="pav-tg" id="pavNot" aria-pressed="${f.notificar}"><span><b>Notificação no celular</b><span class="meta">${f.notificar?'Sai para quem ativou os avisos':'Desligada: o aviso fica só no app'}</span></span><i aria-hidden="true"></i></button>
+    <div class="fld"><span>Quando</span><div class="seg pav-seg2">${[['agora','Agora'],['agendar','Agendar data']].map(([v,l])=>`<button type="button" data-pavq="${v}" aria-pressed="${f.quando===v}">${l}</button>`).join('')}</div></div>
+    ${f.quando==='agendar'?`<label class="fld"><span>Publicar no dia</span><input type="date" id="pavData" min="${amanha}" value="${esc(f.data||amanha)}"></label><span class="meta" style="margin-top:-6px">O aviso e a notificação saem nesse dia, a partir das 6h.</span>`:''}
+    <p class="avl-err" id="pavErr" role="alert" hidden></p>
+    <div class="pav-bts"><button class="btn btn-primary" id="pavRev">Revisar e enviar</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,
+  (o,close)=>{
+    const ler=()=>{f.titulo=o.querySelector('#pavTit').value;f.texto=o.querySelector('#pavTx').value;const d=o.querySelector('#pavData');if(d)f.data=d.value;const x=o.querySelector('#pavFixo');if(x)f.fixoAte=x.value};
+    const de_novo=()=>{ler();close();pavForm()};
+    o.querySelectorAll('[data-pavpara]').forEach(b=>b.onclick=()=>{const v=b.dataset.pavpara;
+      if(v==='todas')f.para=['todas'];else{f.para=f.para.filter(x=>x!=='todas');f.para=f.para.includes(v)?f.para.filter(x=>x!==v):f.para.concat(v);if(!f.para.length)f.para=['todas']}
+      o.querySelectorAll('[data-pavpara]').forEach(x=>x.setAttribute('aria-pressed',f.para.includes(x.dataset.pavpara)))});
+    o.querySelectorAll('[data-pavdest]').forEach(b=>b.onclick=()=>{f.destaque=b.dataset.pavdest;de_novo()});
+    o.querySelectorAll('[data-pavq]').forEach(b=>b.onclick=()=>{f.quando=b.dataset.pavq;de_novo()});
+    o.querySelector('#pavNot').onclick=()=>{f.notificar=!f.notificar;de_novo()};
+    o.querySelector('#pavRev').onclick=()=>{ler();const e=o.querySelector('#pavErr');
+      const err=m=>{e.textContent=m;e.hidden=false};
+      if(f.titulo.trim().length<3)return err('Escreva o título do aviso.');
+      if(f.texto.trim().length<3)return err('Escreva a mensagem.');
+      if(f.quando==='agendar'&&!(f.data>HOJE))return err('Escolha uma data a partir de amanhã.');
+      close();pavConferir()};
+  });
+  setTimeout(()=>{const i=document.getElementById('pavTit');if(i&&!i.value)i.focus()},60);
+}
+function pavParaTxt(f){
+  if(f.para.includes('todas'))return 'todas as turmas';
+  const anos=f.para.filter(x=>/^[789]$/.test(x)).map(x=>x+'º ano'),ts=f.para.filter(x=>!/^[789]$/.test(x));
+  return anos.concat(ts.length?[(ts.length>1?'turmas ':'turma ')+listaT(ts)]:[]).join(', ');
+}
+function pavConferir(){
+  const f=PAV.f,dm=iso=>iso.slice(8,10)+'/'+iso.slice(5,7);
+  const dest={normal:'só no mural',popup:'pop-up',fixo:'fixo no topo até '+dm(f.fixoAte||ISO(new Date(TODAY.getTime()+7*864e5)))}[f.destaque];
+  sheet(`<h2>Conferir antes de enviar</h2>
+    ${f.notificar?`<p class="meta" style="margin:0">Assim a notificação vai aparecer no celular dos alunos:</p>
+    <div class="pav-prev"><img src="icones/geoestudos-96.png" alt="" width="36" height="36"><span><b>📢 ${esc(f.titulo.trim())}</b><span class="meta">${esc(f.texto.trim().slice(0,220))}</span></span></div>`:`<div class="pav-prev"><span><b>${esc(f.titulo.trim())}</b><span class="meta">${esc(f.texto.trim())}</span></span></div>`}
+    <p style="margin:0"><b>Para:</b> ${esc(pavParaTxt(f))} · <b>Destaque:</b> ${esc(dest)} · <b>Notificação:</b> ${f.notificar?'sim':'não'} · <b>Quando:</b> ${f.quando==='agendar'?'dia '+dm(f.data):'agora'}</p>
+    <p class="meta" style="margin:0">${f.notificar?'Depois de enviada, a notificação não volta atrás. ':''}O aviso também fica registrado na aba Mural de avisos da planilha. Para tirá-lo do app depois, use “Tirar do ar” em Avisos recentes.</p>
+    <p class="avl-err" id="pavErr" role="alert" hidden></p>
+    <div class="pav-bts"><button class="btn btn-primary" id="pavEnv">${f.quando==='agendar'?'Agendar aviso':'Enviar agora'}</button><button class="btn btn-ghost" id="pavVolta">Voltar</button></div>`,
+  (o,close)=>{
+    o.querySelector('#pavVolta').onclick=()=>{close();pavForm()};
+    const b=o.querySelector('#pavEnv');
+    b.onclick=async()=>{b.disabled=true;b.textContent='Enviando…';const e=o.querySelector('#pavErr');
+      try{
+        const j=await pavChamar({acao:'novo',titulo:f.titulo.trim(),texto:f.texto.trim(),para:f.para,destaque:f.destaque,notificar:f.notificar,data:f.quando==='agendar'?f.data:'',fixoAte:f.destaque==='fixo'?(f.fixoAte||ISO(new Date(TODAY.getTime()+7*864e5))):''});
+        if(!j.ok){b.disabled=false;b.textContent='Tentar de novo';e.textContent=j.erro||'Não foi possível enviar.';e.hidden=false;return}
+        PAV.f=null;close();
+        toast(f.quando==='agendar'?'Aviso agendado para '+dm(f.data)+'.':'Aviso enviado. Ele entra no app em 1 a 3 minutos'+(f.notificar?', com a notificação.':'.'));
+        setTimeout(pavCarregar,1500);setTimeout(()=>{pavCarregar();carregar()},150e3);
+      }catch(err){b.disabled=false;b.textContent='Tentar de novo';e.textContent='Sem conexão. Tente de novo com internet.';e.hidden=false}};
+  });
+}
+function pavTirar(id,tit){
+  sheet(`<h2>Tirar o aviso do ar?</h2><p style="margin:0"><b>${esc(tit)}</b></p><p class="meta" style="margin:0">O aviso sai do app em 1 a 3 minutos. Se ele teve notificação, ela já chegou aos celulares e não volta atrás. Na planilha, a linha continua guardada com “Publicar?” = Não.</p>
+    <div class="pav-bts"><button class="btn btn-primary" id="pavSim">Tirar do ar</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,
+  (o,close)=>{const b=o.querySelector('#pavSim');b.onclick=async()=>{b.disabled=true;b.textContent='Tirando…';
+    try{const j=await pavChamar({acao:'tirar',id});close();toast(j.ok?'Aviso tirado do ar. Some do app em 1 a 3 minutos.':(j.erro||'Não foi possível tirar o aviso.'));if(j.ok){setTimeout(pavCarregar,1500);setTimeout(carregar,150e3)}}
+    catch(e){close();toast('Sem conexão. Tente de novo com internet.')}}});
+}
 function vProf(){
   const P=profP(),t=store.get('profTok',null);
   if(Date.now()-(store.get('profPainelEm',0)||0)>10*60e3)setTimeout(()=>profAtualizar(false),50);
@@ -2994,6 +3115,7 @@ function vProf(){
     <div><span class="ypill" style="background:var(--pen)">Prof. Me. Haroldo Matos</span><h1 style="margin-top:6px">Painel do professor</h1>
       <p class="meta" style="margin:4px 0 0">Atalhos para editar o conteúdo e roteiros de cada tarefa. Com o modo ligado, cada tela do app mostra botões de edição que só você vê.</p></div>
     <a class="card pf-notas" href="geonotas/"><span class="pf-notas-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span><b>GeoNotas</b><span class="meta">Lançar e consultar as notas das turmas · pede a senha do GeoNotas</span></span>${CHEVR}</a>
+    ${pavCard()}
     <div class="card pf-sit${prob.length?' tem-prob':''}">
       <div class="pf-h"><b>Situação do robô</b><button class="meta link" id="profAtual">Atualizar</button></div>
       <p class="meta" style="margin:0">App ${APP_VERSAO} · Robô: ${esc(P.versao||'')}${quando?' · dados de '+quando:''}</p>
@@ -3571,6 +3693,9 @@ document.addEventListener('click',ev=>{
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
   if(t.closest('#modeBtn'))return modeSheet();
   if(t.closest('#menuBtn'))return menuAbrir();
+  if(t.closest('#pavNovo'))return pavForm();
+  if(t.closest('#pavAtual')){PAV.em=0;return pavCarregar()}
+  const ptr=t.closest('[data-pavtirar]');if(ptr)return pavTirar(ptr.dataset.pavtirar,ptr.dataset.pavtit);
   if(t.closest('#ttsBtn'))return TTS.on?ttsParar():ttsIniciar();
   const av=t.closest('[data-aviso]');if(av){abrirAviso(av.dataset.aviso);return}
   if(t.closest('#muralTodos')){muralTodosSheet();return}
