@@ -2232,7 +2232,7 @@ const TOURS={
   ],
   turma:[
     {alvo:'.card.hello',t:'3. A página da sua turma',x:'Aqui você acompanha quantos resumos já copiou no caderno e quantas atividades já enviou nesta unidade.'},
-    {alvo:'.pushhero, .pushcard, [data-push]',t:'Avisos no celular',x:'Ative os avisos para receber lembretes das entregas e as novidades da sua turma.',opcional:true},
+    {alvo:'.pushhero, .pushcard, [data-push]',t:'Avisos no celular',x:'Ative os avisos para receber lembretes das entregas e as novidades da sua turma. Depois, dá para ligar ou desligar no menu ☰.',opcional:true},
     {alvo:'.rec > summary',t:'Recados',x:'As novidades da sua turma: resumo novo, data marcada ou dúvida respondida. Toque para ver. Os que você já leu ficam em “Recados anteriores”, no menu ☰.',opcional:true},
     {alvo:'[data-sfold="resumos"] > summary',t:'Resumos',x:'Os resumos de cada capítulo, para ler e copiar no caderno. Toque para abrir a lista.'},
     {alvo:'[data-sfold="temas"] > summary',t:'Aulas de aprofundamento',x:'Aulas extras que valem ponto e ajudam a melhorar a sua média.',opcional:true},
@@ -2240,7 +2240,7 @@ const TOURS={
     {alvo:'[data-sfold="mural"] > summary',t:'Mural de avisos',x:'Avisos importantes do professor, como feriados, mudanças de data e avaliações previstas.',opcional:true},
     {alvo:'[data-sfold="duvidas"] > summary',t:'Dúvidas',x:'Ficou com dúvida sobre o conteúdo? Pergunte ao professor por aqui.',opcional:true},
     {alvo:'.tabs',t:'A barra de baixo',x:'Use a barra para ir, a qualquer momento, ao Início, à sua Turma, aos Resumos, às Atividades e ao Calendário.',fixo:true},
-    {alvo:'#menuBtn',t:'O menu ☰',x:'No canto de cima ficam o Guia do estudante, a instalação, o contato com o professor, os recados anteriores e as cores do app.',fixo:true},
+    {alvo:'#menuBtn',t:'O menu ☰',x:'No canto de cima ficam o Guia do estudante, os recados anteriores e os avisos no celular da sua turma, as cores do app e o contato com o professor.',fixo:true},
     {centro:true,t:'Pronto!',x:'Se você fixou a sua turma, da próxima vez o app já abre nela. Quando você abrir um resumo pela primeira vez, mostro as ferramentas de leitura. O guia completo fica no menu ☰, em “Guia do estudante”.',ok:'Começar a estudar'}
   ],
   leitura:[
@@ -2389,7 +2389,7 @@ function vGuia(){
       'Se o celular é usado por mais de um estudante (irmãos, colegas), escolha <b>“Celular compartilhado”</b>.',
       'Depois, escolha a <b>unidade</b>. Só a unidade em andamento fica aberta; as outras abrem e fecham conforme o calendário da escola.',
       'Para mudar de turma, toque em <b>Trocar de turma</b>, no fim da página da turma, ou em <b>Início</b>, na barra de baixo.',
-      'No <b>menu ☰</b>, no canto de cima, ficam o Guia, a instalação, o contato com o professor, as cores do app e as informações sobre o GeoEstudos.']))}
+      'No <b>menu ☰</b>, no canto de cima, ficam o Guia, os <b>recados anteriores</b> e os <b>avisos no celular</b> da sua turma, as <b>cores do app</b>, a instalação, o contato com o professor e as informações sobre o GeoEstudos.']))}
     ${bloco('ano','livro','Resumos','Ler, ouvir, destacar e copiar no caderno',ol([
       'Abra a sua turma e toque em <b>Resumos</b>. Escolha o capítulo.',
       '<b>Ouvir</b> lê o resumo em voz alta. <b>Aa</b> muda o tamanho e o tipo da letra, inclusive uma letra própria para dislexia, e as cores do app (claro, sépia ou escuro).',
@@ -2433,7 +2433,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.12.0',APP_DATA='2026-11-01';
+const APP_VERSAO='1.12.1',APP_DATA='2026-11-01';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
