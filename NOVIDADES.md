@@ -8,6 +8,11 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.16.0 · 02/11/2026
+- Página da unidade em três blocos: Para estudar (Resumos, Atividades de fixação, Aulas de aprofundamento, na cor do ano), Da turma (Próximas datas, Mural de avisos, Dúvidas, em azul) e Para você (Guia do estudante e Trocar de turma, discretos).
+- Nova seção “Atividades de fixação” na página da unidade, com enviadas e próximo prazo; novo passo no tour.
+- Modo escuro: faixas azuis da página da turma com mais contraste.
+
 ## 1.15.0 · 02/11/2026 · robô v22
 - Painel do professor reorganizado em botões por grupo: Comunicar (Avisos, Dúvidas), Turmas (Agenda, Prazos, Notas) e Conteúdo e app (Rascunhos, Ajustes), com selos do que pede ação.
 - Avisos: editar um aviso já publicado (texto, turmas, destaque, data do topo).

@@ -90,6 +90,9 @@ h1{font-size:1.6rem;line-height:1.15} h2{font-size:1.2rem} h3{font-size:1.02rem;
 .sec-ano{--sc:var(--year)}
 .sec-tt{--sc:#0F766E}
 .sec-pen{--sc:#1D3F8F}
+.sec-turma{--sc:#1D3F8F;--sc-on:#fff}
+body.m-escuro .sec-turma{--sc:#2E4F9E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sec-turma{--sc:#2E4F9E}}
 .sec-nov{--sc:#C99A1E;--sc-on:#1E2430;background:var(--hl-soft)}
 .sec-nov .sec-ic{background:var(--hl)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sec-pen{--sc:var(--pen);--sc-on:var(--on-pen)}:root:not([data-theme="light"]) .sec-tt{--sc:#2BA89A}}
@@ -566,6 +569,13 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .fixo:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 
 .sfolds{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.pv-lista{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden;margin-top:8px}
+.pv-i{display:flex;align-items:center;gap:12px;padding:10px 14px;background:none;border:0;border-top:1px solid var(--line);font:inherit;color:var(--ink);text-align:left;cursor:pointer;width:100%}
+.pv-i:first-child{border-top:0}.pv-i:hover,.pv-i:focus-visible{background:var(--surface-2)}
+.pv-ic{flex:none;width:32px;height:32px;border-radius:50%;background:var(--surface-2);color:var(--muted);display:grid;place-items:center}.pv-ic svg{width:18px;height:18px}
+.pv-tx{flex:1;min-width:0}.pv-tx b{display:block;font-size:.95rem;font-weight:600}.pv-tx .meta{font-size:.8rem}
+.pv-i>svg:last-child{color:var(--muted);flex:none}
+.sf-grupo{margin:10px 2px -6px;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .sfold>summary{list-style:none;cursor:pointer;margin-top:0;min-height:56px}
 .sfold>summary::-webkit-details-marker{display:none}
 .sfold .sf-ch{flex:none;color:var(--sc);transition:transform .2s}
@@ -1781,7 +1791,7 @@ function muralFold(){
   const resumo=L.length?`${L.length} ${L.length===1?'aviso':'avisos'} · último em ${dm(L[0].data)}`:'Nenhum aviso por enquanto';
   const corpo=L.length?`<div class="mural">${L.slice(0,3).map(m=>muralItem(m,lid)).join('')}</div>${L.length>3?`<button class="btn btn-ghost sf-mais" id="muralTodos">Ver todos os avisos (${L.length})</button>`:''}`
     :`<div class="card empty-card"><b>Nenhum aviso por enquanto</b><span class="meta">Quando o professor publicar um recado para a turma ${esc(S.turma)}, ele aparece aqui.</span></div>`;
-  return secFold('mural','Mural de avisos','ano','mega',resumo,pe+corpo,nov?`<span class="sf-badge">${nov} ${nov===1?'novo':'novos'}</span>`:'');
+  return secFold('mural','Mural de avisos','turma','mega',resumo,pe+corpo,nov?`<span class="sf-badge">${nov} ${nov===1?'novo':'novos'}</span>`:'');
 }
 function ttsDica(){
   const n=store.get('ttsDica',0);const semPT=!vozPT()||!/^pt[-_]BR/i.test((vozPT()||{}).lang||'');
@@ -2299,6 +2309,7 @@ const TOURS={
     {alvo:'.pushhero, .pushcard, [data-push]',t:'Avisos no celular',x:'Ative os avisos para receber lembretes das entregas e as novidades da sua turma. Depois, dá para ligar ou desligar no menu ☰.',opcional:true},
     {alvo:'.rec > summary',t:'Recados',x:'As novidades da sua turma: resumo novo, data marcada ou dúvida respondida. Toque para ver. Os que você já leu ficam em “Recados anteriores”, no menu ☰.',opcional:true},
     {alvo:'[data-sfold="resumos"] > summary',t:'Resumos',x:'Os resumos de cada capítulo, para ler e copiar no caderno. Toque para abrir a lista.'},
+    {alvo:'[data-sfold="atvs"] > summary',t:'Atividades de fixação',x:'As atividades desta unidade, com o prazo de cada uma. Valem nota: faça, envie e depois marque “Já enviei”.',opcional:true},
     {alvo:'[data-sfold="temas"] > summary',t:'Aulas de aprofundamento',x:'Aulas extras que valem ponto e ajudam a melhorar a sua média.',opcional:true},
     {alvo:'[data-sfold="datas"] > summary',t:'Próximas datas',x:'Entregas do caderno, prazos das atividades e avaliações da sua turma.'},
     {alvo:'[data-sfold="mural"] > summary',t:'Mural de avisos',x:'Avisos importantes do professor, como feriados, mudanças de data e avaliações previstas.',opcional:true},
@@ -2497,7 +2508,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.15.0',APP_DATA='2026-11-02';
+const APP_VERSAO='1.16.0',APP_DATA='2026-11-02';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2764,19 +2775,28 @@ function vTurma(){
       <div style="font-size:.86rem">${sent} de ${acts.length} atividades de fixação enviadas</div>`:''}
     </div>
     ${avisosHtml()}
+    <p class="sf-grupo">Para estudar</p>
     <div class="sfolds">
     ${secFold('resumos','Resumos da Unidade '+ua,'ano','livro',total?`${total} ${total===1?'resumo':'resumos'} · ${done} ${done===1?'copiado':'copiados'} no caderno`:'Nenhum resumo publicado ainda',
       `${continuarCard()}<div class="capgrid">${capsDe(y,ua).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
+    ${acts.length?secFold('atvs','Atividades de fixação','ano','atv',(()=>{const pend=acts.filter(c=>!isSent(c.n)),pr=pend.map(c=>prazoDe(c.n,'atividade')).filter(x=>x&&x>=HOJE).sort()[0];return `${acts.length} ${acts.length===1?'atividade':'atividades'} · ${sent} ${sent===1?'enviada':'enviadas'}${pr?' · próximo prazo '+dm(pr):''}`})(),
+      `<div class="atvlist">${acts.map(atvCard).join('')}</div>`):''}
     ${temasDe(y,ua).length?secFold('temas','Aulas de aprofundamento','ano','globo',`${temasDe(y,ua).length} ${temasDe(y,ua).length===1?'aula extra':'aulas extras'} · valem ponto`,
       `<div class="capgrid">${temasDe(y,ua).map(temaBtn).join('')}</div>`):''}
-    ${secFold('datas','Próximas datas','ano','cal',prox.length?`Próxima: ${dm(prox[0].data)} · ${esc(prox[0].titulo)}`:'Nenhuma data marcada',
+    </div>
+    <p class="sf-grupo">Da turma</p>
+    <div class="sfolds">
+    ${secFold('datas','Próximas datas','turma','cal',prox.length?`Próxima: ${dm(prox[0].data)} · ${esc(prox[0].titulo)}`:'Nenhuma data marcada',
       `${prox.length?`<div class="evlist">${prox.map(evCard).join('')}</div>`:`<div class="card empty-card"><b>Nenhuma data marcada</b><span class="meta">Quando o professor marcar uma entrega ou atividade para a turma ${esc(S.turma)}, ela aparece aqui.</span></div>`}<button class="btn btn-ghost sf-mais" data-go="calendario">${SECIC.cal}Abrir o calendário completo</button>`)}
     ${muralFold()}
     ${duvidasSecao()}
     </div>
     ${pushCard()}
-    ${guiaBtn()}
-    <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
+    <p class="sf-grupo">Para você</p>
+    <div class="pv-lista">
+      <button class="pv-i" data-go="guia"><span class="pv-ic">${GUIAIC}</span><span class="pv-tx"><b>Guia do estudante</b><span class="meta">Como usar o app, passo a passo</span></span>${CHEVR}</button>
+      <button class="pv-i" data-go="home"><span class="pv-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg></span><span class="pv-tx"><b>Trocar de turma</b><span class="meta">Ver outra turma ou outro ano</span></span>${CHEVR}</button>
+    </div>
   </section>`;
 }
 
