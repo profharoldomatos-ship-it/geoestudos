@@ -1117,6 +1117,17 @@ body.m-escuro .pf-av-ic{background:#4A2320;color:#F5A59C}
 .pav-prev{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;padding:12px;background:var(--surface)}
 .pav-prev img{border-radius:9px;flex:none}.pav-prev b,.pav-prev .meta{display:block}
 .pav-bts{display:flex;gap:10px}.pav-bts .btn-primary{flex:1}
+.pf-dv{display:flex;align-items:center;gap:12px;border-left:5px solid #0E6E9C;width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.pf-dv-ic{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#DCEFF8;color:#0E6E9C;flex:none}
+body.m-escuro .pf-dv-ic{background:#173847;color:#8FD0EE}
+.pf-dv-n{background:#B42B2B;color:#fff;font-weight:700;font-size:.78rem;border-radius:999px;padding:3px 9px;flex:none}
+.dq{display:flex;flex-direction:column;gap:8px}
+.dq-i{border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface);display:flex;flex-direction:column;gap:4px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;width:100%}
+.dq-i b{font-weight:600}
+.dq-h{display:flex;gap:8px;align-items:center;font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+.dq-t{font-weight:700;color:#fff;border-radius:999px;padding:1px 8px;font-size:.78rem}
+.dq-r{font-size:.85rem;color:var(--muted);border-left:3px solid var(--line);padding-left:8px}
+.dq-perg{border:1.5px solid var(--line);border-radius:14px;padding:12px;background:var(--surface-2);display:flex;flex-direction:column;gap:2px}
 .pf-alerta{margin:0;color:var(--rust)}
 .pf-prob{margin:0;padding-left:1.1em;font-size:.88rem;display:flex;flex-direction:column;gap:3px}
 .pf-ok{margin:0;color:var(--ok);font-weight:700;display:flex;gap:6px;align-items:center}
@@ -2454,7 +2465,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.13.0',APP_DATA='2026-11-01';
+const APP_VERSAO='1.14.0',APP_DATA='2026-11-02';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3018,7 +3029,8 @@ function pavChamar(o){
 function pavCard(){
   if(Date.now()-PAV.em>60e3&&!PAV.carregando)setTimeout(pavCarregar,80);
   return `<button class="card pf-av" id="pavNovo"><span class="pf-av-ic">${MEGAIC}</span><span class="pf-av-tx"><b>Enviar aviso aos alunos</b><span class="meta">Mural e notificação no celular, sem abrir a planilha</span></span><span aria-hidden="true" class="pf-av-ch">›</span></button>
-    <div id="pavLista">${pavListaHtml()}</div>`;
+    <div id="pavLista">${pavListaHtml()}</div>
+    ${pdvCard()}`;
 }
 function pavListaHtml(){
   const L=PAV.lista;
@@ -3102,6 +3114,86 @@ function pavTirar(id,tit){
   (o,close)=>{const b=o.querySelector('#pavSim');b.onclick=async()=>{b.disabled=true;b.textContent='Tirando…';
     try{const j=await pavChamar({acao:'tirar',id});close();toast(j.ok?'Aviso tirado do ar. Some do app em 1 a 3 minutos.':(j.erro||'Não foi possível tirar o aviso.'));if(j.ok){setTimeout(pavCarregar,1500);setTimeout(carregar,150e3)}}
     catch(e){close();toast('Sem conexão. Tente de novo com internet.')}}});
+}
+/* ---------- Dúvidas dos alunos pelo painel (planilha de dúvidas) ---------- */
+const DUVPIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.2M12 16.5h.01"/></svg>';
+let PDV={lista:null,em:0,carregando:false,aba:'novas'};
+function pdvChamar(o){
+  const t=store.get('profTok',null);
+  const b=Object.assign({tok:t&&t.token||''},o);
+  return fetch(CFG.DATA_URL+(CFG.DATA_URL.includes('?')?'&':'?')+'profduvida='+encodeURIComponent(JSON.stringify(b))+'&t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    if(j&&j.ok===undefined&&j.anos)return {ok:false,erro:'Atualize o robô para a versão 21 para responder as dúvidas pelo painel.'};
+    if(j&&j.sair)profSair();
+    return j||{ok:false,erro:'Resposta vazia do robô.'};
+  });
+}
+const pdvNovas=()=>Array.isArray(PDV.lista)?PDV.lista.filter(d=>!d.resposta):[];
+function pdvCard(){
+  if(Date.now()-PDV.em>60e3&&!PDV.carregando)setTimeout(pdvCarregar,120);
+  const n=pdvNovas().length;
+  return `<button class="card pf-dv" id="pdvAbrir"><span class="pf-dv-ic">${DUVPIC}</span><span class="pf-av-tx"><b>Dúvidas dos alunos</b><span class="meta">${PDV.lista&&PDV.lista.erro?esc(PDV.lista.erro):'Ler e responder sem abrir a planilha'}</span></span>${n?`<span class="pf-dv-n">${n} ${n===1?'nova':'novas'}</span>`:''}<span aria-hidden="true" class="pf-av-ch">›</span></button>`;
+}
+async function pdvCarregar(){
+  PDV.carregando=true;
+  try{const j=await pdvChamar({acao:'lista'});PDV.lista=j.ok?(j.lista||[]):{erro:j.erro||'Não foi possível ler as dúvidas.'};PDV.em=Date.now()}
+  catch(e){PDV.lista={erro:'Sem conexão para ler as dúvidas.'}}
+  finally{PDV.carregando=false;const c=document.getElementById('pdvAbrir');if(c)c.outerHTML=pdvCard();const o=document.querySelector('.pdv-o');if(o)o.dispatchEvent(new Event('pdv'))}
+}
+function pdvQuando(iso){if(!iso)return '';const d=new Date(iso),h=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),dias=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-TODAY)/864e5);
+  return (dias===0?'hoje':dias===-1?'ontem':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}))+', '+h}
+function pdvItem(d){
+  const pubTx=d.pub==='turma'?'publicada para a turma '+d.turma:d.pub==='ano'?'publicada para o '+(T2A[d.turma]||'')+'º ano':'não publicada';
+  return `<button class="dq-i${d.resposta?' ok':''}" data-pdv="${esc(d.id)}"><span class="dq-h"><span class="dq-t" style="background:${COR[T2A[d.turma]]||'var(--pen)'}">${esc(d.turma)}</span><span>${esc(d.nome)} · ${esc(pdvQuando(d.quando))}</span></span>${d.sobre?`<span class="meta">${esc(d.sobre)}</span>`:''}<b>${esc(d.pergunta)}</b>${d.resposta?`<span class="dq-r">✓ ${esc(d.resposta.replace(/^'/,'').slice(0,140))}${d.resposta.length>140?'…':''}<br><span class="meta">${pubTx}</span></span>`:''}</button>`;
+}
+function pdvLista(){
+  const o0=sheet('',(o,close)=>{
+    o.classList.add('pdv-o');
+    const desenha=()=>{
+      const L=PDV.lista,novas=pdvNovas(),resp=Array.isArray(L)?L.filter(d=>d.resposta):[];
+      const itens=PDV.aba==='novas'?novas:resp;
+      o.querySelector('.sheet').innerHTML=`<h2>Dúvidas dos alunos</h2>
+        <div class="seg" style="grid-template-columns:repeat(2,minmax(0,1fr))"><button data-pdvaba="novas" aria-pressed="${PDV.aba==='novas'}">Sem resposta${Array.isArray(L)?' ('+novas.length+')':''}</button><button data-pdvaba="resp" aria-pressed="${PDV.aba==='resp'}">Respondidas</button></div>
+        ${!L||PDV.carregando&&!Array.isArray(L)?'<p class="meta" style="margin:0">Carregando…</p>':L.erro?`<p class="avl-err">${esc(L.erro)}</p>`:itens.length?`<div class="dq">${itens.slice(0,60).map(pdvItem).join('')}</div>`:`<p class="meta" style="margin:0">${PDV.aba==='novas'?'Nenhuma dúvida esperando resposta.':'Nenhuma dúvida respondida ainda.'}</p>`}
+        <p class="meta" style="margin:0">Os nomes só aparecem para você. No app, as respostas publicadas nunca mostram quem perguntou.</p>
+        <div class="pav-bts"><button class="btn btn-ghost" data-close style="flex:1">Fechar</button><button class="btn btn-ghost" id="pdvAtual">Atualizar</button></div>`;
+      o.querySelectorAll('[data-pdvaba]').forEach(b=>b.onclick=()=>{PDV.aba=b.dataset.pdvaba;desenha()});
+      o.querySelectorAll('[data-pdv]').forEach(b=>b.onclick=()=>{const d=(PDV.lista||[]).find(x=>x.id===b.dataset.pdv);if(d){close();pdvResponder(d)}});
+      o.querySelector('#pdvAtual').onclick=()=>{PDV.em=0;pdvCarregar()};
+    };
+    o.addEventListener('pdv',desenha);desenha();
+    if(Date.now()-PDV.em>30e3)pdvCarregar();
+  });
+}
+function pdvResponder(d){
+  const ano=T2A[d.turma]||'';
+  let pub=d.resposta?d.pub:'turma';
+  sheet(`<h2>Responder dúvida</h2>
+    <div class="dq-perg"><span class="dq-h"><span class="dq-t" style="background:${COR[ano]||'var(--pen)'}">${esc(d.turma)}</span><span>${esc(d.nome)} · ${esc(pdvQuando(d.quando))}</span></span>${d.sobre?`<span class="meta">${esc(d.sobre)}</span>`:''}<p style="margin:4px 0 0"><b>${esc(d.pergunta)}</b></p></div>
+    <label class="fld"><span>Sua resposta</span><textarea id="pdvTx" rows="5" maxlength="2000" placeholder="Escreva a resposta para os alunos.">${esc(d.resposta.replace(/^'/,''))}</textarea></label>
+    <div class="fld"><span>Publicar no app (sem o nome do aluno)</span><div class="seg pav-seg3">${[['turma','Turma '+d.turma],['ano','Todo o '+ano+'º ano'],['nao','Não publicar']].map(([v,l])=>`<button type="button" data-pdvpub="${v}" aria-pressed="${pub===v}">${esc(l)}</button>`).join('')}</div>
+      <span class="meta pav-dica" id="pdvDica"></span></div>
+    <p class="avl-err" id="pdvErr" role="alert" hidden></p>
+    <div class="pav-bts"><button class="btn btn-primary" id="pdvSalvar"></button><button class="btn btn-ghost" id="pdvVolta">Voltar</button></div>`,
+  (o,close)=>{
+    const dica=()=>{o.querySelector('#pdvDica').textContent=pub==='nao'?'A resposta fica guardada só na planilha, para você responder na aula. Se ela já estava no app, sai de lá.':(pub==='ano'?'Todas as turmas do '+ano+'º ano recebem':'A turma '+d.turma+' recebe')+' o recado “Dúvida respondida”.';
+      o.querySelector('#pdvSalvar').textContent=pub==='nao'?'Salvar sem publicar':'Salvar e publicar'};
+    o.querySelectorAll('[data-pdvpub]').forEach(b=>b.onclick=()=>{pub=b.dataset.pdvpub;o.querySelectorAll('[data-pdvpub]').forEach(x=>x.setAttribute('aria-pressed',x===b));dica()});
+    dica();
+    o.querySelector('#pdvTx').addEventListener('input',()=>{o.querySelector('#pdvErr').hidden=true});
+    o.querySelector('#pdvVolta').onclick=()=>{close();pdvLista()};
+    const b=o.querySelector('#pdvSalvar');
+    b.onclick=async()=>{const tx=o.querySelector('#pdvTx').value.trim(),e=o.querySelector('#pdvErr');
+      if(pub!=='nao'&&tx.length<2){e.textContent='Escreva a resposta antes de publicar.';e.hidden=false;return}
+      b.disabled=true;b.textContent='Salvando…';
+      try{const j=await pdvChamar({acao:'responder',id:d.id,resposta:tx,pub});
+        if(!j.ok){b.disabled=false;dica();e.textContent=j.erro||'Não foi possível salvar.';e.hidden=false;return}
+        d.resposta=tx;d.pub=pub;close();
+        toast(pub==='nao'?'Resposta guardada na planilha, sem publicar.':'Resposta salva. Ela aparece no app em 1 a 3 minutos.');
+        const c=document.getElementById('pdvAbrir');if(c)c.outerHTML=pdvCard();
+        setTimeout(()=>{PDV.em=0;pdvCarregar()},1500);setTimeout(carregar,150e3);
+      }catch(err){b.disabled=false;dica();e.textContent='Sem conexão. Tente de novo com internet.';e.hidden=false}};
+    setTimeout(()=>{const t=o.querySelector('#pdvTx');if(t&&!t.value)t.focus()},60);
+  });
 }
 function vProf(){
   const P=profP(),t=store.get('profTok',null);
@@ -3694,6 +3786,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#modeBtn'))return modeSheet();
   if(t.closest('#menuBtn'))return menuAbrir();
   if(t.closest('#pavNovo'))return pavForm();
+  if(t.closest('#pdvAbrir'))return pdvLista();
   if(t.closest('#pavAtual')){PAV.em=0;return pavCarregar()}
   const ptr=t.closest('[data-pavtirar]');if(ptr)return pavTirar(ptr.dataset.pavtirar,ptr.dataset.pavtit);
   if(t.closest('#ttsBtn'))return TTS.on?ttsParar():ttsIniciar();

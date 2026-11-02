@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.14.0 · 02/11/2026 · robô v21
+- Painel do professor: “Dúvidas dos alunos”. As dúvidas chegam no próprio app (abas Sem resposta e Respondidas, com selo de novas). O professor responde e escolhe publicar para a turma, para o ano todo ou não publicar. O nome do aluno só aparece para o professor. A planilha de dúvidas continua como registro.
+- Exige o robô v21.
+
 ## 1.13.0 · 01/11/2026 · robô v20
 - Painel do professor: “Enviar aviso aos alunos”. O professor escreve o aviso no próprio app (título, mensagem, para quem, destaque, notificação, agora ou agendado), confere como a notificação vai aparecer e envia. O aviso é gravado na aba Mural de avisos e o robô publica em 1 a 3 minutos.
 - “Avisos recentes” no painel, com “Tirar do ar”.

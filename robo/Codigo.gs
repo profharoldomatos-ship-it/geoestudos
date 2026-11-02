@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-01 · avisos pelo painel v20';
+const VERSAO_ROBO = '2026-11-02 · dúvidas pelo painel v21';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -76,6 +76,12 @@ function doGet(e) {
     let b = {};
     try { b = JSON.parse(p.profaviso); } catch (err) {}
     return ContentService.createTextOutput(JSON.stringify(avisoProfessor_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.profduvida !== undefined) {
+    // Painel do professor: ler e responder as dúvidas dos alunos
+    let b = {};
+    try { b = JSON.parse(p.profduvida); } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify(duvidaProfessor_(b))).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.profdados !== undefined) {
     return ContentService.createTextOutput(JSON.stringify(dadosProfessor_(String(p.profdados)))).setMimeType(ContentService.MimeType.JSON);
@@ -1696,6 +1702,49 @@ function receberDuvida_(b) {
     return { ok: true };
   } catch (err) {
     return { ok: false, erro: 'Não foi possível enviar agora.' };
+  }
+}
+/** Painel do professor: lista as dúvidas (com o nome, só para o professor) e grava respostas. */
+function duvidaProfessor_(b) {
+  try {
+    if (!tokenValido_(String(b.tok || ''))) return { ok: false, sair: true, erro: 'Sua entrada de professor expirou. Entre de novo no modo professor.' };
+    const sh = planilhaDuvidas_();
+    const ult = sh.getLastRow();
+    const pubDe = v => { const x = semAcento_(v); return x === 'turma' || x === 'sim' ? 'turma' : x === 'ano' ? 'ano' : 'nao'; };
+    if (String(b.acao || 'lista') === 'lista') {
+      if (ult < 2) return { ok: true, lista: [] };
+      const ini = Math.max(2, ult - 199);
+      const v = sh.getRange(ini, 1, ult - ini + 1, 8).getValues();
+      const lista = [];
+      v.forEach((l, k) => {
+        const pergunta = String(l[4] || '').replace(/^'/, '').trim();
+        if (!pergunta) return;
+        lista.push({ id: String(l[7] || ('L' + (ini + k))), quando: l[0] instanceof Date ? l[0].toISOString() : '', turma: String(l[1] || ''),
+          nome: String(l[2] || '').replace(/^'/, ''), sobre: String(l[3] || '').replace(/^'/, ''), pergunta: pergunta,
+          resposta: String(l[5] || ''), pub: pubDe(l[6]) });
+      });
+      return { ok: true, lista: lista.reverse() };
+    }
+    // responder
+    const id = String(b.id || '');
+    let linha = 0;
+    if (/^L\d+$/.test(id)) linha = parseInt(id.slice(1), 10);
+    else if (ult > 1) { const k = sh.getRange(2, 8, ult - 1, 1).getValues().findIndex(r => String(r[0]) === id); if (k >= 0) linha = k + 2; }
+    if (!id || linha < 2 || linha > ult) return { ok: false, erro: 'Não encontrei esta dúvida na planilha.' };
+    let resp = String(b.resposta || '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, 2000);
+    if (/^[=+\-@]/.test(resp)) resp = "'" + resp;
+    const pub = { turma: 'Turma', ano: 'Ano', nao: 'Não' }[String(b.pub || 'nao')] || 'Não';
+    if (!resp && pub !== 'Não') return { ok: false, erro: 'Escreva a resposta antes de publicar.' };
+    const lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      if (!String(sh.getRange(linha, 8).getValue() || '')) sh.getRange(linha, 8).setValue(Utilities.getUuid().slice(0, 8));
+      sh.getRange(linha, 6, 1, 2).setValues([[resp, pub]]);
+    } finally { lock.releaseLock(); }
+    agendarAtualizacaoPainel_();
+    return { ok: true, versao: VERSAO_ROBO };
+  } catch (err) {
+    return { ok: false, erro: 'O robô não conseguiu ler ou gravar as dúvidas: ' + err };
   }
 }
 /** Respostas publicadas: só a pergunta e a resposta, nunca o nome. */
