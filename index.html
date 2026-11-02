@@ -1096,6 +1096,38 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .pf-notas>svg{color:var(--pen);flex:none}
 .pf-sit.tem-prob{border-color:var(--rust)}
 .pf-h{display:flex;justify-content:space-between;align-items:center}
+.pt-gt{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 2px -2px}
+.pt-gr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.pt-gr3{grid-template-columns:repeat(3,minmax(0,1fr))}
+#ptiles{display:flex;flex-direction:column}
+.pt-tl{position:relative;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:5px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;min-width:0}
+.pt-tl:hover{border-color:var(--tc)}.pt-tl:focus-visible{outline:3px solid var(--tc);outline-offset:2px}
+.pt-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--tc2);color:var(--tc)}
+body.m-escuro .pt-ic{background:color-mix(in srgb,var(--tc) 28%,var(--surface));color:#fff}
+.pt-tl b{font-size:.95rem;line-height:1.2}.pt-tl .meta{font-size:.76rem;line-height:1.25}
+.pt-bd{position:absolute;top:10px;right:10px;background:#B42B2B;color:#fff;font-size:.72rem;font-weight:700;border-radius:999px;padding:2px 8px}
+.pp-l{display:flex;flex-direction:column;gap:8px}
+.pp-i{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);display:flex;flex-direction:column;gap:3px}
+.pp-i b{font-size:.93rem}.pp-acs{display:flex;gap:16px;margin-top:4px}
+.pp-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pp-pend{margin:0;background:var(--hl-soft);border-radius:10px;padding:8px 10px}
+.pp-perigo{color:#B42B2B;border-color:#E9B4AE}
+.ag-ev{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:10px;background:var(--surface)}
+.ag-dt{flex:none;width:46px;text-align:center;border-radius:10px;background:var(--surface-2);padding:4px 0;font-weight:700;font-size:1.05rem;line-height:1.1}.ag-dt small{display:block;font-size:.7rem;color:var(--muted)}
+.ag-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.ag-tx b{font-size:.92rem}
+.ag-tp{align-self:flex-start;font-size:.7rem;font-weight:700;border-radius:6px;padding:1px 6px}
+.ag-t{display:inline-block;font-size:.72rem;font-weight:700;color:#fff;border-radius:999px;padding:1px 7px;margin:0 3px 0 0}
+.prz-ts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.prz-ts button{border-radius:999px;font:inherit;font-size:.8rem;font-weight:700;padding:5px 10px;border:1.5px solid var(--line);cursor:pointer}
+.prz-ts .ok{background:#DDF0E3;border-color:#9FD3B0;color:#1F6B3A}.prz-ts .no{background:#FFF3C4;border-color:#E9C95A;color:#6B5200}
+body.m-escuro .prz-ts .ok{background:#1E3A28;color:#9FDDB1;border-color:#2F5C3E}body.m-escuro .prz-ts .no{background:#4A3D12;color:#F2D776;border-color:#6B5A1E}
+.not-st{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.not-st div{border-radius:12px;background:var(--surface-2);padding:8px;text-align:center}.not-st b{display:block;font-size:1.25rem}
+.not-al{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:6px 2px;font-size:.9rem}.not-al .g{color:#1F6B3A}.not-al .r{color:#B42B2B}
+body.m-escuro .not-al .g{color:#9FDDB1}body.m-escuro .not-al .r{color:#F5A59C}
+.not-fal{margin:0;font-size:.86rem;background:var(--hl-soft);border-radius:10px;padding:8px 10px}
+.rasc-i{flex-direction:row;align-items:center;gap:10px}.rasc-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rasc-i .btn{padding:8px 12px;flex:none}
+.aj-stp{cursor:default}.aj-n{display:flex;align-items:center;gap:10px}.aj-n button{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:1.1rem;cursor:pointer}
+.aj-ms{display:flex;flex-direction:column;gap:8px}.aj-m{display:flex;flex-direction:column;gap:4px;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--surface)}
+.aj-m textarea,.aj-m select{font:inherit;font-size:.92rem;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);color:var(--ink)}.aj-m.off{opacity:.55}.aj-m .link{align-self:flex-end}
 .pf-av{display:flex;align-items:center;gap:12px;border-left:5px solid #B42B2B;width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
 .pf-av-ic{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#FBE4E1;color:#B42B2B;flex:none}
 body.m-escuro .pf-av-ic{background:#4A2320;color:#F5A59C}
@@ -2465,7 +2497,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.14.0',APP_DATA='2026-11-02';
+const APP_VERSAO='1.15.0',APP_DATA='2026-11-02';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3043,25 +3075,25 @@ async function pavCarregar(){
   PAV.carregando=true;
   try{const j=await pavChamar({acao:'lista'});PAV.lista=j.ok?(j.lista||[]):{erro:j.erro||'Não foi possível ler os avisos.'};PAV.em=Date.now()}
   catch(e){PAV.lista={erro:'Sem conexão para ler os avisos recentes.'}}
-  finally{PAV.carregando=false;const el=document.getElementById('pavLista');if(el)el.innerHTML=pavListaHtml()}
+  finally{PAV.carregando=false;ptAtualizar();const o=document.querySelector('.pav-o');if(o)o.dispatchEvent(new Event('pav'))}
 }
 function pavForm(){
   const T=Object.values(YEARS);
   const f=PAV.f||(PAV.f={titulo:'',texto:'',para:['todas'],destaque:'normal',notificar:true,quando:'agora',data:'',fixoAte:''});
   const amanha=ISO(new Date(TODAY.getTime()+864e5)),em7=ISO(new Date(TODAY.getTime()+7*864e5));
   const ch=(v,l)=>`<button type="button" data-pavpara="${v}" aria-pressed="${f.para.includes(v)}">${l}</button>`;
-  sheet(`<h2>Novo aviso</h2>
+  sheet(`<h2>${f.edit?'Editar aviso':'Novo aviso'}</h2>
     <label class="fld"><span>Título *</span><input id="pavTit" maxlength="120" value="${esc(f.titulo)}" placeholder="Ex.: Não haverá aula na segunda (02/11)"></label>
     <label class="fld"><span>Mensagem *</span><textarea id="pavTx" maxlength="1500" rows="3" placeholder="O texto completo do aviso.">${esc(f.texto)}</textarea></label>
     <div class="fld"><span>Para quem</span><div class="pav-chs">${ch('todas','Todas as turmas')}${T.map(y=>ch(y.ano,y.label)).join('')}${T.map(y=>y.turmas.map(t=>ch(t,t)).join('')).join('')}</div></div>
     <div class="fld"><span>Destaque</span><div class="seg pav-seg3">${[['normal','Só no mural'],['popup','Pop-up'],['fixo','Fixo no topo']].map(([v,l])=>`<button type="button" data-pavdest="${v}" aria-pressed="${f.destaque===v}">${l}</button>`).join('')}</div>
       <span class="meta pav-dica">${f.destaque==='popup'?'Aparece na frente da tela uma vez, quando o aluno abrir o app.':f.destaque==='fixo'?'Faixa vermelha no alto da página da turma até a data abaixo.':'Fica no Mural de avisos da página da turma.'}</span></div>
     ${f.destaque==='fixo'?`<label class="fld"><span>Fixo no topo até</span><input type="date" id="pavFixo" min="${HOJE}" value="${esc(f.fixoAte||em7)}"></label>`:''}
-    <button type="button" class="pav-tg" id="pavNot" aria-pressed="${f.notificar}"><span><b>Notificação no celular</b><span class="meta">${f.notificar?'Sai para quem ativou os avisos':'Desligada: o aviso fica só no app'}</span></span><i aria-hidden="true"></i></button>
-    <div class="fld"><span>Quando</span><div class="seg pav-seg2">${[['agora','Agora'],['agendar','Agendar data']].map(([v,l])=>`<button type="button" data-pavq="${v}" aria-pressed="${f.quando===v}">${l}</button>`).join('')}</div></div>
-    ${f.quando==='agendar'?`<label class="fld"><span>Publicar no dia</span><input type="date" id="pavData" min="${amanha}" value="${esc(f.data||amanha)}"></label><span class="meta" style="margin-top:-6px">O aviso e a notificação saem nesse dia, a partir das 6h.</span>`:''}
+    ${f.edit?'':`<button type="button" class="pav-tg" id="pavNot" aria-pressed="${f.notificar}"><span><b>Notificação no celular</b><span class="meta">${f.notificar?'Sai para quem ativou os avisos':'Desligada: o aviso fica só no app'}</span></span><i aria-hidden="true"></i></button>`}
+    ${f.edit?'':`<div class="fld"><span>Quando</span><div class="seg pav-seg2">${[['agora','Agora'],['agendar','Agendar data']].map(([v,l])=>`<button type="button" data-pavq="${v}" aria-pressed="${f.quando===v}">${l}</button>`).join('')}</div></div>
+    ${f.quando==='agendar'?`<label class="fld"><span>Publicar no dia</span><input type="date" id="pavData" min="${amanha}" value="${esc(f.data||amanha)}"></label><span class="meta" style="margin-top:-6px">O aviso e a notificação saem nesse dia, a partir das 6h.</span>`:''}`}
     <p class="avl-err" id="pavErr" role="alert" hidden></p>
-    <div class="pav-bts"><button class="btn btn-primary" id="pavRev">Revisar e enviar</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,
+    <div class="pav-bts"><button class="btn btn-primary" id="pavRev">${f.edit?'Salvar alterações':'Revisar e enviar'}</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,
   (o,close)=>{
     const ler=()=>{f.titulo=o.querySelector('#pavTit').value;f.texto=o.querySelector('#pavTx').value;const d=o.querySelector('#pavData');if(d)f.data=d.value;const x=o.querySelector('#pavFixo');if(x)f.fixoAte=x.value};
     const de_novo=()=>{ler();close();pavForm()};
@@ -3070,12 +3102,13 @@ function pavForm(){
       o.querySelectorAll('[data-pavpara]').forEach(x=>x.setAttribute('aria-pressed',f.para.includes(x.dataset.pavpara)))});
     o.querySelectorAll('[data-pavdest]').forEach(b=>b.onclick=()=>{f.destaque=b.dataset.pavdest;de_novo()});
     o.querySelectorAll('[data-pavq]').forEach(b=>b.onclick=()=>{f.quando=b.dataset.pavq;de_novo()});
-    o.querySelector('#pavNot').onclick=()=>{f.notificar=!f.notificar;de_novo()};
+    const pn=o.querySelector('#pavNot');if(pn)pn.onclick=()=>{f.notificar=!f.notificar;de_novo()};
     o.querySelector('#pavRev').onclick=()=>{ler();const e=o.querySelector('#pavErr');
       const err=m=>{e.textContent=m;e.hidden=false};
       if(f.titulo.trim().length<3)return err('Escreva o título do aviso.');
       if(f.texto.trim().length<3)return err('Escreva a mensagem.');
       if(f.quando==='agendar'&&!(f.data>HOJE))return err('Escolha uma data a partir de amanhã.');
+      if(f.edit)return pavSalvarEdicao(o,close,f);
       close();pavConferir()};
   });
   setTimeout(()=>{const i=document.getElementById('pavTit');if(i&&!i.value)i.focus()},60);
@@ -3137,7 +3170,7 @@ async function pdvCarregar(){
   PDV.carregando=true;
   try{const j=await pdvChamar({acao:'lista'});PDV.lista=j.ok?(j.lista||[]):{erro:j.erro||'Não foi possível ler as dúvidas.'};PDV.em=Date.now()}
   catch(e){PDV.lista={erro:'Sem conexão para ler as dúvidas.'}}
-  finally{PDV.carregando=false;const c=document.getElementById('pdvAbrir');if(c)c.outerHTML=pdvCard();const o=document.querySelector('.pdv-o');if(o)o.dispatchEvent(new Event('pdv'))}
+  finally{PDV.carregando=false;ptAtualizar();const o=document.querySelector('.pdv-o');if(o)o.dispatchEvent(new Event('pdv'))}
 }
 function pdvQuando(iso){if(!iso)return '';const d=new Date(iso),h=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),dias=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-TODAY)/864e5);
   return (dias===0?'hoje':dias===-1?'ontem':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}))+', '+h}
@@ -3189,10 +3222,300 @@ function pdvResponder(d){
         if(!j.ok){b.disabled=false;dica();e.textContent=j.erro||'Não foi possível salvar.';e.hidden=false;return}
         d.resposta=tx;d.pub=pub;close();
         toast(pub==='nao'?'Resposta guardada na planilha, sem publicar.':'Resposta salva. Ela aparece no app em 1 a 3 minutos.');
-        const c=document.getElementById('pdvAbrir');if(c)c.outerHTML=pdvCard();
+        ptAtualizar();
         setTimeout(()=>{PDV.em=0;pdvCarregar()},1500);setTimeout(carregar,150e3);
       }catch(err){b.disabled=false;dica();e.textContent='Sem conexão. Tente de novo com internet.';e.hidden=false}};
     setTimeout(()=>{const t=o.querySelector('#pdvTx');if(t&&!t.value)t.focus()},60);
+  });
+}
+/* ---------- Painel do professor (v22): botões por grupo e as telas de cada função ---------- */
+const PTIC={aviso:'<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',duv:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.2M12 16.5h.01"/>',cal:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',prazo:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',notas:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',doc:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',aj:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'};
+let RASC={lista:null,em:0,carregando:false};
+function ppChamar(o){
+  const t=store.get('profTok',null);
+  const b=Object.assign({tok:t&&t.token||''},o);
+  return fetch(CFG.DATA_URL+(CFG.DATA_URL.includes('?')?'&':'?')+'profpainel='+encodeURIComponent(JSON.stringify(b))+'&t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    if(j&&j.ok===undefined&&j.anos)return {ok:false,erro:'Atualize o robô para a versão 22 para usar esta função do painel.'};
+    if(j&&j.sair)profSair();
+    return j||{ok:false,erro:'Resposta vazia do robô.'};
+  });
+}
+function painelTiles(){
+  if(Date.now()-PAV.em>60e3&&!PAV.carregando)setTimeout(pavCarregar,80);
+  if(Date.now()-PDV.em>60e3&&!PDV.carregando)setTimeout(pdvCarregar,120);
+  if(Date.now()-RASC.em>5*60e3&&!RASC.carregando)setTimeout(rascCarregar,160);
+  return `<div id="ptiles">${ptilesHtml()}</div>`;
+}
+function ptilesHtml(){
+  const t=(k,ic,cor,cor2,tit,sub,bd)=>`<button class="pt-tl" data-pt="${k}" style="--tc:${cor};--tc2:${cor2}">${bd?`<span class="pt-bd">${bd}</span>`:''}<span class="pt-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PTIC[ic]}</svg></span><b>${tit}</b><span class="meta">${sub}</span></button>`;
+  const nd=pdvNovas().length,nr=Array.isArray(RASC.lista)?RASC.lista.length:0;
+  return `<p class="pt-gt">Comunicar</p><div class="pt-gr">${t('avisos','aviso','#B42B2B','#FBE4E1','Avisos','Enviar, editar e tirar do ar')}${t('duvidas','duv','#0E6E9C','#DCEFF8','Dúvidas','Ler e responder',nd||'')}</div>
+    <p class="pt-gt">Turmas</p><div class="pt-gr pt-gr3">${t('agenda','cal','#1D3F8F','#E3E9F7','Agenda','Marcar datas')}${t('prazos','prazo','#8A5A00','#FFF0C2','Prazos','Atividades da unidade')}${t('notas','notas','#2F7A4A','#DDF0E3','Notas','Atividades avaliativas')}</div>
+    <p class="pt-gt">Conteúdo e app</p><div class="pt-gr">${t('rascunhos','doc','#5B3FA0','#ECE6F8','Rascunhos','Publicar no app',nr||'')}${t('ajustes','aj','#4A5260','#ECEAE4','Ajustes','Mensagem, dúvidas, lembretes')}</div>`;
+}
+function ptAtualizar(){const el=document.getElementById('ptiles');if(el)el.innerHTML=ptilesHtml()}
+function ptAbrir(k){({avisos:pavLista,duvidas:pdvLista,agenda:()=>agLista(),prazos:()=>przLista(),notas:()=>notasLista(),rascunhos:rascLista,ajustes:ajustesForm})[k]()}
+
+/* Avisos: lista com Editar e Tirar do ar */
+function pavLista(){
+  sheet('',(o,close)=>{
+    o.classList.add('pav-o');
+    const desenha=()=>{
+      const L=PAV.lista;
+      o.querySelector('.sheet').innerHTML=`<h2>Avisos</h2><button class="btn btn-primary" id="pavNovo2">+ Novo aviso</button>
+        ${!L?'<p class="meta" style="margin:0">Carregando…</p>':L.erro?`<p class="avl-err">${esc(L.erro)}</p>`:!L.length?'<p class="meta" style="margin:0">Nenhum aviso ainda.</p>':`<div class="pp-l">${L.map(a=>`<div class="pp-i"><b>${esc(a.titulo)}</b><span class="meta">${esc(a.para)} · ${esc(a.destaque)}${a.notificar?' · com notificação':''}${a.situacao?' · '+esc(a.situacao):''}</span>
+          <span class="pp-acs">${a.id?`<button class="meta link" data-paved="${esc(a.id)}">Editar</button>`:''}${a.publicado&&a.id?`<button class="meta link" data-pavtirar="${esc(a.id)}" data-pavtit="${esc(a.titulo)}">Tirar do ar</button>`:'<span class="meta">fora do ar</span>'}</span></div>`).join('')}</div>`}
+        <p class="meta" style="margin:0">Editar corrige o texto, as turmas ou a data do topo. A notificação que já saiu não é enviada de novo.</p>
+        <div class="pav-bts"><button class="btn btn-ghost" data-close style="flex:1">Fechar</button><button class="btn btn-ghost" id="pavAtual2">Atualizar</button></div>`;
+      o.querySelector('#pavNovo2').onclick=()=>{close();PAV.f=null;pavForm()};
+      o.querySelector('#pavAtual2').onclick=()=>{PAV.em=0;pavCarregar()};
+      o.querySelectorAll('[data-paved]').forEach(b=>b.onclick=()=>{const a=(PAV.lista||[]).find(x=>x.id===b.dataset.paved);if(!a)return;close();PAV.f=pavDeItem(a);pavForm()});
+      o.querySelectorAll('[data-pavtirar]').forEach(b=>b.onclick=()=>{close();pavTirar(b.dataset.pavtirar,b.dataset.pavtit)});
+    };
+    o.addEventListener('pav',desenha);desenha();
+    if(Date.now()-PAV.em>30e3)pavCarregar();
+  });
+}
+function pavDeItem(a){
+  const p=semAcentoJS(a.para||'');let para=[];
+  if(!p||p.includes('toda'))para=['todas'];else{(p.match(/[789]\s*(º|°|o\b|ano)/g)||[]).forEach(x=>para.push(x.match(/[789]/)[0]));(p.match(/\b\d{2}\b/g)||[]).forEach(t=>para.push(t))}
+  const d=semAcentoJS(a.destaque||'');
+  return {edit:a.id,titulo:a.titulo,texto:a.texto||'',para:para.length?para:['todas'],destaque:d.includes('fix')?'fixo':d.includes('pop')?'popup':'normal',notificar:a.notificar,quando:'agora',data:'',fixoAte:a.fixoAte||''};
+}
+const semAcentoJS=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+async function pavSalvarEdicao(o,close,f){
+  const b=o.querySelector('#pavRev'),e=o.querySelector('#pavErr');b.disabled=true;b.textContent='Salvando…';
+  try{const j=await pavChamar({acao:'editar',id:f.edit,titulo:f.titulo.trim(),texto:f.texto.trim(),para:f.para,destaque:f.destaque,fixoAte:f.destaque==='fixo'?(f.fixoAte||ISO(new Date(TODAY.getTime()+7*864e5))):''});
+    if(!j.ok){b.disabled=false;b.textContent='Salvar alterações';e.textContent=j.erro||'Não foi possível salvar.';e.hidden=false;return}
+    PAV.f=null;close();toast('Aviso corrigido. A mudança aparece no app em 1 a 3 minutos.');setTimeout(()=>{PAV.em=0;pavCarregar()},1500);setTimeout(carregar,150e3);
+  }catch(err){b.disabled=false;b.textContent='Salvar alterações';e.textContent='Sem conexão. Tente de novo com internet.';e.hidden=false}
+}
+
+/* Agenda das turmas: datas vêm dos dados do app; criar, editar e apagar vão para o Google Agenda */
+const AGT=[['caderno','Entrega do caderno'],['atividade','Atividade de fixação'],['tema','Aula de aprofundamento'],['avaliacao','Avaliação'],['semaula','Sem aula'],['aviso','Outro aviso']];
+const AGCOR={caderno:['#8A5A00','#FFF0C2'],atividade:['#1F6B3A','#DDF0E3'],tema:['#0F766E','#D5F0EC'],avaliacao:['#B42B2B','#FBE4E1'],semaula:['#4A5260','#ECEAE4'],aviso:['#1D3F8F','#E3E9F7']};
+let AG={ano:'todos',pend:[]};
+function agGrupos(){
+  const A=(DATA&&DATA.agenda)||{},g={};
+  Object.keys(A).forEach(t=>A[t].forEach(e=>{
+    const k=e.titulo+'|'+e.data+'|'+(e.hora||'');
+    const tipo=/^sem aula/i.test(e.titulo)?'semaula':e.tipo;
+    (g[k]=g[k]||{titulo:e.titulo,data:e.data,hora:e.hora||'',tipo,cap:e.cap,descricao:e.descricao||'',link:e.link||'',itens:[]}).itens.push({turma:t,id:String(e.id).slice(0,String(e.id).lastIndexOf('@'))});
+  }));
+  return Object.values(g).sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora));
+}
+const dmBR=iso=>iso?iso.slice(8,10)+'/'+iso.slice(5,7):'';
+const MESC=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function agLista(){
+  sheet('',(o,close)=>{
+    const desenha=()=>{
+      const gs=agGrupos().filter(g=>g.data>=HOJE&&(AG.ano==='todos'||g.itens.some(i=>T2A[i.turma]===AG.ano)));
+      o.querySelector('.sheet').innerHTML=`<h2>Agenda das turmas</h2>
+        <div class="seg" style="grid-template-columns:repeat(4,minmax(0,1fr))">${[['todos','Todas'],...Object.values(YEARS).map(y=>[y.ano,y.ano+'º ano'])].map(([v,l])=>`<button data-agano="${v}" aria-pressed="${AG.ano===v}">${l}</button>`).join('')}</div>
+        ${AG.pend.length?`<p class="meta pp-pend">Atualizando: ${AG.pend.length} ${AG.pend.length===1?'mudança aparece':'mudanças aparecem'} aqui em 1 a 3 minutos.</p>`:''}
+        <button class="btn btn-primary" id="agNova">+ Marcar nova data</button>
+        ${gs.length?`<div class="pp-l">${gs.slice(0,60).map((g,k)=>{const [c1,c2]=AGCOR[g.tipo]||AGCOR.aviso,[,m,d]=g.data.split('-');
+          return `<div class="ag-ev"><span class="ag-dt">${+d}<small>${MESC[+m-1]}</small></span><span class="ag-tx"><span class="ag-tp" style="color:${c1};background:${c2}">${esc((AGT.find(x=>x[0]===g.tipo)||AGT[5])[1])}${g.hora?' · '+esc(g.hora):''}</span><b>${esc(g.titulo.replace(/^(entrega do caderno|atividade de fixa[çc][ãa]o|sem aula)\s*[·:–-]\s*/i,''))}</b><span>${g.itens.map(i=>`<span class="ag-t" style="background:${COR[T2A[i.turma]]||'var(--pen)'}">${esc(i.turma)}</span>`).join('')}</span></span><button class="meta link" data-aged="${k}">Editar</button></div>`}).join('')}</div>`:'<p class="meta" style="margin:0">Nenhuma data marcada daqui para a frente.</p>'}
+        <button class="btn btn-ghost" data-close>Fechar</button>`;
+      o.querySelectorAll('[data-agano]').forEach(b=>b.onclick=()=>{AG.ano=b.dataset.agano;desenha()});
+      o.querySelector('#agNova').onclick=()=>{close();agForm(null,{})};
+      o.querySelectorAll('[data-aged]').forEach(b=>b.onclick=()=>{close();agForm(gs[+b.dataset.aged])});
+    };
+    desenha();
+  });
+}
+function agTitulo(f){
+  const c=String(f.cap||''),n=c.replace(/^t/,''),nome=f.nome||'',livre=(f.titulo||'').trim();
+  if(f.tipo==='caderno')return 'Entrega do caderno · Cap. '+n+(nome?' – '+nome:'');
+  if(f.tipo==='atividade')return 'Atividade de fixação · Cap. '+n+(nome?' – '+nome:'');
+  if(f.tipo==='tema')return 'Aula de aprofundamento '+n+(nome?' – '+nome:'');
+  if(f.tipo==='avaliacao')return /avaliac|prova|teste|simulado/.test(semAcentoJS(livre))?livre:'Avaliação'+(livre?' · '+livre:'');
+  if(f.tipo==='semaula')return 'Sem aula'+(livre?' · '+livre:'');
+  return livre||'Aviso';
+}
+function agOpcoes(f){
+  const anos=[...new Set(f.turmas.map(t=>T2A[t]))];
+  if(anos.length!==1)return null;
+  const y=YEARS[anos[0]];
+  if(f.tipo==='tema')return (y.list||[]).flatMap(u=>(u.temas||[]).map(t=>({v:'t'+t.n,l:'Aula de aprofundamento '+t.n+' – '+t.titulo,u:u.n,nome:t.titulo})));
+  return (y.list||[]).flatMap(u=>(u.caps||[]).map(c=>({v:String(c.n),l:'Cap. '+c.n+' – '+c.titulo,u:u.n,nome:c.titulo})));
+}
+function agForm(g,pre){
+  const f=g?{edit:g,tipo:g.tipo==='aviso'&&/^sem aula/i.test(g.titulo)?'semaula':g.tipo,cap:g.cap!=null?String(g.cap):'',data:g.data,hora:g.hora||'',turmas:g.itens.map(i=>i.turma),desc:g.descricao||'',
+      titulo:(g.tipo==='avaliacao'||g.tipo==='aviso'||g.tipo==='semaula')?g.titulo.replace(/^sem aula\s*[·:–-]?\s*/i,''):'',nome:''}
+    :Object.assign({tipo:'caderno',cap:'',data:'',hora:'',turmas:[],desc:'',titulo:'',nome:''},pre||{});
+  const chT=(v,l)=>`<button type="button" data-agt="${v}" aria-pressed="${f.tipo===v}">${l}</button>`;
+  const desenhar=(o,close)=>{
+    const ops=['caderno','atividade','tema'].includes(f.tipo)?agOpcoes(f):[];
+    const precisaCap=['caderno','atividade','tema'].includes(f.tipo);
+    if(precisaCap&&ops&&ops.length&&!ops.some(x=>x.v===String(f.cap))){const y=YEARS[T2A[f.turmas[0]]];const at=ops.find(x=>x.u===(y&&y.atual));f.cap=(at||ops[0]).v}
+    const op=ops&&ops.find(x=>x.v===String(f.cap));f.nome=op?op.nome:'';
+    o.querySelector('.sheet').innerHTML=`<h2>${g?'Editar data':'Marcar data'}</h2>
+      <div class="fld"><span>Tipo</span><div class="pav-chs">${AGT.map(([v,l])=>chT(v,l)).join('')}</div></div>
+      <div class="fld"><span>Turmas</span><div class="pav-chs">${Object.values(YEARS).map(y=>y.turmas.map(t=>`<button type="button" data-agtu="${t}" aria-pressed="${f.turmas.includes(t)}">${t}</button>`).join('')).join('')}</div></div>
+      ${precisaCap?(ops===null?'<p class="avl-err" style="margin:0">Para este tipo, escolha turmas de um mesmo ano.</p>':`<label class="fld"><span>${f.tipo==='tema'?'Aula de aprofundamento':'Capítulo'}</span><select id="agCap">${ops.length?ops.map(x=>`<option value="${esc(x.v)}"${x.v===String(f.cap)?' selected':''}>${esc(x.l)}</option>`).join(''):'<option value="">Escolha as turmas primeiro</option>'}</select></label>`)
+        :`<label class="fld"><span>${f.tipo==='semaula'?'Motivo (opcional)':'Título'}</span><input id="agTit" maxlength="120" value="${esc(f.titulo)}" placeholder="${f.tipo==='semaula'?'Ex.: Proclamação da República':f.tipo==='avaliacao'?'Ex.: Prova da Unidade 4':'Ex.: Visita ao Centro Histórico'}"></label>`}
+      <div class="pp-2"><label class="fld"><span>Data</span><input type="date" id="agData" value="${esc(f.data)}"></label><label class="fld"><span>Horário (opcional)</span><input type="time" id="agHora" value="${esc(f.hora)}"></label></div>
+      <label class="fld"><span>Observação ou link (opcional)</span><input id="agDesc" maxlength="500" value="${esc(f.desc)}" placeholder="Ex.: trazer o caderno completo"></label>
+      <p class="meta" style="margin:0" id="agPrev"></p>
+      <p class="avl-err" id="agErr" role="alert" hidden></p>
+      <div class="pav-bts"><button class="btn btn-primary" id="agOk"></button><button class="btn btn-ghost" id="agVolta">${g?'Voltar':'Cancelar'}</button></div>
+      ${g?'<button class="btn btn-ghost pp-perigo" id="agApaga">Apagar esta data</button>':''}`;
+    const ler=()=>{const c=o.querySelector('#agCap');if(c)f.cap=c.value;const ti=o.querySelector('#agTit');if(ti)f.titulo=ti.value;f.data=o.querySelector('#agData').value;f.hora=o.querySelector('#agHora').value;f.desc=o.querySelector('#agDesc').value;const op2=ops&&ops.find(x=>x.v===String(f.cap));f.nome=op2?op2.nome:''};
+    const prev=()=>{ler();const n=f.turmas.length;o.querySelector('#agPrev').innerHTML=n?`Vai aparecer como: <b>${esc(agTitulo(f))}</b>${f.data?', em '+dmBR(f.data):''}, na${n>1?'s agendas das turmas':' agenda da turma'} ${esc(listaT(f.turmas))}${['caderno','atividade','tema','avaliacao'].includes(f.tipo)?', com lembrete na véspera e no dia':''}.`:'Escolha as turmas.';
+      o.querySelector('#agOk').textContent=g?'Salvar alterações':n>1?'Marcar nas '+n+' agendas':'Marcar na agenda'};
+    o.querySelectorAll('[data-agt]').forEach(b=>b.onclick=()=>{ler();f.tipo=b.dataset.agt;desenhar(o,close)});
+    o.querySelectorAll('[data-agtu]').forEach(b=>b.onclick=()=>{ler();const t=b.dataset.agtu;f.turmas=f.turmas.includes(t)?f.turmas.filter(x=>x!==t):f.turmas.concat(t);desenhar(o,close)});
+    o.querySelectorAll('input,select').forEach(i=>i.addEventListener('input',prev));
+    prev();
+    o.querySelector('#agVolta').onclick=()=>{close();if(g)agLista()};
+    const err=m=>{const e=o.querySelector('#agErr');e.textContent=m;e.hidden=false};
+    o.querySelector('#agOk').onclick=async()=>{ler();
+      if(!f.turmas.length)return err('Escolha pelo menos uma turma.');
+      if(!f.data)return err('Escolha a data.');
+      if(['caderno','atividade','tema'].includes(f.tipo)&&!f.cap)return err('Escolha o capítulo ou a aula.');
+      if((f.tipo==='avaliacao'||f.tipo==='aviso')&&f.titulo.trim().length<3)return err('Escreva o título.');
+      const b=o.querySelector('#agOk');b.disabled=true;b.textContent='Salvando…';
+      try{const j=await ppChamar({acao:g?'agenda.editar':'agenda.criar',itens:g?g.itens:[],evento:{tipo:f.tipo==='aviso'?'outro':f.tipo,cap:f.cap,nome:f.nome,titulo:f.titulo,data:f.data,hora:f.hora,turmas:f.turmas,desc:f.desc}});
+        if(!j.ok){b.disabled=false;prev();return err(j.erro||'Não foi possível salvar na agenda.')}
+        close();AG.pend.push(Date.now());toast((g?'Data alterada':'Data marcada')+'. Ela aparece no app em 1 a 3 minutos.'+(j.erro?' Atenção: '+j.erro:''));setTimeout(()=>{carregar();AG.pend=[]},150e3);
+      }catch(e){b.disabled=false;prev();err('Sem conexão. Tente de novo com internet.')}};
+    const ap=o.querySelector('#agApaga');
+    if(ap)ap.onclick=()=>{close();sheet(`<h2>Apagar esta data?</h2><p style="margin:0"><b>${esc(g.titulo)}</b> · ${dmBR(g.data)}</p><p class="meta" style="margin:0">Sai das agendas das turmas ${esc(listaT(g.itens.map(i=>i.turma)))} e do app em 1 a 3 minutos.</p><div class="pav-bts"><button class="btn btn-primary" id="agSim">Apagar</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`,
+      (o2,close2)=>{const s=o2.querySelector('#agSim');s.onclick=async()=>{s.disabled=true;s.textContent='Apagando…';
+        try{const j=await ppChamar({acao:'agenda.apagar',itens:g.itens});close2();toast(j.ok?'Data apagada. Some do app em 1 a 3 minutos.':(j.erro||'Não foi possível apagar.'));if(j.ok){AG.pend.push(Date.now());setTimeout(()=>{carregar();AG.pend=[]},150e3)}}
+        catch(e){close2();toast('Sem conexão. Tente de novo com internet.')}}})};
+  };
+  sheet('',(o,close)=>desenhar(o,close));
+}
+
+/* Prazos das atividades da unidade em andamento, por turma */
+let PRZ={ano:null};
+function przLista(){
+  const anos=Object.values(YEARS);if(!anos.length)return toast('Os dados do app ainda não carregaram.');
+  if(!PRZ.ano||!YEARS[PRZ.ano])PRZ.ano=anos[0].ano;
+  sheet('',(o,close)=>{
+    const desenha=()=>{
+      const y=YEARS[PRZ.ano],u=(y.units||{})[y.atual]||{caps:[],temas:[]},A=(DATA&&DATA.agenda)||{};
+      const itens=[...(u.caps||[]).filter(c=>c.atividade||c.resumo).map(c=>({tipo:'atividade',cap:String(c.n),nome:c.titulo,t:'Cap. '+c.n+' – '+c.titulo,sub:c.atividade?'Atividade de fixação':'Atividade de fixação · sem formulário ainda'})),
+        ...(u.temas||[]).map(t=>({tipo:'tema',cap:'t'+t.n,nome:t.titulo,t:'Aula de aprofundamento '+t.n,sub:t.titulo}))];
+      const evDe=(tu,it)=>{const l=(A[tu]||[]).filter(e=>e.tipo===it.tipo&&String(e.cap)===it.cap).sort((x,z)=>x.data.localeCompare(z.data));return l.find(e=>e.data>=HOJE)||l[l.length-1]};
+      o.querySelector('.sheet').innerHTML=`<h2>Prazos das atividades</h2>
+        <div class="seg" style="grid-template-columns:repeat(${anos.length},minmax(0,1fr))">${anos.map(a=>`<button data-przano="${a.ano}" aria-pressed="${PRZ.ano===a.ano}">${a.label}</button>`).join('')}</div>
+        <p class="meta" style="margin:0">Unidade ${y.atual} · ${esc(y.unit)}. Toque numa turma para marcar ou mudar o prazo.</p>
+        ${itens.length?`<div class="pp-l">${itens.map((it,k)=>`<div class="pp-i"><b>${esc(it.t)}</b><span class="meta">${esc(it.sub)}</span><span class="prz-ts">${y.turmas.map(tu=>{const e=evDe(tu,it);return `<button class="${e?'ok':'no'}" data-przk="${k}" data-przt="${tu}">${tu} · ${e?dmBR(e.data):'sem prazo'}</button>`}).join('')}</span></div>`).join('')}</div>`:'<p class="meta" style="margin:0">Esta unidade ainda não tem atividades.</p>'}
+        <p class="meta" style="margin:0">O “Já enviei” que o aluno marca fica só no celular dele; por isso aqui não aparece quantos entregaram.</p>
+        <button class="btn btn-ghost" data-close>Fechar</button>`;
+      o.querySelectorAll('[data-przano]').forEach(b=>b.onclick=()=>{PRZ.ano=b.dataset.przano;desenha()});
+      o.querySelectorAll('[data-przk]').forEach(b=>b.onclick=()=>{const it=itens[+b.dataset.przk],tu=b.dataset.przt,e=evDe(tu,it);close();
+        if(e){const g=agGrupos().find(x=>x.itens.some(i=>i.turma===tu&&String(e.id).startsWith(i.id)));if(g)return agForm(g)}
+        agForm(null,{tipo:it.tipo,cap:it.cap,turmas:[tu]})});
+    };
+    desenha();
+  });
+}
+
+/* Notas das atividades avaliativas */
+let NOT={dados:null,turma:null,carregando:false};
+function notasLista(gid){
+  sheet('',(o,close)=>{
+    const desenha=()=>{
+      const D=NOT.dados;
+      let corpo='';
+      if(!D||NOT.carregando)corpo='<p class="meta" style="margin:0">Carregando as notas…</p>';
+      else if(!D.ok)corpo=`<p class="avl-err">${esc(D.erro||'Não foi possível ler as notas.')}</p>`;
+      else if(!D.abas||!D.abas.length)corpo='<p class="meta" style="margin:0">Nenhuma atividade avaliativa recebeu envios ainda.</p>';
+      else{
+        const ts=Object.keys(D.turmas||{});if(!ts.includes(NOT.turma))NOT.turma=ts[0];
+        const T=(D.turmas||{})[NOT.turma]||{feitos:[],faltam:[],total:0};
+        const notas=T.feitos.map(x=>x.nota).filter(x=>!isNaN(x)),med=notas.length?(notas.reduce((a,b)=>a+b,0)/notas.length):null;
+        corpo=`<label class="fld"><span>Atividade</span><select id="notGid">${D.abas.slice().reverse().map(a=>`<option value="${esc(a.gid)}"${a.gid===D.gid?' selected':''}>${esc(a.nome)}</option>`).join('')}</select></label>
+          ${ts.length?`<div class="seg" style="grid-template-columns:repeat(${ts.length},minmax(0,1fr))">${ts.map(t=>`<button data-nott="${t}" aria-pressed="${t===NOT.turma}">Turma ${t}</button>`).join('')}</div>`:''}
+          <div class="not-st"><div><b>${T.feitos.length}</b><span class="meta">${T.total?'de '+T.total+' fizeram':'fizeram'}</span></div><div><b>${med==null?'—':med.toFixed(1).replace('.',',')}</b><span class="meta">média</span></div><div><b>${notas.filter(x=>x<7).length}</b><span class="meta">abaixo de 7</span></div></div>
+          ${T.feitos.length?`<div>${T.feitos.map(x=>`<div class="not-al"><span>${esc(x.nome)}</span><b class="${x.nota>=7?'g':'r'}">${isNaN(x.nota)?'—':String(x.nota).replace('.',',')}</b></div>`).join('')}</div>`:'<p class="meta" style="margin:0">Ninguém desta turma enviou ainda.</p>'}
+          ${T.faltam.length?`<p class="not-fal"><b>Ainda não fizeram (${T.faltam.length}):</b> ${esc(T.faltam.join(', '))}</p>`:T.total?'<p class="meta" style="margin:0">Toda a turma já fez. 🎉</p>':'<p class="meta" style="margin:0">A lista desta turma não está na aba Alunos, por isso não dá para mostrar quem falta.</p>'}`;
+      }
+      o.querySelector('.sheet').innerHTML=`<h2>Notas das avaliativas</h2>${corpo}<div class="pav-bts">${D&&D.url?`<a class="btn btn-ghost" style="flex:1" href="${esc(D.url)}" target="_blank" rel="noopener">Abrir a planilha</a>`:''}<button class="btn btn-ghost" data-close${D&&D.url?'':' style="flex:1"'}>Fechar</button></div>`;
+      const sel=o.querySelector('#notGid');if(sel)sel.onchange=()=>carregarN(sel.value);
+      o.querySelectorAll('[data-nott]').forEach(b=>b.onclick=()=>{NOT.turma=b.dataset.nott;desenha()});
+    };
+    const carregarN=async g=>{NOT.carregando=true;desenha();
+      try{NOT.dados=await ppChamar({acao:'notas',gid:g||''})}catch(e){NOT.dados={ok:false,erro:'Sem conexão para ler as notas.'}}
+      NOT.carregando=false;if(o.isConnected)desenha()};
+    desenha();carregarN(gid||(NOT.dados&&NOT.dados.gid)||'');
+  });
+}
+
+/* Rascunhos: documentos com [rascunho] ou [teste] */
+async function rascCarregar(){
+  RASC.carregando=true;
+  try{const j=await ppChamar({acao:'rasc.lista'});RASC.lista=j.ok?(j.lista||[]):{erro:j.erro||'Não foi possível ler os rascunhos.'};RASC.em=Date.now()}
+  catch(e){RASC.lista={erro:'Sem conexão para ler os rascunhos.'}}
+  finally{RASC.carregando=false;ptAtualizar();const o=document.querySelector('.rasc-o');if(o)o.dispatchEvent(new Event('rasc'))}
+}
+function rascLista(){
+  sheet('',(o,close)=>{
+    o.classList.add('rasc-o');
+    const desenha=()=>{
+      const L=RASC.lista;
+      o.querySelector('.sheet').innerHTML=`<h2>Rascunhos</h2><p class="meta" style="margin:0">Documentos com [rascunho] ou [teste] no nome. Os alunos não veem; no modo professor, as revisões em rascunho já aparecem para você testar. Publicar tira a marca do nome do arquivo.</p>
+        ${!L||RASC.carregando&&!Array.isArray(L)?'<p class="meta" style="margin:0">Procurando nas pastas…</p>':L.erro?`<p class="avl-err">${esc(L.erro)}</p>`:!L.length?'<p class="meta" style="margin:0">Nenhum rascunho nas pastas do app.</p>':`<div class="pp-l">${L.map(r=>`<div class="pp-i rasc-i"><span class="rasc-tx"><b>${esc(r.nome.replace(/^\s*\[\s*(rascunho|teste)\s*\]?\s*/i,''))}</b><span class="meta">${esc(r.local)} · [${esc(r.marca)}]</span><a class="meta link" href="${esc(r.url)}" target="_blank" rel="noopener">Abrir no Docs</a></span><button class="btn btn-primary" data-rpub="${esc(r.id)}">Publicar</button></div>`).join('')}</div>`}
+        <div class="pav-bts"><button class="btn btn-ghost" data-close style="flex:1">Fechar</button><button class="btn btn-ghost" id="rascAtual">Atualizar</button></div>`;
+      o.querySelector('#rascAtual').onclick=()=>{RASC.em=0;rascCarregar();desenha()};
+      o.querySelectorAll('[data-rpub]').forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent='Publicando…';
+        try{const j=await ppChamar({acao:'rasc.publicar',id:b.dataset.rpub});
+          if(!j.ok){b.disabled=false;b.textContent='Publicar';return toast(j.erro||'Não foi possível publicar.')}
+          RASC.lista=(RASC.lista||[]).filter(r=>r.id!==b.dataset.rpub);ptAtualizar();desenha();toast('“'+j.nome+'” publicado. Entra no app em 1 a 3 minutos.');setTimeout(carregar,150e3);
+        }catch(e){b.disabled=false;b.textContent='Publicar';toast('Sem conexão. Tente de novo com internet.')}});
+    };
+    o.addEventListener('rasc',desenha);desenha();
+    if(Date.now()-RASC.em>30e3)rascCarregar();
+  });
+}
+
+/* Ajustes do app (Configurações e Mensagens de incentivo) */
+function ajustesForm(){
+  sheet('<h2>Ajustes do app</h2><p class="meta" style="margin:0">Carregando…</p>',async(o,close)=>{
+    let C;
+    try{C=await ppChamar({acao:'conf.ler'})}catch(e){C={ok:false,erro:'Sem conexão para ler os ajustes.'}}
+    if(!o.isConnected)return;
+    if(!C.ok){o.querySelector('.sheet').innerHTML=`<h2>Ajustes do app</h2><p class="avl-err">${esc(C.erro||'Não foi possível ler os ajustes.')}</p><button class="btn btn-ghost" data-close>Fechar</button>`;return}
+    const v=Object.assign({},C.valores),msgs=C.mensagens.map(m=>Object.assign({},m)),novas=[];let verMsgs=false;
+    const tipoN=t=>{const x=semAcentoJS(t);return x.includes('ativ')?'Atividade':x.includes('unid')?'Unidade':'Resumo'};
+    const desenha=()=>{
+      o.querySelector('.sheet').innerHTML=`<h2>Ajustes do app</h2>
+        <label class="fld"><span>Mensagem da tela inicial</span><textarea id="ajMsg" rows="2" maxlength="300" placeholder="Em branco: nenhuma faixa">${esc(v.mensagem)}</textarea><span class="meta" style="font-weight:400">Faixa amarela abaixo da escolha do ano. Apague o texto para tirar a faixa.</span></label>
+        <button type="button" class="pav-tg" data-ajtg="duvidas" aria-pressed="${!!v.duvidas}"><span><b>Caixa de dúvidas aberta</b><span class="meta">Feche nas férias ou em semana de prova</span></span><i aria-hidden="true"></i></button>
+        <div class="pav-tg aj-stp"><span><b>Dúvidas por aluno por dia</b></span><span class="aj-n"><button type="button" id="ajMenos" aria-label="Menos">−</button><b>${v.duvPorDia}</b><button type="button" id="ajMais" aria-label="Mais">+</button></span></div>
+        <button type="button" class="pav-tg" data-ajtg="avisoNovo" aria-pressed="${!!v.avisoNovo}"><span><b>Avisar quando sair atividade nova</b><span class="meta">Recado no app da turma</span></span><i aria-hidden="true"></i></button>
+        <div class="pp-2"><label class="fld"><span>Lembrete na véspera</span><input type="time" id="ajVes" value="${esc(v.vespera)}"></label><label class="fld"><span>Lembrete no dia</span><input type="time" id="ajDia" value="${esc(v.dia)}"></label></div>
+        <button type="button" class="pav-tg" id="ajMsgs" aria-expanded="${verMsgs}"><span><b>Mensagens de incentivo</b><span class="meta">${msgs.filter(m=>m.ativo).length} ativas · ${verMsgs?'toque para fechar':'ver e editar'}</span></span><span aria-hidden="true">${verMsgs?'▴':'▾'}</span></button>
+        ${verMsgs?`<div class="aj-ms">${msgs.map((m,k)=>`<div class="aj-m${m.ativo?'':' off'}"><span class="meta">${esc(tipoN(m.tipo))}</span><textarea rows="2" maxlength="300" data-ajm="${k}">${esc(m.texto)}</textarea><button type="button" class="meta link" data-ajon="${k}">${m.ativo?'Desativar':'Ativar'}</button></div>`).join('')}
+          ${novas.map((m,k)=>`<div class="aj-m"><select data-ajnt="${k}">${['resumo','atividade','unidade'].map(t=>`<option value="${t}"${m.tipo===t?' selected':''}>${t==='resumo'?'Resumo':t==='atividade'?'Atividade':'Unidade'}</option>`).join('')}</select><textarea rows="2" maxlength="300" data-ajn="${k}" placeholder="Nova mensagem">${esc(m.texto)}</textarea></div>`).join('')}
+          <button type="button" class="btn btn-ghost" id="ajAdd">+ Nova mensagem</button><span class="meta">Aparecem quando o aluno marca um resumo copiado, envia uma atividade ou termina uma unidade.</span></div>`:''}
+        <p class="avl-err" id="ajErr" role="alert" hidden></p>
+        <div class="pav-bts"><button class="btn btn-primary" id="ajOk">Salvar ajustes</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`;
+      const ler=()=>{v.mensagem=o.querySelector('#ajMsg').value;v.vespera=o.querySelector('#ajVes').value;v.dia=o.querySelector('#ajDia').value;
+        o.querySelectorAll('[data-ajm]').forEach(t=>msgs[+t.dataset.ajm].texto=t.value);
+        o.querySelectorAll('[data-ajn]').forEach(t=>novas[+t.dataset.ajn].texto=t.value);
+        o.querySelectorAll('[data-ajnt]').forEach(t=>novas[+t.dataset.ajnt].tipo=t.value)};
+      o.querySelectorAll('[data-ajtg]').forEach(b=>b.onclick=()=>{ler();v[b.dataset.ajtg]=!v[b.dataset.ajtg];desenha()});
+      o.querySelector('#ajMenos').onclick=()=>{ler();v.duvPorDia=Math.max(1,v.duvPorDia-1);desenha()};
+      o.querySelector('#ajMais').onclick=()=>{ler();v.duvPorDia=Math.min(5,v.duvPorDia+1);desenha()};
+      o.querySelector('#ajMsgs').onclick=()=>{ler();verMsgs=!verMsgs;desenha()};
+      o.querySelectorAll('[data-ajon]').forEach(b=>b.onclick=()=>{ler();const m=msgs[+b.dataset.ajon];m.ativo=!m.ativo;desenha()});
+      const add=o.querySelector('#ajAdd');if(add)add.onclick=()=>{ler();novas.push({tipo:'resumo',texto:''});desenha()};
+      o.querySelector('#ajOk').onclick=async()=>{ler();const b=o.querySelector('#ajOk'),e=o.querySelector('#ajErr');
+        const mud={};Object.keys(v).forEach(k=>{if(String(v[k])!==String(C.valores[k]))mud[k]=v[k]});
+        const mm=msgs.filter((m,k)=>m.texto!==C.mensagens[k].texto||m.ativo!==C.mensagens[k].ativo),nn=novas.filter(m=>m.texto.trim());
+        if(!Object.keys(mud).length&&!mm.length&&!nn.length){close();return toast('Nada foi alterado.')}
+        b.disabled=true;b.textContent='Salvando…';
+        try{const j=await ppChamar({acao:'conf.salvar',valores:mud,mensagens:mm,novas:nn});
+          if(!j.ok){b.disabled=false;b.textContent='Salvar ajustes';e.textContent=j.erro||'Não foi possível salvar.';e.hidden=false;return}
+          close();toast('Ajustes salvos. Valem no app em 1 a 3 minutos.');setTimeout(carregar,150e3);
+        }catch(err){b.disabled=false;b.textContent='Salvar ajustes';e.textContent='Sem conexão. Tente de novo com internet.';e.hidden=false}};
+    };
+    desenha();
   });
 }
 function vProf(){
@@ -3207,7 +3530,7 @@ function vProf(){
     <div><span class="ypill" style="background:var(--pen)">Prof. Me. Haroldo Matos</span><h1 style="margin-top:6px">Painel do professor</h1>
       <p class="meta" style="margin:4px 0 0">Atalhos para editar o conteúdo e roteiros de cada tarefa. Com o modo ligado, cada tela do app mostra botões de edição que só você vê.</p></div>
     <a class="card pf-notas" href="geonotas/"><span class="pf-notas-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span><b>GeoNotas</b><span class="meta">Lançar e consultar as notas das turmas · pede a senha do GeoNotas</span></span>${CHEVR}</a>
-    ${pavCard()}
+    ${painelTiles()}
     <div class="card pf-sit${prob.length?' tem-prob':''}">
       <div class="pf-h"><b>Situação do robô</b><button class="meta link" id="profAtual">Atualizar</button></div>
       <p class="meta" style="margin:0">App ${APP_VERSAO} · Robô: ${esc(P.versao||'')}${quando?' · dados de '+quando:''}</p>
@@ -3785,6 +4108,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
   if(t.closest('#modeBtn'))return modeSheet();
   if(t.closest('#menuBtn'))return menuAbrir();
+  const ptb=t.closest('[data-pt]');if(ptb)return ptAbrir(ptb.dataset.pt);
   if(t.closest('#pavNovo'))return pavForm();
   if(t.closest('#pdvAbrir'))return pdvLista();
   if(t.closest('#pavAtual')){PAV.em=0;return pavCarregar()}

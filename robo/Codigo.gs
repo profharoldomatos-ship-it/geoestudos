@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-02 · dúvidas pelo painel v21';
+const VERSAO_ROBO = '2026-11-02 · painel completo v22';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -76,6 +76,12 @@ function doGet(e) {
     let b = {};
     try { b = JSON.parse(p.profaviso); } catch (err) {}
     return ContentService.createTextOutput(JSON.stringify(avisoProfessor_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.profpainel !== undefined) {
+    // Painel do professor: agenda, notas das avaliativas, rascunhos e ajustes
+    let b = {};
+    try { b = JSON.parse(p.profpainel); } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify(painelAcao_(b))).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.profduvida !== undefined) {
     // Painel do professor: ler e responder as dúvidas dos alunos
@@ -1330,7 +1336,8 @@ function avisoProfessor_(b) {
       v.forEach(l => {
         const titulo = String(l[1] || '').trim();
         if (!titulo) return;
-        lista.push({ id: String(l[10] || ''), titulo: titulo.slice(0, 120), para: String(l[3] || 'Todas as turmas'), destaque: String(l[4] || 'Normal'),
+        lista.push({ id: String(l[10] || ''), titulo: titulo.slice(0, 120), texto: String(l[2] || ''), para: String(l[3] || 'Todas as turmas'), destaque: String(l[4] || 'Normal'),
+          fixoAte: (l[5] instanceof Date && !isNaN(l[5])) ? Utilities.formatDate(l[5], GEO.FUSO, 'yyyy-MM-dd') : '',
           notificar: sim_(l[6]), publicado: sim_(l[8]), situacao: String(l[9] || ''),
           data: (l[0] instanceof Date && !isNaN(l[0])) ? Utilities.formatDate(l[0], GEO.FUSO, 'dd/MM/yyyy') : '' });
       });
@@ -1340,7 +1347,27 @@ function avisoProfessor_(b) {
     lock.waitLock(20000);
     let id = '';
     try {
-      if (acao === 'tirar') {
+      if (acao === 'editar') {
+        id = String(b.id || '');
+        const ult = sh.getLastRow();
+        const ids = ult > 1 ? sh.getRange(2, 11, ult - 1, 1).getValues() : [];
+        const k = ids.findIndex(r => String(r[0]) === id);
+        if (!id || k < 0) return { ok: false, erro: 'Não encontrei este aviso na planilha.' };
+        const titulo = String(b.titulo || '').trim().slice(0, 120), texto = String(b.texto || '').trim().slice(0, 1500);
+        if (!titulo || !texto) return { ok: false, erro: 'Escreva o título e a mensagem.' };
+        const conf = lerConfig_();
+        const validas = [].concat.apply([], Object.keys(conf.turmas).map(x => conf.turmas[x]));
+        const para = [].concat(b.para || []).map(String);
+        let paraTxt = 'Todas as turmas';
+        if (para.length && para.indexOf('todas') < 0) {
+          const partes = para.filter(x => /^[789]$/.test(x)).map(x => x + 'º ano').concat(para.filter(x => validas.indexOf(x) >= 0));
+          if (!partes.length) return { ok: false, erro: 'Escolha para quem é o aviso.' };
+          paraTxt = partes.join('; ');
+        }
+        const dest = { normal: 'Normal', popup: 'Pop-up', fixo: 'Fixo no topo', popupfixo: 'Pop-up e fixo no topo' }[String(b.destaque || 'normal')] || 'Normal';
+        const dia = iso => /^\d{4}-\d{2}-\d{2}$/.test(String(iso || '')) ? new Date(String(iso) + 'T12:00:00') : '';
+        sh.getRange(k + 2, 2, 1, 5).setValues([[titulo, texto, paraTxt, dest, /fixo/i.test(dest) ? dia(b.fixoAte) : '']]);
+      } else if (acao === 'tirar') {
         id = String(b.id || '');
         const ult = sh.getLastRow();
         const ids = ult > 1 ? sh.getRange(2, 11, ult - 1, 1).getValues() : [];
@@ -1373,6 +1400,168 @@ function avisoProfessor_(b) {
     return { ok: false, erro: 'O robô não conseguiu gravar o aviso: ' + err };
   }
 }
+/* ------------------------------------------------------------------ */
+/* Painel do professor (v22): agenda, notas, rascunhos e ajustes        */
+/* ------------------------------------------------------------------ */
+function painelAcao_(b) {
+  try {
+    if (!tokenValido_(String(b.tok || ''))) return { ok: false, sair: true, erro: 'Sua entrada de professor expirou. Entre de novo no modo professor.' };
+    const a = String(b.acao || '');
+    if (a === 'agenda.criar' || a === 'agenda.editar' || a === 'agenda.apagar') return agendaPainel_(a, b);
+    if (a === 'notas') return notasPainel_(b);
+    if (a === 'rasc.lista') return { ok: true, lista: rascunhos_() };
+    if (a === 'rasc.publicar') return publicarRascunho_(String(b.id || ''));
+    if (a === 'conf.ler') return confLer_();
+    if (a === 'conf.salvar') return confSalvar_(b);
+    return { ok: false, erro: 'Ação desconhecida.' };
+  } catch (err) {
+    return { ok: false, erro: 'O robô não conseguiu concluir: ' + err };
+  }
+}
+function agendaTurma_(t) { return CalendarApp.getCalendarsByName(GEO.PREFIXO_AGENDA + t)[0]; }
+/** Título no padrão que o robô entende (o tipo e o capítulo saem do título). */
+function tituloEvento_(e) {
+  const cap = String(e.cap || '').replace(/[^\dt]/g, ''), nome = String(e.nome || '').trim().slice(0, 90), livre = String(e.titulo || '').trim().slice(0, 120);
+  const n = cap.replace(/^t/, '');
+  switch (String(e.tipo)) {
+    case 'caderno': return 'Entrega do caderno · Cap. ' + n + (nome ? ' – ' + nome : '');
+    case 'atividade': return 'Atividade de fixação · Cap. ' + n + (nome ? ' – ' + nome : '');
+    case 'tema': return 'Aula de aprofundamento ' + n + (nome ? ' – ' + nome : '');
+    case 'avaliacao': return /avaliac|prova|teste|simulado/.test(semAcento_(livre)) ? livre : 'Avaliação' + (livre ? ' · ' + livre : '');
+    case 'semaula': return 'Sem aula' + (livre ? ' · ' + livre : '');
+    default: return livre || 'Aviso';
+  }
+}
+function agendaPainel_(a, b) {
+  const conf = lerConfig_();
+  const validas = [].concat.apply([], Object.keys(conf.turmas).map(k => conf.turmas[k]));
+  const feitos = [], erros = [];
+  const apagar = itens => [].concat(itens || []).forEach(it => {
+    const cal = agendaTurma_(String(it.turma || ''));
+    if (!cal) { erros.push('Agenda da turma ' + it.turma + ' não encontrada'); return; }
+    const ev = cal.getEventById(String(it.id || ''));
+    if (ev) { ev.deleteEvent(); feitos.push(it.turma); }
+  });
+  const e = b.evento || {};
+  const ts = [].concat(e.turmas || []).map(String).filter(t => validas.indexOf(t) >= 0);
+  if (a !== 'agenda.apagar') {
+    // confere antes de apagar o evento antigo (na edição), para não perder a data
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(e.data || ''))) return { ok: false, erro: 'Escolha a data.' };
+    if (!ts.length) return { ok: false, erro: 'Escolha pelo menos uma turma.' };
+  }
+  if (a !== 'agenda.criar') apagar(b.itens);
+  if (a !== 'agenda.apagar') {
+    const titulo = tituloEvento_(e);
+    const desc = String(e.desc || '').trim().slice(0, 1500);
+    const [y, m, d] = e.data.split('-').map(Number);
+    const hora = String(e.hora || '').match(/^(\d{1,2}):(\d{2})$/);
+    ts.forEach(t => {
+      const cal = agendaTurma_(t);
+      if (!cal) { erros.push('Agenda da turma ' + t + ' não encontrada'); return; }
+      if (hora) { const ini = new Date(y, m - 1, d, +hora[1], +hora[2]); cal.createEvent(titulo, ini, new Date(ini.getTime() + 60 * 6e4), { description: desc }); }
+      else cal.createAllDayEvent(titulo, new Date(y, m - 1, d), { description: desc });
+      feitos.push(t);
+    });
+  }
+  agendarAtualizacaoPainel_();
+  return { ok: !erros.length || feitos.length > 0, erro: erros.join(' · '), feitos: feitos };
+}
+function notasPainel_(b) {
+  const ss = planilhaNotas_();
+  const abas = ss.getSheets().filter(x => /º ano/.test(x.getName())).map(x => ({ gid: String(x.getSheetId()), nome: x.getName() }));
+  const gid = String(b.gid || (abas.length ? abas[abas.length - 1].gid : ''));
+  const sh = ss.getSheets().filter(x => String(x.getSheetId()) === gid)[0];
+  if (!sh) return { ok: true, abas: abas, url: ss.getUrl() };
+  const ano = (sh.getName().match(/([789])º/) || [])[1] || '';
+  const conf = lerConfig_();
+  const turmas = conf.turmas[ano] || [];
+  const ult = sh.getLastRow();
+  const v = ult > 1 ? sh.getRange(2, 1, ult - 1, 7).getValues() : [];
+  const porTurma = {};
+  turmas.forEach(t => {
+    const feitos = v.filter(l => String(l[2]) === t).map(l => ({ nome: String(l[3] || l[4] || ''), nota: Number(l[6]) }));
+    const ja = feitos.map(f => chaveNome_(f.nome));
+    const lista = alunosDaTurma_(t);
+    porTurma[t] = { feitos: feitos.sort((x, y) => x.nome.localeCompare(y.nome)), faltam: lista.filter(n => ja.indexOf(chaveNome_(n)) < 0), total: lista.length };
+  });
+  return { ok: true, abas: abas, gid: gid, nome: sh.getName(), turmas: porTurma, url: ss.getUrl() + '#gid=' + gid };
+}
+/** Docs marcados com [rascunho] ou [teste] dentro da pasta do app. */
+function rascunhos_() {
+  const out = [];
+  const varre = (pasta, caminho, nivel) => {
+    const fs = pasta.getFilesByType(MimeType.GOOGLE_DOCS);
+    while (fs.hasNext()) {
+      const f = fs.next(), nome = f.getName();
+      if (/^\s*\[\s*(rascunho|teste)/i.test(nome)) out.push({ id: f.getId(), nome: nome, local: caminho.join(' · '), url: f.getUrl(), atualizado: f.getLastUpdated().toISOString(), marca: /teste/i.test(nome.slice(0, 12)) ? 'teste' : 'rascunho' });
+    }
+    if (nivel >= 3) return;
+    const ps = pasta.getFolders();
+    while (ps.hasNext()) { const p = ps.next(); varre(p, caminho.concat(p.getName()), nivel + 1); }
+  };
+  varre(DriveApp.getFolderById(GEO.PASTA_APP), [], 0);
+  return out.sort((x, y) => y.atualizado.localeCompare(x.atualizado)).slice(0, 60);
+}
+function publicarRascunho_(id) {
+  if (!rascunhos_().some(r => r.id === id)) return { ok: false, erro: 'Este documento não está mais marcado como rascunho.' };
+  const f = DriveApp.getFileById(id);
+  const novo = f.getName().replace(/^\s*\[\s*(rascunho|teste)\s*\]?\s*/i, '');
+  const pais = f.getParents();
+  if (pais.hasNext()) {
+    const ir = pais.next().getFilesByName(novo);
+    while (ir.hasNext()) { const o = ir.next(); if (o.getId() !== id && !o.isTrashed()) return { ok: false, erro: 'Já existe na pasta um documento chamado “' + novo + '”. Renomeie ou apague o antigo antes de publicar.' }; }
+  }
+  f.setName(novo);
+  agendarAtualizacaoPainel_();
+  return { ok: true, nome: novo };
+}
+const CHAVES_CONF_ = [
+  ['mensagem', 'mensagem da tela inicial', 'Mensagem da tela inicial', 'Faixa amarela na página inicial do app (em branco: sem faixa)'],
+  ['duvidas', 'caixa de duvidas', 'Caixa de dúvidas', 'Mostrar a caixa de dúvidas no app (Sim/Não)'],
+  ['duvPorDia', 'duvidas por aluno', 'Dúvidas por aluno por dia', 'Quantas dúvidas cada estudante pode enviar por dia (de 1 a 5)'],
+  ['avisoNovo', 'aviso de atividade nova', 'Aviso de atividade nova', 'Avisar no app quando sair atividade nova (Sim/Não)'],
+  ['vespera', 'lembrete na vespera', 'Lembrete na véspera', 'Horário do lembrete na véspera (ex.: 18:00)'],
+  ['dia', 'lembrete no dia', 'Lembrete no dia', 'Horário do lembrete no dia (ex.: 07:00)']
+];
+function confLer_() {
+  const c = lerConfig_();
+  const sm = SpreadsheetApp.openById(GEO.PLANILHA_MENSAGENS).getSheets()[0];
+  const v = sm.getDataRange().getDisplayValues();
+  const msgs = v.slice(1).map((l, i) => ({ linha: i + 2, tipo: String(l[0] || ''), texto: String(l[1] || ''), ativo: !String(l[2] || '').trim() || sim_(l[2]) })).filter(m => m.texto.trim());
+  return { ok: true, valores: { mensagem: c.mensagem || '', duvidas: c.duvidas !== false, duvPorDia: c.duvPorDia || 1, avisoNovo: c.avisoNovo !== false, vespera: c.lembreteVespera || '', dia: c.lembreteDia || '' },
+    mensagens: msgs, urlConfig: SpreadsheetApp.openById(GEO.PLANILHA_CONFIG).getUrl(), urlMensagens: sm.getParent().getUrl() };
+}
+function confSalvar_(b) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = SpreadsheetApp.openById(GEO.PLANILHA_CONFIG).getSheets()[0];
+    const v = sh.getDataRange().getDisplayValues();
+    const val = b.valores || {};
+    const fmt = (k, x) => (k === 'duvidas' || k === 'avisoNovo') ? (x ? 'Sim' : 'Não') : k === 'duvPorDia' ? String(Math.max(1, Math.min(5, parseInt(x, 10) || 1))) : String(x == null ? '' : x).replace(/^[=+\-@]/, "'$&").slice(0, 300);
+    CHAVES_CONF_.forEach(([k, chave, rotulo, desc]) => {
+      if (!(k in val)) return;
+      if ((k === 'vespera' || k === 'dia') && val[k] && !/^\d{1,2}:\d{2}$/.test(String(val[k]))) return;
+      const i = v.findIndex(l => semAcento_(l[0]).indexOf(chave) === 0);
+      if (i >= 0) sh.getRange(i + 1, 2).setValue(fmt(k, val[k]));
+      else sh.appendRow([rotulo, fmt(k, val[k]), desc]);
+    });
+    const sm = SpreadsheetApp.openById(GEO.PLANILHA_MENSAGENS).getSheets()[0];
+    [].concat(b.mensagens || []).forEach(m => {
+      const ln = parseInt(m.linha, 10);
+      if (!(ln >= 2 && ln <= sm.getLastRow())) return;
+      const txt = String(m.texto || '').trim().replace(/^[=+\-@]/, "'$&").slice(0, 300);
+      sm.getRange(ln, 2, 1, 2).setValues([[txt, m.ativo ? 'Sim' : 'Não']]);
+    });
+    [].concat(b.novas || []).forEach(m => {
+      const txt = String(m.texto || '').trim().replace(/^[=+\-@]/, "'$&").slice(0, 300);
+      if (txt) sm.appendRow([{ resumo: 'Resumo', atividade: 'Atividade', unidade: 'Unidade' }[m.tipo] || 'Resumo', txt, 'Sim']);
+    });
+  } finally { lock.releaseLock(); }
+  agendarAtualizacaoPainel_();
+  return { ok: true };
+}
+
 /** Atualiza o app logo depois de um aviso do painel (em ~20 s), sem esperar a rodada de 5 minutos. */
 function agendarAtualizacaoPainel_() {
   try {

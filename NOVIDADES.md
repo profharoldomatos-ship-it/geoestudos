@@ -8,6 +8,16 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.15.0 · 02/11/2026 · robô v22
+- Painel do professor reorganizado em botões por grupo: Comunicar (Avisos, Dúvidas), Turmas (Agenda, Prazos, Notas) e Conteúdo e app (Rascunhos, Ajustes), com selos do que pede ação.
+- Avisos: editar um aviso já publicado (texto, turmas, destaque, data do topo).
+- Agenda: marcar, editar e apagar datas nas agendas das turmas (entrega do caderno, atividade de fixação, aula de aprofundamento, avaliação, sem aula, outro aviso), com o título no padrão do robô.
+- Prazos: atividades da unidade em andamento com o prazo de cada turma; um toque abre a data já preenchida.
+- Notas: resultado das atividades avaliativas por turma (quem fez, nota, média, abaixo de 7 e quem falta).
+- Rascunhos: lista dos documentos com [rascunho] ou [teste] e botão Publicar.
+- Ajustes: mensagem da tela inicial, caixa de dúvidas, limite de dúvidas, aviso de atividade nova, horários dos lembretes e mensagens de incentivo.
+- Exige o robô v22.
+
 ## 1.14.0 · 02/11/2026 · robô v21
 - Painel do professor: “Dúvidas dos alunos”. As dúvidas chegam no próprio app (abas Sem resposta e Respondidas, com selo de novas). O professor responde e escolhe publicar para a turma, para o ano todo ou não publicar. O nome do aluno só aparece para o professor. A planilha de dúvidas continua como registro.
 - Exige o robô v21.
