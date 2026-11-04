@@ -1158,6 +1158,9 @@ body.m-escuro .pf-av-ic{background:#4A2320;color:#F5A59C}
 .pav-tg[aria-pressed="true"] i{background:var(--pen)}.pav-tg[aria-pressed="true"] i:after{left:21px}
 .pav-prev{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;padding:12px;background:var(--surface)}
 .pav-prev img{border-radius:9px;flex:none}.pav-prev b,.pav-prev .meta{display:block}
+.pf-tt{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:2px 0 4px}
+.pf-tt button{border:1.5px solid color-mix(in srgb,var(--yc) 45%,transparent);border-bottom-width:4px;border-bottom-color:var(--yc);border-radius:10px;padding:7px 0;background:var(--surface);color:var(--ink);font-family:var(--display);font-weight:700;font-size:1rem;cursor:pointer}
+.pf-tt button[aria-current]{background:var(--yc);border-color:var(--yc);color:#fff}
 .rasc-ban{display:flex;flex-direction:column;gap:10px;border:2px dashed #C99A1E;background:var(--hl-soft);border-radius:var(--r);padding:12px 14px;font-size:.92rem}
 .rasc-ban .btn{align-self:flex-start}
 .rasc-tag{display:inline-block;background:#FFE27A;color:#1E2430;border-radius:6px;padding:0 6px;font-size:.72rem;font-weight:700;letter-spacing:0;text-transform:none;margin-right:4px}
@@ -3000,6 +3003,10 @@ function profEditCap0(c,y,P){
   if(c.tema)return profEdit([['Editar a aula',docUrl(c.doc)],['Editar a atividade escrita',docUrl(c.docAtividade)],['Editar a atividade avaliativa',c.aval&&docUrl(c.aval.doc)],['Ver as notas',c.aval&&P.notas],['Pasta das aulas',pastaUnidade(y.ano,c.u,true)]]);
   return profEdit([['Editar o resumo',docUrl(c.doc)],['Editar a revisão rápida',docUrl(c.docRevisao)],['Pasta da unidade',pastaUnidade(y.ano,c.u)],['Link da atividade (Conteúdo)',c.atividade!==undefined&&P.conteudo]]);
 }
+/* Modo professor: troca rápida de turma nas abas Resumos, Atividades e Calendário */
+function profTurmas(){
+  return `<nav class="pf-tt" aria-label="Turma">${Object.values(YEARS).map(y=>y.turmas.map(t=>`<button data-pftt="${t}" style="--yc:${y.color}"${t===S.turma?' aria-current="true"':''}>${t}</button>`).join('')).join('')}</nav>`;
+}
 function profBarra(){
   return `<div class="profbar" role="region" aria-label="Modo professor"><span class="pb-t">${PROFIC}<b>Modo professor</b></span><span class="pb-b">${S.tab==='prof'?'':'<button data-go="prof">Painel</button>'}<button id="profSair">Sair</button></span></div>`;
 }
@@ -4037,6 +4044,7 @@ function render(){
   document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
   $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre,prof:vProf,guia:vGuia}[S.tab]();
   if(S.tab==='home'&&!S.cap){const d0=diaLista()[0],el=document.getElementById('dia');if(d0&&el&&el.open&&!diaVistos().includes(d0.id))setTimeout(()=>diaMarcar(d0.id),1500)}
+  if(PROF()&&!S.cap&&['resumos','atividades','calendario'].includes(S.tab)&&S.turma)$('#view').insertAdjacentHTML('afterbegin',profTurmas());
   if(PROF())$('#view').insertAdjacentHTML('afterbegin',profBarra());
   if(MINHA&&S.turma&&S.turma!==MINHA&&S.tab!=='home'&&S.tab!=='turma')$('#view').insertAdjacentHTML('afterbegin',`<div class="outra mini"><span>Vendo a <b>Turma ${esc(S.turma)}</b> · sua turma é a ${esc(MINHA)}</span><button class="link" data-turma="${esc(MINHA)}">Voltar</button></div>`);
   if(S.cap){loadAnn();paintResumo()}
@@ -4176,6 +4184,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#avisosOk')){marcarVisto(avisosNovos().map(a=>a.id));return render()}
   if(t.closest('#modeBtn'))return modeSheet();
   if(t.closest('#menuBtn'))return menuAbrir();
+  const pft=t.closest('[data-pftt]');if(pft){S.turma=pft.dataset.pftt;S.unit=null;store.set('turma',S.turma);render();return}
   const ptb=t.closest('[data-pt]');if(ptb)return ptAbrir(ptb.dataset.pt);
   if(t.closest('#pushTodas'))return ativarPush(TURMAS.concat(pushProf()||PROF()?['PROF']:[]));
   const lib=t.closest('[data-liberar]');if(lib){const c=capOf(capId(lib.dataset.liberar));if(c)liberarRascunho(c);return}
