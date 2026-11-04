@@ -1402,6 +1402,9 @@ const temasDe=(y,u)=>((y.units||{})[u]||{temas:[]}).temas||[];
 const pubs=y=>capsDe(y,y.atual).filter(c=>c.resumo);
 /* Unidades: só a unidade em andamento fica aberta para os alunos (o modo professor abre todas) */
 const PROF=()=>{const t=store.get('profTok',null);return !!(t&&t.token&&t.exp>Date.now())};
+/* No celular do professor não há "minha turma" nem celular compartilhado: ele vê todas as turmas */
+function profSemTurma(){if(MINHA||COMP){MINHA=null;COMP=false;store.set('minha',null);store.set('compartilhado',false)}}
+if(PROF())profSemTurma();
 const liberada=(n,y)=>{y=y||Y();return PROF()||+n===+y.atual};
 const LOCKIC='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const msgFechada=n=>`A Unidade ${n} está fechada. Só a unidade em andamento fica disponível.`;
@@ -2547,7 +2550,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.17.0',APP_DATA='2026-11-04';
+const APP_VERSAO='1.17.1',APP_DATA='2026-11-04';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3027,7 +3030,7 @@ function profEntrar(){
         b.disabled=false;b.textContent='Entrar';
         if(!j.ok)return err(j.erro||(j.anos?'O robô ainda não foi atualizado para o modo professor.':'Não foi possível entrar.'));
         store.set('profTok',{token:j.token,exp:j.expira});store.set('profPainel',j.painel||{});store.set('profPainelEm',Date.now());if(pushProf())avisarSW(PUSH.turmas);
-        close();toast('Modo professor ligado.');go('prof');carregarRascunhos(true);
+        profSemTurma();close();toast('Modo professor ligado.');go('prof');carregarRascunhos(true);
         if(pushOk()&&DATA&&DATA.push&&DATA.push.chave&&typeof Notification!=='undefined'&&Notification.permission==='granted')ativarPush(TURMAS.concat('PROF'));
       }catch(e){b.disabled=false;b.textContent='Entrar';err('Sem conexão com o robô. Tente de novo com internet.')}
     });
