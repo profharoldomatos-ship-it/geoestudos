@@ -8,6 +8,11 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.17.0 · 04/11/2026 · robô v23
+- Rascunhos que só o professor vê: aulas de aprofundamento (e atividade) e resumos com “[rascunho]” no nome aparecem no modo professor, com a etiqueta “Rascunho · só você vê”, para ditar e explicar em sala. O botão “Liberar para os alunos”, dentro da aula, tira a marca do nome no Drive e a publica. O texto dos rascunhos fica num arquivo privado e só chega ao celular com a senha do professor.
+- Modo professor: o celular passa a receber os avisos de todas as turmas (botão “Receber de todas as turmas” no painel); o app não pergunta mais “Você é da turma…?” nem mostra o modo de celular compartilhado.
+- Exige o robô v23.
+
 ## 1.16.0 · 02/11/2026
 - Página da unidade em três blocos: Para estudar (Resumos, Atividades de fixação, Aulas de aprofundamento, na cor do ano), Da turma (Próximas datas, Mural de avisos, Dúvidas, em azul) e Para você (Guia do estudante e Trocar de turma, discretos).
 - Nova seção “Atividades de fixação” na página da unidade, com enviadas e próximo prazo; novo passo no tour.

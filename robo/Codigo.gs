@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-02 · painel completo v22';
+const VERSAO_ROBO = '2026-11-04 · rascunhos só para o professor v23';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -82,6 +82,13 @@ function doGet(e) {
     let b = {};
     try { b = JSON.parse(p.profpainel); } catch (err) {}
     return ContentService.createTextOutput(JSON.stringify(painelAcao_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.profrasc !== undefined) {
+    // Rascunhos de resumos e aulas: só para o professor (não estão nos dados públicos)
+    if (!tokenValido_(String(p.profrasc))) return ContentService.createTextOutput(JSON.stringify({ ok: false, sair: true })).setMimeType(ContentService.MimeType.JSON);
+    const fr = arquivoRascunhos_();
+    const txtR = fr ? fr.getBlob().getDataAsString('UTF-8') : '{"itens":[]}';
+    return ContentService.createTextOutput('{"ok":true,' + txtR.trim().replace(/^\{/, '')).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.profduvida !== undefined) {
     // Painel do professor: ler e responder as dúvidas dos alunos
@@ -240,6 +247,7 @@ function atualizar() {
       const limite = new Date(Date.now() - 3 * 864e5).toISOString();
       dados.notificacoes = ((anterior && anterior.notificacoes) || []).filter(n => n.quando >= limite).concat(novas).slice(-120);
     } catch (err) { Logger.log('Avisos: ' + err); dados.notificacoes = (anterior && anterior.notificacoes) || []; }
+    try { salvarRascunhos_(docs.rascs, conteudo); } catch (err) { Logger.log('Rascunhos: ' + err); }
     const txt = JSON.stringify(dados);
     gravarDados_(txt);
     guardarCache_(txt);
@@ -396,6 +404,8 @@ function lerDocs_() {
   // Resultado: { caps: { '7': { 13: {id, nome, unidade, atualizado} } },
   //             temas: { '7': { 4: { 1: {aula: {...}, atividade: {...}} } } } }
   const docs = {}, temas = {}, revs = {}, avals = {};
+  // Rascunhos de resumos e aulas: não entram nos dados públicos; só o professor vê (profrasc)
+  const rascs = { caps: {}, temas: {} };
   const raiz = DriveApp.getFolderById(GEO.PASTA_APP);
   const anos = raiz.getFolders();
   while (anos.hasNext()) {
@@ -424,7 +434,11 @@ function lerDocs_() {
           rv[rn] = { id: f.getId(), atualizado: f.getLastUpdated().toISOString(), rascunho: rasc };
           continue;
         }
-        if (rasc) continue;
+        if (rasc) {
+          if (!/^(avalia[çc][ãa]o|atividade\s+avaliativa)\b/i.test(mc[2].trim()))
+            (rascs.caps[ano] = rascs.caps[ano] || {})[parseInt(mc[1], 10)] = { id: f.getId(), nome: mc[2].trim(), unidade: parseInt(mu[1], 10), atualizado: f.getLastUpdated().toISOString() };
+          continue;
+        }
         if (/^(avalia[çc][ãa]o|atividade\s+avaliativa)\b/i.test(mc[2].trim())) {
           // "14 Avaliação" ou "14 Atividade avaliativa": atividade que vale nota, do capítulo 14
           (avals[ano] = avals[ano] || {})[parseInt(mc[1], 10)] = { id: f.getId(), atualizado: f.getLastUpdated().toISOString() };
@@ -444,7 +458,8 @@ function lerDocs_() {
         while (tds.hasNext()) {
           const f = tds.next();
           let nome = f.getName();
-          if (/^\s*\[\s*rascunho/i.test(nome)) continue;
+          const rascT = /^\s*\[\s*rascunho/i.test(nome);
+          if (rascT) nome = nome.replace(/^\s*\[\s*rascunho\s*\]?\s*/i, '');
           // "[teste] 1 Avaliação": aparece só no celular do professor (link ?professor=1)
           const teste = /^\s*\[\s*teste\s*\]/i.test(nome);
           if (teste) nome = nome.replace(/^\s*\[\s*teste\s*\]\s*/i, '');
@@ -454,6 +469,13 @@ function lerDocs_() {
           const ehAval = /^(avalia[çc][ãa]o|atividade\s+avaliativa)\b/i.test(resto);
           if (teste && !ehAval) continue;
           const u = parseInt(mu[1], 10);
+          if (rascT) {
+            if (ehAval) continue;   // avaliação em prévia usa [teste]
+            const rt = ((((rascs.temas[ano] = rascs.temas[ano] || {})[u] = rascs.temas[ano][u] || {})[n] = rascs.temas[ano][u][n] || {}));
+            const infoR = { id: f.getId(), nome: resto, atualizado: f.getLastUpdated().toISOString() };
+            if (/^atividade\b/i.test(resto)) rt.atividade = infoR; else rt.aula = infoR;
+            continue;
+          }
           const t = (((temas[ano] = temas[ano] || {})[u] = temas[ano][u] || {})[n] = temas[ano][u][n] || {});
           const info = { id: f.getId(), nome: resto, atualizado: f.getLastUpdated().toISOString(), teste: teste };
           if (ehAval) t.aval = info;
@@ -462,7 +484,7 @@ function lerDocs_() {
       }
     }
   }
-  return { caps: docs, temas: temas, revs: revs, avals: avals };
+  return { caps: docs, temas: temas, revs: revs, avals: avals, rascs: rascs };
 }
 
 /**
@@ -884,6 +906,37 @@ function gravarDados_(txt) {
   const f = arquivoDados_();
   if (f) f.setContent(txt);
   else DriveApp.getFolderById(GEO.PASTA_APP).createFile(GEO.ARQUIVO_DADOS, txt, MimeType.PLAIN_TEXT);
+}
+/* Rascunhos: arquivo próprio, sem compartilhamento, lido só pelo robô e entregue com a senha do professor */
+function arquivoRascunhos_() {
+  const id = PropertiesService.getScriptProperties().getProperty('arquivoRascunhos');
+  if (id) { try { const f = DriveApp.getFileById(id); if (!f.isTrashed()) return f; } catch (e) { } }
+  return null;
+}
+function salvarRascunhos_(rascs, conteudo) {
+  let ant = {};
+  const f0 = arquivoRascunhos_();
+  if (f0) { try { (JSON.parse(f0.getBlob().getDataAsString('UTF-8')).itens || []).forEach(i => ant[i.doc + '|' + i.atualizado] = i.resumo); } catch (e) { } }
+  const texto = d => { const k = d.id + '|' + d.atualizado; if (ant[k] !== undefined) return ant[k]; try { return docParaTexto_(DocumentApp.openById(d.id)); } catch (e) { return ''; } };
+  const itens = [];
+  Object.keys(rascs.caps || {}).forEach(ano => Object.keys(rascs.caps[ano]).forEach(n => {
+    const d = rascs.caps[ano][n], sc = ((conteudo.caps || {})[ano] || {})[n];
+    itens.push({ ano: ano, tipo: 'cap', n: +n, unidade: sc ? sc.unidade : d.unidade, titulo: (sc && sc.titulo) || d.nome, doc: d.id, docs: [d.id], atualizado: d.atualizado, resumo: texto(d) });
+  }));
+  Object.keys(rascs.temas || {}).forEach(ano => Object.keys(rascs.temas[ano]).forEach(u => Object.keys(rascs.temas[ano][u]).forEach(n => {
+    const r = rascs.temas[ano][u][n];
+    const it = { ano: ano, tipo: 'tema', n: +n, unidade: +u, titulo: (r.aula || r.atividade).nome, docs: [] };
+    if (r.aula) { it.doc = r.aula.id; it.atualizado = r.aula.atualizado; it.resumo = texto(r.aula); it.docs.push(r.aula.id); }
+    if (r.atividade) { it.docAtividade = r.atividade.id; it.atividadeTexto = texto(r.atividade); it.docs.push(r.atividade.id); }
+    itens.push(it);
+  })));
+  const txt = JSON.stringify({ itens: itens, versao: new Date().toISOString() });
+  if (f0) f0.setContent(txt);
+  else {
+    // fica no Meu Drive (fora das pastas do app), sem compartilhamento
+    const f = DriveApp.createFile('GeoEstudos - rascunhos do professor (não apagar).json', txt, MimeType.PLAIN_TEXT);
+    PropertiesService.getScriptProperties().setProperty('arquivoRascunhos', f.getId());
+  }
 }
 const PEDACO_ = 40000;
 function guardarCache_(txt) {
