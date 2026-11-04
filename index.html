@@ -1158,6 +1158,9 @@ body.m-escuro .pf-av-ic{background:#4A2320;color:#F5A59C}
 .pav-tg[aria-pressed="true"] i{background:var(--pen)}.pav-tg[aria-pressed="true"] i:after{left:21px}
 .pav-prev{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;padding:12px;background:var(--surface)}
 .pav-prev img{border-radius:9px;flex:none}.pav-prev b,.pav-prev .meta{display:block}
+.sec-alerta{--sc:#B42B2B;--sc-on:#fff;box-shadow:0 0 0 3px color-mix(in srgb,#B42B2B 22%,transparent)}
+.sec-alerta .sec-ic svg{animation:recSino 2.4s ease-in-out infinite;transform-origin:50% 20%}
+@media (prefers-reduced-motion:reduce){.sec-alerta .sec-ic svg{animation:none}}
 .pf-tt{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:14px 0 6px}
 .pf-tt button{border:1.5px solid color-mix(in srgb,var(--yc) 45%,transparent);border-bottom-width:4px;border-bottom-color:var(--yc);border-radius:10px;padding:7px 0;background:var(--surface);color:var(--ink);font-family:var(--display);font-weight:700;font-size:1rem;cursor:pointer}
 .pf-tt button[aria-current]{background:var(--yc);border-color:var(--yc);color:#fff}
@@ -1835,7 +1838,8 @@ function muralFold(){
   const resumo=L.length?`${L.length} ${L.length===1?'aviso':'avisos'} · último em ${dm(L[0].data)}`:'Nenhum aviso por enquanto';
   const corpo=L.length?`<div class="mural">${L.slice(0,3).map(m=>muralItem(m,lid)).join('')}</div>${L.length>3?`<button class="btn btn-ghost sf-mais" id="muralTodos">Ver todos os avisos (${L.length})</button>`:''}`
     :`<div class="card empty-card"><b>Nenhum aviso por enquanto</b><span class="meta">Quando o professor publicar um recado para a turma ${esc(S.turma)}, ele aparece aqui.</span></div>`;
-  return secFold('mural','Mural de avisos','turma','mega',resumo,pe+corpo,nov?`<span class="sf-badge">${nov} ${nov===1?'novo':'novos'}</span>`:'');
+  const nv=L.find(m=>!lid.has(m.id));
+  return secFold('mural','Mural de avisos',nov?'alerta':'turma','mega',nov?`Novo: ${esc(nv.titulo)}`:resumo,pe+corpo,nov?`<span class="sf-badge">${nov} ${nov===1?'novo':'novos'}</span>`:'');
 }
 function ttsDica(){
   const n=store.get('ttsDica',0);const semPT=!vozPT()||!/^pt[-_]BR/i.test((vozPT()||{}).lang||'');
