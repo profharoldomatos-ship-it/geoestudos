@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.18.0 · 04/11/2026
+- Modo professor: botões das seis turmas no topo de Resumos, Atividades e Calendário, para trocar de turma sem sair da aba.
+
 ## 1.17.1 · 04/11/2026
 - Modo professor: o celular do professor deixa de ter “minha turma” (somem as marcas “Minha turma”/“Minha” e a cor fixa da barra) e não abre mais direto numa turma.
 
