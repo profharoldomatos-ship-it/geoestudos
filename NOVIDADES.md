@@ -8,6 +8,9 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## Robô v24 · 04/11/2026
+- Correção: avisos, dúvidas, atividades avaliativas e inscrições de avisos não esperam mais a atualização do robô terminar. Antes, durante uma atualização longa, o envio podia falhar com “Tempo limite do bloqueio”.
+
 ## 1.18.0 · 04/11/2026
 - Modo professor: botões das seis turmas no topo de Resumos, Atividades e Calendário, para trocar de turma sem sair da aba.
 

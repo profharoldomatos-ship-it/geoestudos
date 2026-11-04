@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-04 · rascunhos só para o professor v23';
+const VERSAO_ROBO = '2026-11-04 · gravação sem esperar a atualização v24';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -207,8 +207,16 @@ function aoMudarAlgo() {
 }
 
 function atualizar() {
+  // A atualização pode levar minutos (Docs, PDFs, agendas). Ela NÃO segura a trava do robô durante todo esse tempo:
+  // marca "atualizando" numa propriedade, para que avisos, dúvidas, atividades e inscrições continuem sendo gravados.
+  const props = PropertiesService.getScriptProperties();
   const lock = LockService.getScriptLock();
-  if (!lock.tryLock(30000)) { Logger.log('Outra atualização já está em andamento.'); return null; }
+  if (!lock.tryLock(10000)) { Logger.log('Robô ocupado; a atualização fica para a próxima rodada.'); return null; }
+  try {
+    const em = parseInt(props.getProperty('atualizandoEm') || '0', 10);
+    if (Date.now() - em < 6 * 60e3) { Logger.log('Outra atualização já está em andamento.'); return null; }
+    props.setProperty('atualizandoEm', String(Date.now()));
+  } finally { lock.releaseLock(); }
   try {
     try { guardarSenhaProfessor_(); } catch (e) { Logger.log('Senha do professor: ' + e); }
     const anterior = lerDadosAnteriores_();
@@ -259,7 +267,7 @@ function atualizar() {
     try { lembretesProf_(conf); } catch (err) { Logger.log('Agenda do professor: ' + err); }
     return dados;
   } finally {
-    lock.releaseLock();
+    props.deleteProperty('atualizandoEm');
   }
 }
 
