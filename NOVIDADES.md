@@ -8,6 +8,18 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.19.0 · 05/11/2026 (com o robô v25)
+
+- **Liberar para os alunos** (aula de aprofundamento em rascunho): se a aula tiver atividade avaliativa em [rascunho] ou [teste], a mesma janela pergunta o destino dela: *só para eu testar*, *para os alunos* (com a data do prazo, que o robô escreve no Doc) ou *deixar como está*.
+- Aluno não vê mais o cartão vazio "Aula ainda não publicada": a aula de aprofundamento só aparece quando tiver texto ou atividade. No modo professor, o cartão continua.
+- Atividade da aula de aprofundamento: o texto "Aguarde" ficou alinhado com o texto de cima.
+- Roteiros do painel e manual (cap. 7) atualizados.
+
+## Robô v25 · 05/11/2026
+
+- Lê "[rascunho] N Avaliação" (continua fora do app) e informa só ao celular do professor quantas questões ela tem.
+- Nova ação do painel `rasc.aval`: vira [teste] ou libera para os alunos gravando "Prazo: dd/mm/aaaa" no Doc.
+
 ## 1.18.1 · 05/11/2026
 
 - Painel do professor › roteiros: **Aula de aprofundamento** ganhou dois passos (escrever como [rascunho] e liberar pelo botão *Liberar para os alunos*, que não libera a avaliação).

@@ -1162,6 +1162,12 @@ body.m-escuro .pf-av-ic{background:#4A2320;color:#F5A59C}
 .pf-tt button{border:1.5px solid color-mix(in srgb,var(--yc) 45%,transparent);border-bottom-width:4px;border-bottom-color:var(--yc);border-radius:10px;padding:7px 0;background:var(--surface);color:var(--ink);font-family:var(--display);font-weight:700;font-size:1rem;cursor:pointer}
 .pf-tt button[aria-current]{background:var(--yc);border-color:var(--yc);color:#fff}
 .rasc-ban{display:flex;flex-direction:column;gap:10px;border:2px dashed #C99A1E;background:var(--hl-soft);border-radius:var(--r);padding:12px 14px;font-size:.92rem}
+.lb-av{border:1px solid var(--line);border-radius:14px;padding:12px;margin:0;display:flex;flex-direction:column;gap:8px;background:color-mix(in srgb,var(--year) 6%,var(--surface))}
+.lb-avt{padding:0;margin:0 0 2px;font-size:.92rem;color:var(--ink)}.lb-avi{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--year);color:#fff;vertical-align:-4px;margin-right:4px}.lb-avi svg{width:12px;height:12px}
+.lb-op{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);cursor:pointer}
+.lb-op:has(input:checked){border-color:var(--year);box-shadow:0 0 0 2px color-mix(in srgb,var(--year) 25%,transparent)}
+.lb-op>input{margin-top:3px;accent-color:var(--year);width:18px;height:18px;flex:none}.lb-op>span{display:flex;flex-direction:column;gap:2px}.lb-op small{color:var(--muted);font-size:.84rem}
+.lb-pz input{font:inherit;font-weight:700;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px 6px}
 .rasc-ban .btn{align-self:flex-start}
 .rasc-tag{display:inline-block;background:#FFE27A;color:#1E2430;border-radius:6px;padding:0 6px;font-size:.72rem;font-weight:700;letter-spacing:0;text-transform:none;margin-right:4px}
 .pa-bts{display:flex;gap:8px;flex-wrap:wrap}
@@ -1356,8 +1362,9 @@ function mesclarRascunhos(){
     if(!u){u={n:r.unidade,titulo:'Unidade '+r.unidade,caps:[],temas:[]};y.units[r.unidade]=u;y.list=y.list.concat(u).sort((a,b)=>a.n-b.n)}
     if(r.tipo==='tema'){
       const ex=(u.temas||[]).find(t=>t.n===r.n);
-      if(ex){if(!ex.resumo&&r.resumo){ex.resumo=r.resumo;ex.doc=r.doc;ex.rascunho=true;ex.rascDocs=r.docs}if(!ex.atividadeTexto&&r.atividadeTexto){ex.atividadeTexto=r.atividadeTexto;ex.docAtividade=r.docAtividade;ex.rascunho=true;ex.rascDocs=(ex.rascDocs||[]).concat(r.docAtividade)}return}
-      u.temas=(u.temas||[]).concat({n:r.n,titulo:r.titulo,resumo:r.resumo||'',atividadeTexto:r.atividadeTexto||'',doc:r.doc,docAtividade:r.docAtividade,rascunho:true,rascDocs:r.docs}).sort((a,b)=>a.n-b.n);
+      if(r.aval&&!(r.resumo||r.atividadeTexto)){if(ex)ex.rascAval=r.aval;return}
+      if(ex){if(r.aval)ex.rascAval=r.aval;if(!ex.resumo&&r.resumo){ex.resumo=r.resumo;ex.doc=r.doc;ex.rascunho=true;ex.rascDocs=r.docs}if(!ex.atividadeTexto&&r.atividadeTexto){ex.atividadeTexto=r.atividadeTexto;ex.docAtividade=r.docAtividade;ex.rascunho=true;ex.rascDocs=(ex.rascDocs||[]).concat(r.docAtividade)}return}
+      u.temas=(u.temas||[]).concat({n:r.n,titulo:r.titulo,resumo:r.resumo||'',atividadeTexto:r.atividadeTexto||'',doc:r.doc,docAtividade:r.docAtividade,rascunho:true,rascDocs:r.docs,rascAval:r.aval||null}).sort((a,b)=>a.n-b.n);
     }else{
       const ex=(u.caps||[]).find(c=>c.n===r.n);
       if(ex){if(!ex.resumo){ex.resumo=r.resumo;ex.doc=r.doc;ex.rascunho=true;ex.rascDocs=r.docs}return}
@@ -1373,12 +1380,31 @@ async function carregarRascunhos(forcar){
 }
 function liberarRascunho(c){
   const docs=(c.rascDocs||[c.doc]).filter(Boolean),nome=(c.tema?'Aula de aprofundamento '+c.n:'Capítulo '+c.n)+' – '+c.titulo;
+  /* v1.19: a avaliação da aula (em [rascunho] ou [teste]) pode ser liberada no mesmo toque */
+  const av=c.tema?(c.rascAval?{doc:c.rascAval.doc,rasc:true,total:c.rascAval.total,qtd:c.rascAval.qtd,prazo:c.rascAval.prazo}:c.aval&&c.aval.teste?{doc:c.aval.doc,rasc:false,total:(c.aval.qs||[]).length,qtd:c.aval.qtd,prazo:c.aval.prazo}:null):null;
+  const d14=new Date(Date.now()+14*864e5),iso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  const pz=av&&av.prazo&&av.prazo>=HOJE?av.prazo:iso(d14);
+  const op=(v,t,sub,chk)=>`<label class="lb-op"><input type="radio" name="lbav" value="${v}"${chk?' checked':''}><span><b>${t}</b><small>${sub}</small></span></label>`;
+  const avHtml=!av?'':`<div class="lb-av" role="radiogroup" aria-labelledby="lbAvT"><p class="lb-avt" id="lbAvT"><span class="lb-avi" aria-hidden="true">${CHECK}</span> Esta aula tem uma <b>atividade avaliativa</b> ${av.rasc?'em rascunho':'em teste'}${av.total?` (${av.total} ${av.total===1?'questão':'questões'})`:''}.</p>
+    ${av.rasc?op('teste','Liberar só para eu testar','Vira [teste]: aparece só no modo professor.',true):''}
+    ${op('alunos','Liberar para os alunos',`<span class="lb-pz">Prazo: <input type="date" id="lbPrazo" value="${pz}" min="${HOJE}" aria-label="Prazo da avaliação"></span>${av.qtd?` · ${av.qtd} questões sorteadas por aluno`:''}`,false)}
+    ${op('manter',av.rasc?'Deixar em rascunho':'Manter em teste',av.rasc?'A avaliação continua fora do app.':'Continua só no modo professor.',!av.rasc)}</div>`;
   sheet(`<h2>Liberar para os alunos?</h2><p style="margin:0"><b>${esc(nome)}</b></p><p class="meta" style="margin:0">${c.tema?'A aula'+(c.atividadeTexto?' e a atividade':''):'O resumo'} passa${c.tema&&c.atividadeTexto?'m':''} a aparecer para as turmas do ${esc(Y().label)} em 1 a 3 minutos. No Drive, a marca “[rascunho]” sai do nome do arquivo.</p>
+    ${avHtml}
     <div class="pav-bts"><button class="btn btn-primary" id="lbSim">Liberar agora</button><button class="btn btn-ghost" data-close>Agora não</button></div>`,
-  (o,close)=>{const b=o.querySelector('#lbSim');b.onclick=async()=>{b.disabled=true;b.textContent='Liberando…';
-    try{for(const id of docs){const j=await ppChamar({acao:'rasc.publicar',id});if(!j.ok){b.disabled=false;b.textContent='Liberar agora';close();return toast(j.erro||'Não foi possível liberar.')}}
-      close();RASCP.itens=(RASCP.itens||[]).filter(r=>!docs.includes(r.doc));(Y().list||[]).forEach(u=>(c.tema?u.temas||[]:u.caps||[]).forEach(x=>{if(x.n===c.n&&x.rascunho)x.rascunho=false}));render();toast('Liberado. Aparece para os alunos em 1 a 3 minutos.');setTimeout(()=>{carregar();carregarRascunhos(true)},150e3);
-    }catch(e){b.disabled=false;b.textContent='Liberar agora';toast('Sem conexão. Tente de novo com internet.')}}});
+  (o,close)=>{const b=o.querySelector('#lbSim'),pzI=o.querySelector('#lbPrazo');
+    if(pzI)pzI.addEventListener('focus',()=>{const r=o.querySelector('input[name=lbav][value=alunos]');if(r)r.checked=true});
+    const volta=()=>{b.disabled=false;b.textContent='Liberar agora'};
+    b.onclick=async()=>{
+    const modo=av?(o.querySelector('input[name=lbav]:checked')||{}).value||'manter':'manter',prazo=pzI?pzI.value:'';
+    if(modo==='alunos'&&(!prazo||prazo<HOJE)){toast('Escolha a data do prazo (hoje ou depois).');pzI&&pzI.focus();return}
+    b.disabled=true;b.textContent='Liberando…';
+    try{for(const id of docs){const j=await ppChamar({acao:'rasc.publicar',id});if(!j.ok){volta();close();return toast(j.erro||'Não foi possível liberar.')}}
+      let msgAv='';
+      if(av&&modo!=='manter'){const j=await ppChamar({acao:'rasc.aval',id:av.doc,modo,prazo});
+        msgAv=j.ok?(modo==='teste'?' A avaliação ficou em teste: só você vê.':` A avaliação sai para os alunos, com prazo em ${dm(prazo)}.`):' A aula saiu, mas a avaliação não: '+(j.erro||'tente pelo Painel › Rascunhos.')}
+      close();RASCP.itens=(RASCP.itens||[]).filter(r=>!docs.includes(r.doc));(Y().list||[]).forEach(u=>(c.tema?u.temas||[]:u.caps||[]).forEach(x=>{if(x.n===c.n&&x.rascunho)x.rascunho=false}));render();toast('Liberado. Aparece para os alunos em 1 a 3 minutos.'+msgAv);setTimeout(()=>{carregar();carregarRascunhos(true)},150e3);
+    }catch(e){volta();toast('Sem conexão. Tente de novo com internet.')}}});
 }
 aplicarDados();
 
@@ -1401,7 +1427,9 @@ const anoT=()=>T2A[S.turma]||(S.turma||'7')[0];
 const capsDe=(y,u)=>((y.units||{})[u]||{caps:[]}).caps;
 function capOf(n,y){y=y||Y();const tt=String(n)[0]==='t',k=tt?+String(n).slice(1):+n;for(const u of (y.list||[])){const c=(tt?(u.temas||[]):u.caps).find(x=>x.n==k);if(c)return Object.assign({u:u.n,tema:tt,id:tt?'t'+c.n:c.n},c)}return null}
 const capId=v=>/^t\d+$/.test(String(v))?String(v):+v;
-const temasDe=(y,u)=>((y.units||{})[u]||{temas:[]}).temas||[];
+/* Aula ainda não publicada (ex.: avaliação em [teste] com a aula em rascunho): o aluno não vê o item vazio */
+const temaVisivel=t=>!!(t.resumo||temAtv(t)||PROF());
+const temasDe=(y,u)=>(((y.units||{})[u]||{temas:[]}).temas||[]).filter(temaVisivel);
 const pubs=y=>capsDe(y,y.atual).filter(c=>c.resumo);
 /* Unidades: só a unidade em andamento fica aberta para os alunos (o modo professor abre todas) */
 const PROF=()=>{const t=store.get('profTok',null);return !!(t&&t.token&&t.exp>Date.now())};
@@ -2553,7 +2581,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.18.1',APP_DATA='2026-11-05';
+const APP_VERSAO='1.19.0',APP_DATA='2026-11-05';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2879,7 +2907,7 @@ function vResumos(){
       <div class="unit-head"><span class="eyebrow">Unidade ${u} · ${est}</span><b class="unit-t">${esc(un.titulo)}</b></div>
       <div class="ul-sec">${SECIC.livro}<b>Resumos dos capítulos</b><span>${un.caps.filter(c=>c.resumo).length} de ${un.caps.length}</span></div>
       ${un.caps.map(capRow).join('')||'<div class="cap off"><span class="t meta">Nenhum capítulo cadastrado.</span></div>'}
-      ${(un.temas||[]).length?`<div class="ul-sec tt-sec">${SECIC.globo}<b>Aulas de aprofundamento</b><span>valem ponto</span></div>${un.temas.map(temaRow).join('')}`:''}
+      ${(un.temas||[]).filter(temaVisivel).length?`<div class="ul-sec tt-sec">${SECIC.globo}<b>Aulas de aprofundamento</b><span>valem ponto</span></div>${un.temas.filter(temaVisivel).map(temaRow).join('')}`:''}
       ${temPub?`<div class="offnote">${CHECK} Os resumos ficam guardados no celular para ler sem internet.</div>`:''}
     </div>
     ${temPub?'':`<p class="meta" style="margin:0">Os resumos desta unidade aparecem aqui quando o professor publicá-los.</p>`}
@@ -2966,7 +2994,7 @@ function vTema(n,c){
       ${c.pdfAtv?`<div class="atv-pdf"><span class="pdf-ic" aria-hidden="true">PDF</span><span class="ap-t"><b>Atividade em PDF</b><span class="meta">Para imprimir e responder à mão, se o professor pedir.</span></span><span class="ap-b"><a class="btn btn-ghost" href="${esc(c.pdfAtv)}" target="_blank" rel="noopener">${PDF_DL}Abrir</a><button class="btn btn-ghost" data-sharepdf="atv">${PDF_SH}Enviar</button></span></div>`:''}
       ${c.atividade?`<a class="btn act-go" href="${esc(c.atividade)}" target="_blank" rel="noopener">${c.atividadeTexto?'Responder no formulário':'Fazer a atividade'}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`:''}
       ${temAtv(c)?`<button class="copy-btn${sent?' on':''}" id="sentBtn" aria-pressed="${sent}">${sent?CHECK+' Atividade feita':'Já fiz esta atividade'}</button><span class="meta">${c.atividade?'Depois de enviar o formulário, volte aqui e marque.':'Siga as orientações do professor para a entrega e marque aqui quando terminar.'}</span>`
-      :`<p class="meta" style="margin:0"><b>Aguarde:</b> a atividade desta aula será publicada em breve. Você recebe um aviso quando ela sair.</p>`}
+      :`<p class="meta" style="margin-block:0"><b>Aguarde:</b> a atividade desta aula será publicada em breve. Você recebe um aviso quando ela sair.</p>`}
     </div>`:''}
     ${duvidaCard()}
   </article>`;
@@ -3064,9 +3092,9 @@ async function profAtualizar(avisar){
 const ROTEIROS=[
   ['Publicar um resumo',4,['Na pasta da unidade, crie um Google Doc com o número e o título do capítulo, por exemplo: 14 Região Norte.','Para escrever sem publicar, comece o nome com [rascunho].','Use os estilos de título (Formatar › Estilos de parágrafo) nas seções: eles viram os títulos no app e as telas do modo apresentação.','Tire o [rascunho] do nome. Em até 5 minutos o resumo e o PDF aparecem no app.'],P=>[['Planilha de Conteúdo (capítulos)',P.conteudo]]],
   ['Atividade de fixação (formulário)',6,['Crie o formulário no Google Formulários, com perguntas de nome completo e turma.','Toque em Enviar › ícone de link e copie o endereço.','Cole na planilha Conteúdo › Capítulos, coluna Atividade, na linha do capítulo.','Marque o prazo na agenda de cada turma: Atividade de fixação · Cap. 14.'],P=>[['Planilha de Conteúdo',P.conteudo],['Agendas',P.agendaGeral]]],
-  ['Aula de aprofundamento',7,['Na subpasta das aulas de aprofundamento da unidade, crie o Doc com o número e o título: 1 Título da aula.','Atividade escrita no próprio app: Doc 1 Atividade. Por formulário: link na aba Temas Transversais da planilha de Conteúdo.','Prazo na agenda: Aula de aprofundamento 1 · prazo.','Para escrever sem publicar, comece o nome com [rascunho]: a aula aparece só no modo professor, com a etiqueta “Rascunho · só você vê”.','Para publicar, abra a aula no app e toque em Liberar para os alunos, ou tire o [rascunho] do nome. Esse botão não libera a atividade avaliativa.'],P=>[['Planilha de Conteúdo',P.conteudo]]],
+  ['Aula de aprofundamento',7,['Na subpasta das aulas de aprofundamento da unidade, crie o Doc com o número e o título: 1 Título da aula.','Atividade escrita no próprio app: Doc 1 Atividade. Por formulário: link na aba Temas Transversais da planilha de Conteúdo.','Prazo na agenda: Aula de aprofundamento 1 · prazo.','Para escrever sem publicar, comece o nome com [rascunho]: a aula aparece só no modo professor, com a etiqueta “Rascunho · só você vê”.','Para publicar, abra a aula no app e toque em Liberar para os alunos, ou tire o [rascunho] do nome. Se a aula tiver atividade avaliativa, a mesma janela pergunta se ela fica para você testar, sai para os alunos com prazo ou continua como está.'],P=>[['Planilha de Conteúdo',P.conteudo]]],
   ['Revisão rápida (não vale nota)',8,['Ao lado do resumo, crie o Doc 14 Revisão.','Cada pergunta: enunciado, A) a D), linha Resposta: e, se quiser, Explicação:.','Até 12 perguntas; o app sorteia 6 a cada vez.','Pode pedir ao Claude para escrever as perguntas a partir do resumo.','Com o nome [rascunho] 14 Revisão, a revisão aparece só no modo professor: teste no app e, quando estiver boa, apague o [rascunho] do nome.'],P=>[]],
-  ['Atividade avaliativa (vale nota)',9,['Enquanto a aula for rascunho, crie [rascunho] 1 Avaliação, com 20 questões (A a D e Resposta:). Assim ela fica fora do app.','Depois de liberar a aula, troque [rascunho] por [teste] para testar no modo professor.','Com o modo professor ligado, abra a aula no app e faça a atividade para testar: os envios vão para a aba (teste).','Para liberar aos alunos: acrescente Prazo: dd/mm/aaaa e tire o [teste] do nome, ou publique em Painel › Rascunhos.','Confira a lista de alunos (aba Alunos) e veja as notas na planilha de notas.'],P=>[['Planilha de notas e alunos',P.notas]]],
+  ['Atividade avaliativa (vale nota)',9,['Enquanto a aula for rascunho, crie [rascunho] 1 Avaliação, com 20 questões (A a D e Resposta:). Assim ela fica fora do app.','Para testar: ao liberar a aula, escolha Liberar só para eu testar (ou troque [rascunho] por [teste] no nome).','Com o modo professor ligado, abra a aula no app e faça a atividade para testar: os envios vão para a aba (teste).','Para liberar aos alunos: escolha Liberar para os alunos e a data do prazo na janela da aula; ou acrescente Prazo: dd/mm/aaaa e tire o [teste] do nome; ou publique em Painel › Rascunhos.','Confira a lista de alunos (aba Alunos) e veja as notas na planilha de notas.'],P=>[['Planilha de notas e alunos',P.notas]]],
   ['Datas na agenda',10,['Use a agenda da turma (Geografia 71, 72…).','Títulos reconhecidos: Entrega do caderno · Cap. 14, Atividade de fixação · Cap. 14, Aula de aprofundamento 1 · prazo, Avaliação…','O primeiro link da descrição vira botão no app.'],P=>[['Abrir a Agenda',P.agendaGeral]]],
   ['Aviso no mural',11,['Planilha de Configurações › aba Mural de avisos: uma linha por aviso.','Preencha título, mensagem, Para quem (anos, turmas ou todas) e destaque.','Notificação no celular: Sim ou Não.','Por último, Publicar? = Sim. A coluna Situação diz o que falta.'],P=>[['Planilha de Configurações e Mural',P.config]]],
   ['Conteúdo Geográfico do Dia',20,['Planilha de Configurações › aba Conteúdo do Dia: uma linha por postagem.','Preencha o título, um texto breve e/ou o link da mídia (YouTube, imagem, arquivo do Drive, site). A fonte é opcional.','Por último, Publicar? = Sim. Em até 5 minutos aparece na página inicial e todas as turmas recebem a notificação.','A aba guarda o inventário: data de publicação, situação e quando a notificação saiu. Não apague linhas antigas.'],P=>[['Aba Conteúdo do Dia',P.dia||P.config]]],

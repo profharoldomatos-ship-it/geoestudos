@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-04 · gravação sem esperar a atualização v24';
+const VERSAO_ROBO = '2026-11-05 · liberar a avaliação junto com a aula v25';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -478,10 +478,11 @@ function lerDocs_() {
           if (teste && !ehAval) continue;
           const u = parseInt(mu[1], 10);
           if (rascT) {
-            if (ehAval) continue;   // avaliação em prévia usa [teste]
             const rt = ((((rascs.temas[ano] = rascs.temas[ano] || {})[u] = rascs.temas[ano][u] || {})[n] = rascs.temas[ano][u][n] || {}));
             const infoR = { id: f.getId(), nome: resto, atualizado: f.getLastUpdated().toISOString() };
-            if (/^atividade\b/i.test(resto)) rt.atividade = infoR; else rt.aula = infoR;
+            // "[rascunho] 1 Avaliação": fica fora do app; só o botão Liberar do professor fica sabendo dela (v25)
+            if (ehAval) rt.aval = infoR;
+            else if (/^atividade\b/i.test(resto)) rt.atividade = infoR; else rt.aula = infoR;
             continue;
           }
           const t = (((temas[ano] = temas[ano] || {})[u] = temas[ano][u] || {})[n] = temas[ano][u][n] || {});
@@ -933,9 +934,15 @@ function salvarRascunhos_(rascs, conteudo) {
   }));
   Object.keys(rascs.temas || {}).forEach(ano => Object.keys(rascs.temas[ano]).forEach(u => Object.keys(rascs.temas[ano][u]).forEach(n => {
     const r = rascs.temas[ano][u][n];
-    const it = { ano: ano, tipo: 'tema', n: +n, unidade: +u, titulo: (r.aula || r.atividade).nome, docs: [] };
+    const it = { ano: ano, tipo: 'tema', n: +n, unidade: +u, titulo: (r.aula || r.atividade || r.aval).nome, docs: [] };
     if (r.aula) { it.doc = r.aula.id; it.atualizado = r.aula.atualizado; it.resumo = texto(r.aula); it.docs.push(r.aula.id); }
     if (r.atividade) { it.docAtividade = r.atividade.id; it.atividadeTexto = texto(r.atividade); it.docs.push(r.atividade.id); }
+    if (r.aval) {
+      // só o resumo da avaliação (quantas questões, prazo): as questões e o gabarito não saem daqui
+      try { const lido = lerAvaliacao_(DocumentApp.openById(r.aval.id).getBody().getText()); it.aval = { doc: r.aval.id, total: lido.perguntas.length, qtd: Math.min(lido.qtd, lido.perguntas.length), prazo: lido.prazo }; }
+      catch (e) { it.aval = { doc: r.aval.id, total: 0, qtd: 0, prazo: '' }; }
+    }
+    if (!r.aula && !r.atividade && !r.aval) return;
     itens.push(it);
   })));
   const txt = JSON.stringify({ itens: itens, versao: new Date().toISOString() });
@@ -1472,6 +1479,7 @@ function painelAcao_(b) {
     if (a === 'notas') return notasPainel_(b);
     if (a === 'rasc.lista') return { ok: true, lista: rascunhos_() };
     if (a === 'rasc.publicar') return publicarRascunho_(String(b.id || ''));
+    if (a === 'rasc.aval') return liberarAvaliacao_(String(b.id || ''), String(b.modo || ''), String(b.prazo || ''));
     if (a === 'conf.ler') return confLer_();
     if (a === 'conf.salvar') return confSalvar_(b);
     return { ok: false, erro: 'Ação desconhecida.' };
@@ -1575,6 +1583,34 @@ function publicarRascunho_(id) {
   f.setName(novo);
   agendarAtualizacaoPainel_();
   return { ok: true, nome: novo };
+}
+/**
+ * v25: botão "Liberar para os alunos" da aula também decide o destino da avaliação.
+ *   modo 'teste'  → "[teste] N Avaliação" (só no modo professor)
+ *   modo 'alunos' → grava "Prazo: dd/mm/aaaa" no Doc e tira a marca do nome
+ */
+function liberarAvaliacao_(id, modo, prazo) {
+  if (!rascunhos_().some(r => r.id === id)) return { ok: false, erro: 'A avaliação não está mais marcada como rascunho ou teste.' };
+  const f = DriveApp.getFileById(id);
+  const base = f.getName().replace(/^\s*\[\s*(rascunho|teste)\s*\]?\s*/i, '');
+  if (modo === 'teste') { f.setName('[teste] ' + base); agendarAtualizacaoPainel_(); return { ok: true, nome: f.getName() }; }
+  if (modo !== 'alunos') return { ok: false, erro: 'Escolha o que fazer com a avaliação.' };
+  const m = prazo.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return { ok: false, erro: 'Escolha a data do prazo.' };
+  const pais = f.getParents();
+  if (pais.hasNext()) {
+    const ir = pais.next().getFilesByName(base);
+    while (ir.hasNext()) { const o = ir.next(); if (o.getId() !== id && !o.isTrashed()) return { ok: false, erro: 'Já existe na pasta um documento chamado “' + base + '”. Renomeie ou apague o antigo antes de liberar.' }; }
+  }
+  const linha = 'Prazo: ' + m[3] + '/' + m[2] + '/' + m[1];
+  const corpo = DocumentApp.openById(id).getBody();
+  const ps = corpo.getParagraphs();
+  let feito = false;
+  for (let i = 0; i < ps.length && !feito; i++) if (/^\s*prazo[^:]*:/i.test(ps[i].getText())) { ps[i].setText(linha); feito = true; }
+  if (!feito) corpo.insertParagraph(0, linha);
+  f.setName(base);
+  agendarAtualizacaoPainel_();
+  return { ok: true, nome: base, prazo: linha };
 }
 const CHAVES_CONF_ = [
   ['mensagem', 'mensagem da tela inicial', 'Mensagem da tela inicial', 'Faixa amarela na página inicial do app (em branco: sem faixa)'],
