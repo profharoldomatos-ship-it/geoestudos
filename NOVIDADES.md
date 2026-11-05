@@ -8,6 +8,11 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.18.1 · 05/11/2026
+
+- Painel do professor › roteiros: **Aula de aprofundamento** ganhou dois passos (escrever como [rascunho] e liberar pelo botão *Liberar para os alunos*, que não libera a avaliação).
+- **Atividade avaliativa (vale nota)**: novo fluxo — [rascunho] enquanto a aula for rascunho, [teste] depois de liberar a aula, e liberar com *Prazo:* tirando o [teste] ou por Painel › Rascunhos.
+
 ## Robô v24 · 04/11/2026
 - Correção: avisos, dúvidas, atividades avaliativas e inscrições de avisos não esperam mais a atualização do robô terminar. Antes, durante uma atualização longa, o envio podia falhar com “Tempo limite do bloqueio”.
 
