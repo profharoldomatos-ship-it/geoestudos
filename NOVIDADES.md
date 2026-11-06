@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.20.1 · 06/11/2026
+
+- Correção: o cartão **Continuar de onde parei** aparecia dentro de qualquer unidade (ex.: a aula de aprofundamento da Unidade 4 surgia na Unidade 2). Agora ele só aparece na unidade a que pertence o texto.
+
 ## 1.20.0 · 06/11/2026 (com o robô v26)
 
 - **O que cada turma vê:** o professor oculta ou exibe conteúdo por turma, sem apagar nada e sem mexer no Drive.

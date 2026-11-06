@@ -1987,9 +1987,11 @@ function salvarProgresso(){
   const pct=fim?100:Math.round(i/bs.length*100);
   const m=store.get('ultimo',{});m[anoT()]={cap:S.cap,b:+bs[i].dataset.b,pct,t:Date.now()};store.set('ultimo',m);
 }
-function continuarCard(){
+/* "Continuar de onde parei": só dentro da unidade a que pertence o texto (un = unidade aberta na tela) */
+function continuarCard(un){
   const u=(store.get('ultimo',{})||{})[anoT()];if(!u)return '';
   const c=capOf(u.cap);if(!c||!c.resumo||!liberada(c.u))return '';
+  if(un!=null&&+c.u!==+un)return '';
   if(u.pct>=97)return '';
   const dias=Math.floor((Date.now()-u.t)/864e5),quando=dias<=0?'hoje':dias===1?'ontem':'há '+dias+' dias';
   return `<button class="card contbtn" data-continuar="1"><span class="cont-ic" aria-hidden="true">${SECIC.livro}</span><span class="cont-tx"><span class="eyebrow">Continuar de onde parei</span><b>${c.tema?'Aprofundamento '+c.n:'Cap. '+c.n} · ${esc(c.titulo)}</b><span class="cont-bar" aria-hidden="true"><i style="width:${u.pct}%"></i></span><span class="meta">${u.pct}% lido · ${quando}</span></span>${CHEVR}</button>`;
@@ -2642,7 +2644,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.20.0',APP_DATA='2026-11-06';
+const APP_VERSAO='1.20.1',APP_DATA='2026-11-06';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2912,7 +2914,7 @@ function vTurma(){
     <p class="sf-grupo">Para estudar</p>
     <div class="sfolds">
     ${secFold('resumos','Resumos da Unidade '+ua,'ano','livro',total?`${total} ${total===1?'resumo':'resumos'} · ${done} ${done===1?'copiado':'copiados'} no caderno`:'Nenhum resumo publicado ainda',
-      `${continuarCard()}<div class="capgrid">${capsDe(y,ua).filter(c=>!c.ocR).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
+      `${continuarCard(ua)}<div class="capgrid">${capsDe(y,ua).filter(c=>!c.ocR).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
     ${acts.length?secFold('atvs','Atividades de fixação','ano','atv',(()=>{const pend=acts.filter(c=>!isSent(c.n)),pr=pend.map(c=>prazoDe(c.n,'atividade')).filter(x=>x&&x>=HOJE).sort()[0];return `${acts.length} ${acts.length===1?'atividade':'atividades'} · ${sent} ${sent===1?'enviada':'enviadas'}${pr?' · próximo prazo '+dm(pr):''}`})(),
       `<div class="atvlist">${acts.map(atvCard).join('')}</div>`):''}
     ${temasDe(y,ua).length?secFold('temas','Aulas de aprofundamento','ano','globo',`${temasDe(y,ua).length} ${temasDe(y,ua).length===1?'aula extra':'aulas extras'} · valem ponto`,
