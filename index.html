@@ -1138,14 +1138,6 @@ body.m-escuro .not-al .g{color:#9FDDB1}body.m-escuro .not-al .r{color:#F5A59C}
 .aj-stp{cursor:default}.aj-n{display:flex;align-items:center;gap:10px}.aj-n button{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-weight:700;font-size:1.1rem;cursor:pointer}
 .aj-ms{display:flex;flex-direction:column;gap:8px}.aj-m{display:flex;flex-direction:column;gap:4px;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--surface)}
 .aj-m textarea,.aj-m select{font:inherit;font-size:.92rem;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);color:var(--ink)}.aj-m.off{opacity:.55}.aj-m .link{align-self:flex-end}
-.pf-av{display:flex;align-items:center;gap:12px;border-left:5px solid #B42B2B;width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
-.pf-av-ic{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#FBE4E1;color:#B42B2B;flex:none}
-body.m-escuro .pf-av-ic{background:#4A2320;color:#F5A59C}
-.pf-av-tx{flex:1;min-width:0}.pf-av-tx b,.pf-av-tx .meta{display:block}.pf-av-ch{font-size:1.3rem;color:var(--muted)}
-.pf-avl ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
-.pf-avl li{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:.9rem;border-top:1px solid var(--line);padding-top:8px}
-.pf-avl li>span{min-width:0}.pf-avl li b,.pf-avl li .meta{display:block}.pf-avl li .link{flex:none;white-space:nowrap}
-.pf-avl-off{flex:none;white-space:nowrap}
 .pav-chs{display:flex;flex-wrap:wrap;gap:6px}
 .pav-chs button{border:1.5px solid var(--line);border-radius:999px;padding:7px 12px;font:inherit;font-size:.86rem;font-weight:700;background:var(--bg);color:var(--ink);cursor:pointer}
 .pav-chs button[aria-pressed="true"]{border-color:var(--pen);background:var(--pen-soft);color:var(--pen)}
@@ -2644,7 +2636,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.20.1',APP_DATA='2026-11-06';
+const APP_VERSAO='1.20.2',APP_DATA='2026-11-06';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3234,7 +3226,6 @@ function enviosProfHtml(P){
   </div>`;
 }
 /* ---------- Avisos aos alunos pelo painel (vão para a aba Mural de avisos) ---------- */
-const MEGAIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 let PAV={lista:null,em:0,carregando:false,f:null};
 function pavChamar(o){
   const t=store.get('profTok',null);
@@ -3244,19 +3235,6 @@ function pavChamar(o){
     if(j&&j.sair){profSair();}
     return j||{ok:false,erro:'Resposta vazia do robô.'};
   });
-}
-function pavCard(){
-  if(Date.now()-PAV.em>60e3&&!PAV.carregando)setTimeout(pavCarregar,80);
-  return `<button class="card pf-av" id="pavNovo"><span class="pf-av-ic">${MEGAIC}</span><span class="pf-av-tx"><b>Enviar aviso aos alunos</b><span class="meta">Mural e notificação no celular, sem abrir a planilha</span></span><span aria-hidden="true" class="pf-av-ch">›</span></button>
-    <div id="pavLista">${pavListaHtml()}</div>
-    ${pdvCard()}`;
-}
-function pavListaHtml(){
-  const L=PAV.lista;
-  if(!L)return '';
-  if(L.erro)return `<div class="card pf-avl"><p class="meta" style="margin:0">${esc(L.erro)}</p></div>`;
-  if(!L.length)return '';
-  return `<div class="card pf-avl"><div class="pf-h"><b>Avisos recentes</b><button class="meta link" id="pavAtual">Atualizar</button></div><ul>${L.map(a=>`<li><span><b>${esc(a.titulo)}</b><span class="meta">${esc(a.para)} · ${esc(a.destaque)}${a.notificar?' · com notificação':''}${a.situacao?' · '+esc(a.situacao.replace(/^No ar desde [\d/]+ · /,'no ar · ')):''}</span></span>${a.publicado&&a.id?`<button class="meta link" data-pavtirar="${esc(a.id)}" data-pavtit="${esc(a.titulo)}">Tirar do ar</button>`:'<span class="meta pf-avl-off">fora do ar</span>'}</li>`).join('')}</ul></div>`;
 }
 async function pavCarregar(){
   PAV.carregando=true;
@@ -3336,7 +3314,6 @@ function pavTirar(id,tit){
     catch(e){close();toast('Sem conexão. Tente de novo com internet.')}}});
 }
 /* ---------- Dúvidas dos alunos pelo painel (planilha de dúvidas) ---------- */
-const DUVPIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.2M12 16.5h.01"/></svg>';
 let PDV={lista:null,em:0,carregando:false,aba:'novas'};
 function pdvChamar(o){
   const t=store.get('profTok',null);
@@ -3348,11 +3325,6 @@ function pdvChamar(o){
   });
 }
 const pdvNovas=()=>Array.isArray(PDV.lista)?PDV.lista.filter(d=>!d.resposta):[];
-function pdvCard(){
-  if(Date.now()-PDV.em>60e3&&!PDV.carregando)setTimeout(pdvCarregar,120);
-  const n=pdvNovas().length;
-  return `<button class="card pf-dv" id="pdvAbrir"><span class="pf-dv-ic">${DUVPIC}</span><span class="pf-av-tx"><b>Dúvidas dos alunos</b><span class="meta">${PDV.lista&&PDV.lista.erro?esc(PDV.lista.erro):'Ler e responder sem abrir a planilha'}</span></span>${n?`<span class="pf-dv-n">${n} ${n===1?'nova':'novas'}</span>`:''}<span aria-hidden="true" class="pf-av-ch">›</span></button>`;
-}
 async function pdvCarregar(){
   PDV.carregando=true;
   try{const j=await pdvChamar({acao:'lista'});PDV.lista=j.ok?(j.lista||[]):{erro:j.erro||'Não foi possível ler as dúvidas.'};PDV.em=Date.now()}
@@ -3366,7 +3338,7 @@ function pdvItem(d){
   return `<button class="dq-i${d.resposta?' ok':''}" data-pdv="${esc(d.id)}"><span class="dq-h"><span class="dq-t" style="background:${COR[T2A[d.turma]]||'var(--pen)'}">${esc(d.turma)}</span><span>${esc(d.nome)} · ${esc(pdvQuando(d.quando))}</span></span>${d.sobre?`<span class="meta">${esc(d.sobre)}</span>`:''}<b>${esc(d.pergunta)}</b>${d.resposta?`<span class="dq-r">✓ ${esc(d.resposta.replace(/^'/,'').slice(0,140))}${d.resposta.length>140?'…':''}<br><span class="meta">${pubTx}</span></span>`:''}</button>`;
 }
 function pdvLista(){
-  const o0=sheet('',(o,close)=>{
+  sheet('',(o,close)=>{
     o.classList.add('pdv-o');
     const desenha=()=>{
       const L=PDV.lista,novas=pdvNovas(),resp=Array.isArray(L)?L.filter(d=>d.resposta):[];
@@ -4313,9 +4285,6 @@ document.addEventListener('click',ev=>{
   if(t.closest('#pushTodas'))return ativarPush(TURMAS.concat(pushProf()||PROF()?['PROF']:[]));
   const ocb=t.closest('[data-oc]');if(ocb){const k=ocb.dataset.oc,[ano,id]=k.split('|');ocMudar(ocb,{chave:k}).then(ok=>{if(ok){const card=document.getElementById('ocCard');const c=capOf(capId(id));if(card&&c){card.outerHTML=ocCard(c)}}});return}
   const lib=t.closest('[data-liberar]');if(lib){const c=capOf(capId(lib.dataset.liberar));if(c)liberarRascunho(c);return}
-  if(t.closest('#pavNovo'))return pavForm();
-  if(t.closest('#pdvAbrir'))return pdvLista();
-  if(t.closest('#pavAtual')){PAV.em=0;return pavCarregar()}
   const ptr=t.closest('[data-pavtirar]');if(ptr)return pavTirar(ptr.dataset.pavtirar,ptr.dataset.pavtit);
   if(t.closest('#ttsBtn'))return TTS.on?ttsParar():ttsIniciar();
   const av=t.closest('[data-aviso]');if(av){abrirAviso(av.dataset.aviso);return}

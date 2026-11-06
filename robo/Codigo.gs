@@ -2423,7 +2423,6 @@ function painelProfessor_() {
   const props = PropertiesService.getScriptProperties();
   const pl = id => id ? 'https://docs.google.com/spreadsheets/d/' + id + '/edit' : '';
   const pasta = id => id ? 'https://drive.google.com/drive/folders/' + id : '';
-  const planilhaId = k => { try { return props.getProperty(k) || ''; } catch (e) { return ''; } };
   let duvId = ''; try { duvId = planilhaDuvidas_().getParent().getId(); } catch (e) { }
   let notasId = ''; try { notasId = planilhaNotas_().getId(); } catch (e) { }
   let inscId = ''; try { inscId = planilhaInscricoes_().getParent().getId(); } catch (e) { }

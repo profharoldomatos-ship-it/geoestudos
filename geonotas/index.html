@@ -826,7 +826,7 @@ function setPriv(on){
 /* ===== Importação das notas dos Google Formulários =====
    Vale só o PRIMEIRO envio de cada aluno; nota = pontos ÷ total × 10. */
 const IMP={};
-const APP_VERSAO='1.11.0',APP_DATA='2026-10-26';
+const APP_VERSAO='1.11.1',APP_DATA='2026-11-06';
 function impFechar(){$('#imp').classList.remove('open')}
 async function abrirImport(){
   $('#imp').classList.add('open');$('#impTit').textContent='Importar dos formulários';$('#impSub').textContent='Turma '+S.turma+' · escolha a atividade';
@@ -862,7 +862,6 @@ function impValidos(){ // vale o primeiro envio de cada aluno (respostas já vê
 }
 function renderPrevia(){
   const p=IMP.p,ok=new Set(impValidos());
-  const nomeDe=r=>(p.alunos.find(a=>a.r===+r)||{}).nome||'';
   const opts=(r,i)=>'<option value="">— escolher o aluno —</option><option value="x"'+(IMP.sel[i]==='x'?' selected':'')+'>✕ descartar esta resposta</option>'+p.alunos.map(a=>'<option value="'+a.r+'"'+(+r===a.r?' selected':'')+'>'+esc(a.nome)+'</option>').join('');
   const enviaram=new Set(impValidos().map(i=>+IMP.sel[i]));
   const temNaPlanilha=r=>{const at=p.atual[r]||{};return at.marca===true||(p.cols.nota&&at.nota!=null&&String(at.nota)!=='')};

@@ -8,6 +8,13 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.20.2 · 06/11/2026 (limpeza de código)
+
+- App: removidos o cartão antigo de avisos e dúvidas do modo professor (substituído pelo Painel em 1.13), com seus estilos, ícones e cliques. Nenhuma mudança visível.
+- GeoNotas 1.11.1: removido um auxiliar sem uso.
+- Robô: removido um auxiliar sem uso (`planilhaId`). Sem mudança de funcionamento; não precisa colar de novo, vai junto na próxima versão do robô.
+- Mantido, de propósito: Conteúdo do Dia (suspenso, `DIA_ATIVO=false`) para eventual retomada em 2027.
+
 ## 1.20.1 · 06/11/2026
 
 - Correção: o cartão **Continuar de onde parei** aparecia dentro de qualquer unidade (ex.: a aula de aprofundamento da Unidade 4 surgia na Unidade 2). Agora ele só aparece na unidade a que pertence o texto.
