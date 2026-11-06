@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-05 · liberar a avaliação junto com a aula v25';
+const VERSAO_ROBO = '2026-11-06 · ocultar e exibir por turma v26';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -240,7 +240,8 @@ function atualizar() {
       },
       anos: anos,
       mensagens: lerMensagens_(),
-      agenda: agenda
+      agenda: agenda,
+      ocultos: ocultosLer_()   // v26: o que cada turma não vê (o app esconde; a avaliativa é travada aqui no robô)
     };
     try { dados.duvidas = lerDuvidasRespondidas_(dados); } catch (err) { Logger.log('Dúvidas: ' + err); dados.duvidas = (anterior && anterior.duvidas) || []; }
     let mural = null;
@@ -865,7 +866,8 @@ function calcularAvisos_(dados, anterior, conf) {
   dados.anos.forEach(a => a.unidades.forEach(u => u.caps.forEach(c => {
     const id = 'r-' + a.ano + '-' + c.n;
     if (c.doc && c.resumo && !antDocs[a.ano + '-' + c.n] && !ja[id]) {
-      avisos.push({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Resumo novo no app', texto: 'Capítulo ' + c.n + ': ' + c.titulo + '. Leia e copie no caderno.', cap: c.n });
+      const exc = turmasOcultas_(dados.ocultos, a, c.n, 'resumo');
+      if (exc.length < a.turmas.length) avisos.push(Object.assign({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Resumo novo no app', texto: 'Capítulo ' + c.n + ': ' + c.titulo + '. Leia e copie no caderno.', cap: c.n }, exc.length ? { exceto: exc } : {}));
     }
   })));
 
@@ -874,7 +876,8 @@ function calcularAvisos_(dados, anterior, conf) {
   dados.anos.forEach(a => a.unidades.forEach(u => (u.temas || []).forEach(t => {
     const id = 'tt-' + a.ano + '-' + t.n;
     if (t.resumo && !antTemas[a.ano + '-' + t.n] && !ja[id]) {
-      avisos.push({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Nova aula de aprofundamento', texto: 'Aula de aprofundamento ' + t.n + ': ' + t.titulo + '. Aula extra que vale ponto na recuperação.', cap: 't' + t.n });
+      const exc = turmasOcultas_(dados.ocultos, a, 't' + t.n, 'aula');
+      if (exc.length < a.turmas.length) avisos.push(Object.assign({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Nova aula de aprofundamento', texto: 'Aula de aprofundamento ' + t.n + ': ' + t.titulo + '. Aula extra que vale ponto na recuperação.', cap: 't' + t.n }, exc.length ? { exceto: exc } : {}));
     }
   })));
 
@@ -1039,7 +1042,7 @@ function novasNotificacoes_(dados, anterior, conf) {
   const antes = {};
   ((anterior && anterior.avisos) || []).forEach(a => antes[a.id] = true);
   (dados.avisos || []).filter(a => !antes[a.id]).forEach(a => {
-    const ts = a.turma ? [a.turma] : (turmasDoAno[a.ano] || []);
+    const ts = (a.turma ? [a.turma] : (turmasDoAno[a.ano] || [])).filter(t => (a.exceto || []).indexOf(t) < 0);
     ts.forEach(t => add(t, { tipo: 'novidade', titulo: a.titulo, texto: a.texto, cap: a.cap || null, tab: a.tipo === 'resumo' ? 'resumos' : a.tipo === 'duvida' ? 'turma' : 'calendario' }));
   });
 
@@ -1073,7 +1076,7 @@ function novasNotificacoes_(dados, anterior, conf) {
     const chave = 'lembrete-' + r[0] + '-' + hoje;
     if (props.getProperty(chave) || !janela(r[1])) return;
     Object.keys(dados.agenda).forEach(t => {
-      const evs = dados.agenda[t].filter(e => e.data === r[2] && e.tipo !== 'aviso');
+      const evs = dados.agenda[t].filter(e => e.data === r[2] && e.tipo !== 'aviso' && !eventoOculto_(dados, t, e));
       if (!evs.length) return;
       add(t, { tipo: 'lembrete', titulo: r[3] + ': ' + resumoEventos_(evs, r[0] === 'dia'), texto: textoEventos_(evs), cap: evs.length === 1 ? evs[0].cap : null, tab: evs.every(e => e.tipo === 'atividade') ? 'atividades' : 'calendario' });
     });
@@ -1480,6 +1483,7 @@ function painelAcao_(b) {
     if (a === 'rasc.lista') return { ok: true, lista: rascunhos_() };
     if (a === 'rasc.publicar') return publicarRascunho_(String(b.id || ''));
     if (a === 'rasc.aval') return liberarAvaliacao_(String(b.id || ''), String(b.modo || ''), String(b.prazo || ''));
+    if (a === 'oc.mudar') return ocultosMudar_(b);
     if (a === 'conf.ler') return confLer_();
     if (a === 'conf.salvar') return confSalvar_(b);
     return { ok: false, erro: 'Ação desconhecida.' };
@@ -1611,6 +1615,65 @@ function liberarAvaliacao_(id, modo, prazo) {
   f.setName(base);
   agendarAtualizacaoPainel_();
   return { ok: true, nome: base, prazo: linha };
+}
+/* ------------------------------------------------------------------ */
+/* v26: ocultar e exibir conteúdo por turma                             */
+/* ------------------------------------------------------------------ */
+/**
+ * Fica numa propriedade do script ("ocultos"), nunca no Drive: { i: { "7|13|atividade": ["72"] }, t: { "72": ["atividade"] } }
+ *   i = item por item: ano | capítulo (13) ou aula de aprofundamento (t1) | parte (resumo, atividade, aula, aval)
+ *   t = tipo inteiro por turma: resumo, atividade (de fixação), tema (aulas de aprofundamento), aval (avaliativas)
+ * Ocultar a aula de aprofundamento esconde também a atividade e a avaliativa dela.
+ */
+function ocultosLer_() {
+  try { const o = JSON.parse(PropertiesService.getScriptProperties().getProperty('ocultos') || '{}'); return { i: o.i || {}, t: o.t || {} }; }
+  catch (e) { return { i: {}, t: {} }; }
+}
+function ocultoPara_(oc, ano, id, parte, turma) {
+  if (!oc) return false;
+  id = String(id);
+  const tema = id.charAt(0) === 't', k = ano + '|' + id + '|', tipos = (oc.t || {})[turma] || [];
+  const em = l => (l || []).indexOf(turma) >= 0;
+  const tipo = parte === 'aval' ? 'aval' : tema ? 'tema' : parte;
+  if (em((oc.i || {})[k + parte]) || tipos.indexOf(tipo) >= 0) return true;
+  return tema && parte !== 'aula' && (em((oc.i || {})[k + 'aula']) || tipos.indexOf('tema') >= 0);
+}
+function turmasOcultas_(oc, a, id, parte) { return (a.turmas || []).filter(t => ocultoPara_(oc, String(a.ano), id, parte, t)); }
+function eventoOculto_(dados, turma, e) {
+  if (!e.cap || !dados.ocultos) return false;
+  const a = (dados.anos || []).filter(x => (x.turmas || []).indexOf(turma) >= 0)[0];
+  if (!a) return false;
+  const ano = String(a.ano), oc = dados.ocultos;
+  if (e.tipo === 'atividade') return ocultoPara_(oc, ano, e.cap, 'atividade', turma);
+  if (e.tipo === 'caderno') return ocultoPara_(oc, ano, e.cap, 'resumo', turma);
+  if (e.tipo === 'tema') return ocultoPara_(oc, ano, e.cap, 'aula', turma) || (ocultoPara_(oc, ano, e.cap, 'atividade', turma) && ocultoPara_(oc, ano, e.cap, 'aval', turma));
+  return false;
+}
+/** Painel: liga ou desliga uma turma num item (chave) ou num tipo inteiro (tipo). Devolve a lista toda. */
+function ocultosMudar_(b) {
+  const turma = String(b.turma || ''), ocultar = !!b.oculto;
+  if (!/^\d{2}$/.test(turma)) return { ok: false, erro: 'Turma inválida.' };
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return { ok: false, erro: 'O robô está ocupado agora. Tente de novo em alguns segundos.' };
+  try {
+    const oc = ocultosLer_();
+    if (b.chave) {
+      const k = String(b.chave);
+      if (!/^\d\|t?\d+\|(resumo|atividade|aula|aval)$/.test(k)) return { ok: false, erro: 'Item inválido.' };
+      const l = (oc.i[k] || []).filter(x => x !== turma);
+      if (ocultar) l.push(turma);
+      if (l.length) oc.i[k] = l.sort(); else delete oc.i[k];
+    } else if (b.tipo) {
+      const tp = String(b.tipo);
+      if (['resumo', 'atividade', 'tema', 'aval'].indexOf(tp) < 0) return { ok: false, erro: 'Tipo inválido.' };
+      const l = (oc.t[turma] || []).filter(x => x !== tp);
+      if (ocultar) l.push(tp);
+      if (l.length) oc.t[turma] = l; else delete oc.t[turma];
+    } else return { ok: false, erro: 'Nada para mudar.' };
+    PropertiesService.getScriptProperties().setProperty('ocultos', JSON.stringify(oc));
+    agendarAtualizacaoPainel_();
+    return { ok: true, ocultos: oc };
+  } finally { lock.releaseLock(); }
 }
 const CHAVES_CONF_ = [
   ['mensagem', 'mensagem da tela inicial', 'Mensagem da tela inicial', 'Faixa amarela na página inicial do app (em branco: sem faixa)'],
@@ -2109,10 +2172,10 @@ function avaliacaoPublicada_(docId) {
   try { d = JSON.parse(lerCache_() || (arquivoDados_() ? arquivoDados_().getBlob().getDataAsString('UTF-8') : '{}')); } catch (e) { }
   let achou = null;
   ((d && d.anos) || []).forEach(a => (a.unidades || []).forEach(u => (u.caps || []).forEach(c => {
-    if (c.aval && c.aval.doc === docId) achou = { ano: String(a.ano), rot: 'Cap. ' + c.n, titulo: c.titulo, aval: c.aval, turmas: a.turmas || [] };
+    if (c.aval && c.aval.doc === docId) achou = { ano: String(a.ano), id: String(c.n), rot: 'Cap. ' + c.n, titulo: c.titulo, aval: c.aval, turmas: a.turmas || [], oc: d.ocultos };
   })));
   ((d && d.anos) || []).forEach(a => (a.unidades || []).forEach(u => (u.temas || []).forEach(t => {
-    if (t.aval && t.aval.doc === docId) achou = { ano: String(a.ano), rot: 'Aprofundamento ' + t.n, titulo: t.titulo, aval: t.aval, turmas: a.turmas || [] };
+    if (t.aval && t.aval.doc === docId) achou = { ano: String(a.ano), id: 't' + t.n, rot: 'Aprofundamento ' + t.n, titulo: t.titulo, aval: t.aval, turmas: a.turmas || [], oc: d.ocultos };
   })));
   return achou;
 }
@@ -2159,6 +2222,8 @@ function validarIdent_(b, info) {
   if (info.turmas.indexOf(turma) < 0) return { erro: 'Escolha a sua turma.' };
   if (chaveNome_(nome).split(' ').filter(x => x.length > 1).length < 2) return { erro: 'Escreva o seu nome completo (nome e sobrenome).' };
   if (info.aval.teste) return { turma: turma, nome: nome, oficial: '(teste do professor)', chave: chaveNome_(nome) + '|' + turma + '|' + Date.now() };
+  // v26: avaliativa oculta para esta turma (Painel › O que cada turma vê): ninguém da turma envia, mesmo trocando de turma no app
+  if (info.oc && ocultoPara_(info.oc, info.ano, info.id, 'aval', turma)) return { erro: 'Esta atividade não está disponível para a Turma ' + turma + '.' };
   const lista = alunosDaTurma_(turma);
   if (!lista.length) return { turma: turma, nome: nome, oficial: '(turma sem lista)', chave: chaveNome_(nome) + '|' + turma };
   const r = acharAluno_(nome, lista);

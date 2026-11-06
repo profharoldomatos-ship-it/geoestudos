@@ -1162,6 +1162,14 @@ body.m-escuro .pf-av-ic{background:#4A2320;color:#F5A59C}
 .pf-tt button{border:1.5px solid color-mix(in srgb,var(--yc) 45%,transparent);border-bottom-width:4px;border-bottom-color:var(--yc);border-radius:10px;padding:7px 0;background:var(--surface);color:var(--ink);font-family:var(--display);font-weight:700;font-size:1rem;cursor:pointer}
 .pf-tt button[aria-current]{background:var(--yc);border-color:var(--yc);color:#fff}
 .rasc-ban{display:flex;flex-direction:column;gap:10px;border:2px dashed #C99A1E;background:var(--hl-soft);border-radius:var(--r);padding:12px 14px;font-size:.92rem}
+.vis{border:1.5px solid var(--line);border-radius:14px;padding:12px;margin:12px 0;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.vis h3{margin:0;font-size:.95rem;display:flex;align-items:center;gap:6px}.vis h3 svg{width:18px;height:18px;flex:none}.vis>.meta{margin:0;font-size:.84rem}
+.vr{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px}.vr .meta{display:block;font-size:.82rem}
+.tp{display:flex;gap:6px;flex:none}.tp button{min-width:58px;min-height:48px;padding:7px 8px;border-radius:10px;font:inherit;font-weight:800;font-size:.9rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;cursor:pointer}.tp button small{font-weight:700;font-size:.66rem}
+.tp [aria-pressed=true]{background:#1D3F8F;border-color:#1D3F8F;color:#fff}.tp [aria-pressed=false]{border-style:dashed;border-color:#D9A441;color:#8A5A00;background:color-mix(in srgb,#F59E0B 10%,var(--surface))}.tp button:disabled{cursor:default;opacity:.75}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tp [aria-pressed=false]{color:#F4C46A}}:root[data-theme="dark"] .tp [aria-pressed=false]{color:#F4C46A}
+.oc-tag{display:inline-block;background:#5B6472;color:#fff;border-radius:6px;padding:0 6px;font-size:.72rem;font-weight:700;letter-spacing:0;text-transform:none;margin-right:4px;align-self:flex-start}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden}.seg button{flex:1;padding:9px 4px;font:inherit;font-weight:700;background:var(--surface);color:var(--ink);border:0;border-right:1px solid var(--line);white-space:nowrap;cursor:pointer}.seg button:last-child{border-right:0}.seg [aria-selected=true]{background:var(--sy,#1D3F8F);color:#fff}
 .lb-av{border:1px solid var(--line);border-radius:14px;padding:12px;margin:0;display:flex;flex-direction:column;gap:8px;background:color-mix(in srgb,var(--year) 6%,var(--surface))}
 .lb-avt{padding:0;margin:0 0 2px;font-size:.92rem;color:var(--ink)}.lb-avi{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--year);color:#fff;vertical-align:-4px;margin-right:4px}.lb-avi svg{width:12px;height:12px}
 .lb-op{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);cursor:pointer}
@@ -1341,9 +1349,61 @@ const MSGS={
  atividade:['Parabéns! O cumprimento desta atividade é muito importante para a construção da sua nota neste período.'],
  unidade:['Incrível! Você copiou todos os resumos da unidade. Seu caderno está pronto para as avaliações.']
 };
+/* v1.20: conteúdo oculto por turma (Painel do professor › O que cada turma vê).
+   Chave do item: ano|id|parte, com id = nº do capítulo ou t+nº da aula de aprofundamento; parte = resumo, atividade, aula ou aval.
+   Tipo inteiro por turma: resumo, atividade (de fixação), tema (aulas de aprofundamento), aval (avaliativas). */
+const OC=()=>{const o=(DATA&&DATA.ocultos)||{};return {i:o.i||{},t:o.t||{}}};
+const ocTem=()=>{const o=OC();return Object.keys(o.i).length+Object.keys(o.t).length>0};
+const ocChave=()=>{const t=store.get('profTok',null),p=!!(t&&t.token&&t.exp>Date.now());return (p?'P':S.turma||'')+'|'+JSON.stringify((DATA&&DATA.ocultos)||'')};
+const ocTipo=(id,parte)=>parte==='aval'?'aval':String(id)[0]==='t'?'tema':parte;
+/* por: 'item' (marcado neste item), 'pai' (pela aula ou pelo tipo em Ajustes) ou false */
+function ocPor(ano,id,parte,t){
+  const o=OC(),k=ano+'|'+id+'|',em=l=>(l||[]).includes(t),tp=o.t[t]||[];
+  if(em(o.i[k+parte]))return 'item';
+  if(tp.includes(ocTipo(id,parte)))return 'pai';
+  if(String(id)[0]==='t'&&parte!=='aula'&&(em(o.i[k+'aula'])||tp.includes('tema')))return 'pai';
+  return false;
+}
+const ocPara=(ano,id,parte,t)=>!!ocPor(ano,id,parte,t);
+const ocLista=ts=>ts.length===1?'a '+ts[0]:ts.slice(0,-1).join(', ')+' e '+ts[ts.length-1];
+function ocTag(c,tema){
+  if(!PROF()||!DATA)return '';const ano=anoT(),id=tema?'t'+c.n:String(c.n);
+  const p=ocTurmas(ano,id,tema?'aula':'resumo');if(p.length)return `<span class="oc-tag">Oculto para ${ocLista(p)}</span> `;
+  const a=ocTurmas(ano,id,'atividade');if(a.length&&(c.atividade||c.atividadeTexto))return `<span class="oc-tag">Atividade oculta para ${ocLista(a)}</span> `;
+  const v=ocTurmas(ano,id,'aval');if(v.length&&c.aval)return `<span class="oc-tag">Avaliativa oculta para ${ocLista(v)}</span> `;
+  return '';
+}
+const ocTurmas=(ano,id,parte)=>(((DATA&&DATA.anos)||[]).find(a=>String(a.ano)===String(ano))||{turmas:[]}).turmas.filter(t=>ocPara(ano,id,parte,t));
+function ocAplicar(anos,T){
+  anos.forEach(a=>{if(!(a.turmas||[]).includes(T))return;const ano=a.ano;
+    (a.unidades||[]).forEach(u=>{
+      (u.caps||[]).forEach(c=>{
+        if(ocPara(ano,c.n,'resumo',T)){c.resumo='';c.pdf='';c.ocR=true}
+        if(ocPara(ano,c.n,'atividade',T)){c.atividade='';c.atividadeTexto=''}
+        if(c.aval&&ocPara(ano,c.n,'aval',T))c.aval=null;
+      });
+      u.caps=(u.caps||[]).filter(c=>!c.ocR||c.atividade||c.atividadeTexto);
+      u.temas=(u.temas||[]).filter(t=>!ocPara(ano,'t'+t.n,'aula',T));
+      u.temas.forEach(t=>{if(ocPara(ano,'t'+t.n,'atividade',T)){t.atividade='';t.atividadeTexto=''}if(t.aval&&ocPara(ano,'t'+t.n,'aval',T))t.aval=null});
+    });
+  });
+  return anos;
+}
+/* prazos da agenda do que a turma não vê */
+function ocEvento(e){
+  if(!e.cap||PROF()||!S.turma)return false;const ano=anoT();
+  if(e.tipo==='atividade')return ocPara(ano,e.cap,'atividade',S.turma);
+  if(e.tipo==='caderno')return ocPara(ano,e.cap,'resumo',S.turma);
+  if(e.tipo==='tema')return ocPara(ano,e.cap,'aula',S.turma)||(ocPara(ano,e.cap,'atividade',S.turma)&&ocPara(ano,e.cap,'aval',S.turma));
+  return false;
+}
+var OC_K='';
 function aplicarDados(){
   YEARS={};TURMAS=[];T2A={};if(!DATA||!DATA.anos)return;
-  for(const a of DATA.anos){
+  const ehProf=(()=>{const t=store.get('profTok',null);return !!(t&&t.token&&t.exp>Date.now())})();
+  OC_K=ocChave();
+  const anos=(!ehProf&&S.turma&&ocTem())?ocAplicar(JSON.parse(JSON.stringify(DATA.anos)),S.turma):DATA.anos;
+  for(const a of anos){
     const units={};a.unidades.forEach(u=>units[u.n]=u);
     const com=a.unidades.filter(u=>u.inicio&&u.inicio<=HOJE).sort((p,q)=>p.inicio<q.inicio?1:-1),at=com.length?com[0].n:a.atual;
     YEARS[a.ano]={ano:a.ano,label:a.nome,color:COR[a.ano]||'var(--pen)',atual:at,unit:(units[at]||{}).titulo||'',livro:a.livro,units,list:a.unidades,turmas:a.turmas};
@@ -1439,7 +1499,7 @@ if(PROF())profSemTurma();
 const liberada=(n,y)=>{y=y||Y();return PROF()||+n===+y.atual};
 const LOCKIC='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const msgFechada=n=>`A Unidade ${n} está fechada. Só a unidade em andamento fica disponível.`;
-const agendaT=()=>(((DATA&&DATA.agenda)||{})[S.turma]||[]).slice().sort((x,y)=>(x.data+(x.hora||'')).localeCompare(y.data+(y.hora||''))||(x.cap||0)-(y.cap||0));
+const agendaT=()=>(((DATA&&DATA.agenda)||{})[S.turma]||[]).filter(e=>!ocEvento(e)).sort((x,y)=>(x.data+(x.hora||'')).localeCompare(y.data+(y.hora||''))||(x.cap||0)-(y.cap||0));
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1458,6 +1518,7 @@ function cheer(kind,sub){
 }
 const CHEVR='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none"><path d="M9 6l6 6-6 6"/></svg>';
 const CHEVD='<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+const OLHOIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const CHECK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
 const GLOBO_HH='<svg class="contour globo-hh" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76"/><path d="M12 50h76"/><path d="M17.5 31h65M17.5 69h65"/></g><path d="M8 66c14 13 64 13 84-10" opacity=".7"/></svg>';
 
@@ -2007,7 +2068,7 @@ const dm=iso=>{const {d,m}=dataBR(iso);return String(d).padStart(2,'0')+'/'+Stri
 /* Avisos de novidade */
 function avisosNovos(){
   if(!DATA||!DATA.avisos)return [];
-  return DATA.avisos.filter(a=>!S.vistos.includes(a.id)&&(a.turma?a.turma===S.turma:a.ano===anoT()));
+  return DATA.avisos.filter(a=>!S.vistos.includes(a.id)&&(a.turma?a.turma===S.turma:a.ano===anoT()&&!(a.exceto||[]).includes(S.turma)));
 }
 addEventListener('pagehide',()=>{REC_SESSAO=[]});
 function marcarVisto(ids){S.vistos=[...new Set([...S.vistos,...ids])].slice(-300);store.set('vistos',S.vistos)}
@@ -2226,7 +2287,7 @@ const sec=(titulo,tipo,ic,extra,sub)=>`<div class="sec sec-${tipo}"><span class=
 /* Telas */
 function capRow(c){
   if(!c.resumo)return `<div class="cap off"><span class="n"><small>Cap.</small><b>${c.n}</b></span><span class="t"><b>${esc(c.titulo)}</b><span class="meta">Resumo ainda não publicado</span></span></div>`;
-  const done=isCopied(c.n);return `<button class="cap" data-cap="${c.n}"><span class="n"><small>Cap.</small><b>${c.n}</b></span><span class="t"><b>${esc(c.titulo)}</b>${done?`<span class="done">${CHECK} Copiado no caderno</span>`:''}</span>${CHEVR}</button>`;
+  const done=isCopied(c.n);return `<button class="cap" data-cap="${c.n}"><span class="n"><small>Cap.</small><b>${c.n}</b></span><span class="t">${ocTag(c)}<b>${esc(c.titulo)}</b>${done?`<span class="done">${CHECK} Copiado no caderno</span>`:''}</span>${CHEVR}</button>`;
 }
 
 function semDados(){
@@ -2581,7 +2642,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.19.0',APP_DATA='2026-11-05';
+const APP_VERSAO='1.20.0',APP_DATA='2026-11-06';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2727,7 +2788,7 @@ function unitChips(active){
 function capBtn(c){
   if(!c.resumo)return `<div class="capitem off"><div class="capbtn"><span class="cn">${c.n}</span><span class="ct"><span class="eyebrow">Capítulo ${c.n}</span><b>${esc(c.titulo)}</b><span class="meta">Resumo ainda não publicado</span></span></div></div>`;
   const done=isCopied(c.n),sent=isSent(c.n);
-  return `<div class="capitem"><button class="capbtn" data-cap="${c.n}"><span class="cn">${c.n}</span><span class="ct"><span class="eyebrow">${c.rascunho?'<span class="rasc-tag">Rascunho · só você vê</span> ':''}Capítulo ${c.n}</span><b>${esc(c.titulo)}</b></span>${CHEVR}</button>
+  return `<div class="capitem"><button class="capbtn" data-cap="${c.n}"><span class="cn">${c.n}</span><span class="ct"><span class="eyebrow">${c.rascunho?'<span class="rasc-tag">Rascunho · só você vê</span> ':''}${ocTag(c)}Capítulo ${c.n}</span><b>${esc(c.titulo)}</b></span>${CHEVR}</button>
     <div class="capacts${c.atividade?'':' one'}"><button data-cap="${c.n}" class="ca-res${done?' ok':''}">${done?CHECK:''}${done?'Resumo copiado':'Copiar resumo'}</button>${c.atividade?`<button data-act="${c.n}" class="ca-act${sent?' ok':''}">${sent?CHECK+'Atividade enviada':'Atividade de fixação'}</button>`:''}</div></div>`;
 }
 /* Caixa de dúvidas: a pergunta vai para uma planilha que só o professor vê.
@@ -2795,7 +2856,7 @@ function duvidaSheet(sobre){
     };
   });
 }
-const avisosTurma=()=>(!DATA||!DATA.avisos)?[]:DATA.avisos.filter(a=>a.turma?a.turma===S.turma:a.ano===anoT());
+const avisosTurma=()=>(!DATA||!DATA.avisos)?[]:DATA.avisos.filter(a=>a.turma?a.turma===S.turma:a.ano===anoT()&&!(a.exceto||[]).includes(S.turma));
 function avisoItem(a,lido){return `<div class="aviso${lido?' lido':''}">${lido?'':'<span class="av-novo" aria-label="Novo"></span>'}<span class="av-ic" aria-hidden="true">${a.tipo==='resumo'?'✎':a.tipo==='duvida'?'?':'◷'}</span><span style="min-width:0"><b>${esc(a.titulo)}</b><br><span>${esc(a.texto)}</span>${lido?'<span class="av-lido">Lido</span>':''}</span>${a.cap&&capOf(a.cap)&&capOf(a.cap).resumo?`<button class="av-go" data-cap="${a.cap}" data-aviso="${a.id}" aria-label="Abrir">${CHEVR}</button>`:''}</div>`}
 /* Recados: ao abrir a faixa, os recados contam como lidos. Ficam esmaecidos enquanto a faixa está aberta
    e, ao fechar ou sair da página, somem da faixa e passam para "Recados anteriores" (menu ☰). */
@@ -2851,7 +2912,7 @@ function vTurma(){
     <p class="sf-grupo">Para estudar</p>
     <div class="sfolds">
     ${secFold('resumos','Resumos da Unidade '+ua,'ano','livro',total?`${total} ${total===1?'resumo':'resumos'} · ${done} ${done===1?'copiado':'copiados'} no caderno`:'Nenhum resumo publicado ainda',
-      `${continuarCard()}<div class="capgrid">${capsDe(y,ua).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
+      `${continuarCard()}<div class="capgrid">${capsDe(y,ua).filter(c=>!c.ocR).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
     ${acts.length?secFold('atvs','Atividades de fixação','ano','atv',(()=>{const pend=acts.filter(c=>!isSent(c.n)),pr=pend.map(c=>prazoDe(c.n,'atividade')).filter(x=>x&&x>=HOJE).sort()[0];return `${acts.length} ${acts.length===1?'atividade':'atividades'} · ${sent} ${sent===1?'enviada':'enviadas'}${pr?' · próximo prazo '+dm(pr):''}`})(),
       `<div class="atvlist">${acts.map(atvCard).join('')}</div>`):''}
     ${temasDe(y,ua).length?secFold('temas','Aulas de aprofundamento','ano','globo',`${temasDe(y,ua).length} ${temasDe(y,ua).length===1?'aula extra':'aulas extras'} · valem ponto`,
@@ -2905,8 +2966,8 @@ function vResumos(){
     ${unitChips(u)}
     <div class="card unit-card">
       <div class="unit-head"><span class="eyebrow">Unidade ${u} · ${est}</span><b class="unit-t">${esc(un.titulo)}</b></div>
-      <div class="ul-sec">${SECIC.livro}<b>Resumos dos capítulos</b><span>${un.caps.filter(c=>c.resumo).length} de ${un.caps.length}</span></div>
-      ${un.caps.map(capRow).join('')||'<div class="cap off"><span class="t meta">Nenhum capítulo cadastrado.</span></div>'}
+      <div class="ul-sec">${SECIC.livro}<b>Resumos dos capítulos</b><span>${un.caps.filter(c=>c.resumo).length} de ${un.caps.filter(c=>!c.ocR).length}</span></div>
+      ${un.caps.filter(c=>!c.ocR).map(capRow).join('')||'<div class="cap off"><span class="t meta">Nenhum capítulo cadastrado.</span></div>'}
       ${(un.temas||[]).filter(temaVisivel).length?`<div class="ul-sec tt-sec">${SECIC.globo}<b>Aulas de aprofundamento</b><span>valem ponto</span></div>${un.temas.filter(temaVisivel).map(temaRow).join('')}`:''}
       ${temPub?`<div class="offnote">${CHECK} Os resumos ficam guardados no celular para ler sem internet.</div>`:''}
     </div>
@@ -2958,11 +3019,11 @@ const TTIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="
 const temAtv=t=>!!(t.atividade||t.atividadeTexto);
 function temaRow(t){
   if(!t.resumo)return `<div class="cap off tt"><span class="n"><small>Aula</small><b>${t.n}</b></span><span class="t"><b>${esc(t.titulo)}</b><span class="meta">Aula ainda não publicada</span></span></div>`;
-  return `<button class="cap tt" data-cap="t${t.n}"><span class="n"><small>Aula</small><b>${t.n}</b></span><span class="t"><b>${esc(t.titulo)}</b>${isCopied('t'+t.n)?`<span class="done">${CHECK} Aula estudada</span>`:''}</span>${CHEVR}</button>`;
+  return `<button class="cap tt" data-cap="t${t.n}"><span class="n"><small>Aula</small><b>${t.n}</b></span><span class="t">${ocTag(t,true)}<b>${esc(t.titulo)}</b>${isCopied('t'+t.n)?`<span class="done">${CHECK} Aula estudada</span>`:''}</span>${CHEVR}</button>`;
 }
 function temaBtn(t){
   const id='t'+t.n,done=isCopied(id),sent=isSent(id);
-  return `<div class="capitem ttitem"><button class="capbtn" ${t.resumo?`data-cap="${id}"`:'disabled'}><span class="cn tt-cn">${TTIC}</span><span class="ct"><span class="eyebrow">${t.rascunho?'<span class="rasc-tag">Rascunho · só você vê</span> ':''}Aula de aprofundamento ${t.n} · vale ponto</span><b>${esc(t.titulo)}</b>${t.resumo?'':'<span class="meta">Aula ainda não publicada</span>'}</span>${t.resumo?CHEVR:''}</button>
+  return `<div class="capitem ttitem"><button class="capbtn" ${t.resumo?`data-cap="${id}"`:'disabled'}><span class="cn tt-cn">${TTIC}</span><span class="ct"><span class="eyebrow">${t.rascunho?'<span class="rasc-tag">Rascunho · só você vê</span> ':''}${ocTag(t,true)}Aula de aprofundamento ${t.n} · vale ponto</span><b>${esc(t.titulo)}</b>${t.resumo?'':'<span class="meta">Aula ainda não publicada</span>'}</span>${t.resumo?CHEVR:''}</button>
     <div class="capacts${temAtv(t)?'':' one'}">${t.resumo?`<button data-cap="${id}" class="ca-res${done?' ok':''}">${done?CHECK+'Aula estudada':'Abrir aula'}</button>`:''}${temAtv(t)?`<button data-act="${id}" class="ca-act tt-act-b${sent?' ok':''}">${sent?CHECK+'Atividade feita':'Atividade'}</button>`:''}</div></div>`;
 }
 function girarDica(){
@@ -3025,7 +3086,27 @@ function profEditCap(c){
   if(!PROF()||!c)return '';
   const y=Y(),P=profP();
   const rb=c.rascunho?`<div class="rasc-ban"><span><b>Rascunho: só você vê.</b> Os alunos ainda não têm acesso ${c.tema?'a esta aula':'a este resumo'}. Use para ditar e explicar; libere quando terminar.</span><button class="btn btn-primary" data-liberar="${esc(String(c.id))}">Liberar para os alunos</button></div>`:'';
-  return rb+profEditCap0(c,y,P);
+  return rb+profEditCap0(c,y,P)+(c.rascunho?'':ocCard(c));
+}
+/* Quadro do professor: o que cada turma vê deste resumo ou aula (v1.20) */
+function ocCard(c){
+  const y=Y(),ano=y.ano,id=c.tema?'t'+c.n:String(c.n),ts=y.turmas||[];if(!ts.length)return '';
+  const linhas=c.tema?[['aula','Aula de aprofundamento','Oculta: some a aula inteira, com as atividades.',true],['atividade','Atividade escrita',c.atividade&&!c.atividadeTexto?'Formulário':'No próprio app',temAtv(c)],['aval','Atividade avaliativa','Oculta: a turma não envia mais. Respostas e notas continuam na planilha.',!!c.aval]]
+    :[['resumo','Resumo','Lista, busca e progresso',true],['atividade','Atividade de fixação','Aba Atividades e prazos',!!(c.atividade||c.atividadeTexto)],['aval','Atividade avaliativa','Respostas e notas continuam na planilha.',!!c.aval]];
+  let pai=false;
+  const row=([parte,nome,sub,tem])=>!tem?'':`<div class="vr"><span><b>${nome}</b><span class="meta">${sub}</span></span><span class="tp">${ts.map(t=>{const por=ocPor(ano,id,parte,t);if(por==='pai')pai=true;
+    return `<button type="button" data-oc="${ano}|${id}|${parte}" data-oct="${t}" aria-pressed="${!por}"${por==='pai'?' disabled':''} aria-label="Turma ${t}: ${por?'oculto':'vê'}${por==='pai'?' (pela aula ou pelos Ajustes)':''}">${t}<small>${por?'oculto'+(por==='pai'?'*':''):'vê'}</small></button>`}).join('')}</span></div>`;
+  const corpo=linhas.map(row).join('');
+  return `<div class="vis" id="ocCard"><h3>${OLHOIC}O que cada turma vê</h3>${corpo}<p class="meta">Toque na turma para ocultar ou exibir. Muda em 1 a 3 minutos. Nada é apagado.${pai?'<br>* Oculto pela aula ou em Painel › Ajustes.':''}</p></div>`;
+}
+async function ocMudar(btn,dados){
+  const ant=btn.getAttribute('aria-pressed'),ocultar=ant==='true';
+  btn.disabled=true;btn.setAttribute('aria-pressed',String(!ocultar));const sm=btn.querySelector('small');if(sm)sm.textContent=ocultar?'oculto':'vê';
+  try{const j=await ppChamar(Object.assign({acao:'oc.mudar',turma:btn.dataset.oct,oculto:ocultar},dados));
+    if(!j.ok){toast(j.erro||'Não foi possível mudar.');btn.setAttribute('aria-pressed',ant);if(sm)sm.textContent=ocultar?'vê':'oculto';btn.disabled=false;return false}
+    DATA.ocultos=j.ocultos;try{store.set('dados',DATA)}catch(e){}
+    toast((ocultar?'Oculto para a ':'Visível para a ')+btn.dataset.oct+'. Muda para os alunos em 1 a 3 minutos.');btn.disabled=false;return true;
+  }catch(e){toast('Sem conexão. Tente de novo com internet.');btn.setAttribute('aria-pressed',ant);if(sm)sm.textContent=ocultar?'vê':'oculto';btn.disabled=false;return false}
 }
 function profEditCap0(c,y,P){
   if(c.tema)return profEdit([['Editar a aula',docUrl(c.doc)],['Editar a atividade escrita',docUrl(c.docAtividade)],['Editar a atividade avaliativa',c.aval&&docUrl(c.aval.doc)],['Ver as notas',c.aval&&P.notas],['Pasta das aulas',pastaUnidade(y.ano,c.u,true)]]);
@@ -3094,6 +3175,7 @@ const ROTEIROS=[
   ['Atividade de fixação (formulário)',6,['Crie o formulário no Google Formulários, com perguntas de nome completo e turma.','Toque em Enviar › ícone de link e copie o endereço.','Cole na planilha Conteúdo › Capítulos, coluna Atividade, na linha do capítulo.','Marque o prazo na agenda de cada turma: Atividade de fixação · Cap. 14.'],P=>[['Planilha de Conteúdo',P.conteudo],['Agendas',P.agendaGeral]]],
   ['Aula de aprofundamento',7,['Na subpasta das aulas de aprofundamento da unidade, crie o Doc com o número e o título: 1 Título da aula.','Atividade escrita no próprio app: Doc 1 Atividade. Por formulário: link na aba Temas Transversais da planilha de Conteúdo.','Prazo na agenda: Aula de aprofundamento 1 · prazo.','Para escrever sem publicar, comece o nome com [rascunho]: a aula aparece só no modo professor, com a etiqueta “Rascunho · só você vê”.','Para publicar, abra a aula no app e toque em Liberar para os alunos, ou tire o [rascunho] do nome. Se a aula tiver atividade avaliativa, a mesma janela pergunta se ela fica para você testar, sai para os alunos com prazo ou continua como está.'],P=>[['Planilha de Conteúdo',P.conteudo]]],
   ['Revisão rápida (não vale nota)',8,['Ao lado do resumo, crie o Doc 14 Revisão.','Cada pergunta: enunciado, A) a D), linha Resposta: e, se quiser, Explicação:.','Até 12 perguntas; o app sorteia 6 a cada vez.','Pode pedir ao Claude para escrever as perguntas a partir do resumo.','Com o nome [rascunho] 14 Revisão, a revisão aparece só no modo professor: teste no app e, quando estiver boa, apague o [rascunho] do nome.'],P=>[]],
+  ['Ocultar ou exibir para uma turma',22,['Um item: abra o resumo ou a aula no modo professor e, no quadro O que cada turma vê, toque na turma (azul = vê, tracejado = oculto).','Um tipo inteiro (metodologia da turma): Painel › Ajustes › O que cada turma vê. Escolha o ano e toque na turma. Já vale, sem salvar.','Ocultar a aula de aprofundamento esconde também as atividades dela. Muda para os alunos em 1 a 3 minutos e nada é apagado.','Avaliativa oculta: a turma não envia mais; respostas e notas continuam na planilha.'],P=>[]],
   ['Atividade avaliativa (vale nota)',9,['Enquanto a aula for rascunho, crie [rascunho] 1 Avaliação, com 20 questões (A a D e Resposta:). Assim ela fica fora do app.','Para testar: ao liberar a aula, escolha Liberar só para eu testar (ou troque [rascunho] por [teste] no nome).','Com o modo professor ligado, abra a aula no app e faça a atividade para testar: os envios vão para a aba (teste).','Para liberar aos alunos: escolha Liberar para os alunos e a data do prazo na janela da aula; ou acrescente Prazo: dd/mm/aaaa e tire o [teste] do nome; ou publique em Painel › Rascunhos.','Confira a lista de alunos (aba Alunos) e veja as notas na planilha de notas.'],P=>[['Planilha de notas e alunos',P.notas]]],
   ['Datas na agenda',10,['Use a agenda da turma (Geografia 71, 72…).','Títulos reconhecidos: Entrega do caderno · Cap. 14, Atividade de fixação · Cap. 14, Aula de aprofundamento 1 · prazo, Avaliação…','O primeiro link da descrição vira botão no app.'],P=>[['Abrir a Agenda',P.agendaGeral]]],
   ['Aviso no mural',11,['Planilha de Configurações › aba Mural de avisos: uma linha por aviso.','Preencha título, mensagem, Para quem (anos, turmas ou todas) e destaque.','Notificação no celular: Sim ou Não.','Por último, Publicar? = Sim. A coluna Situação diz o que falta.'],P=>[['Planilha de Configurações e Mural',P.config]]],
@@ -3583,7 +3665,7 @@ function ajustesForm(){
     try{C=await ppChamar({acao:'conf.ler'})}catch(e){C={ok:false,erro:'Sem conexão para ler os ajustes.'}}
     if(!o.isConnected)return;
     if(!C.ok){o.querySelector('.sheet').innerHTML=`<h2>Ajustes do app</h2><p class="avl-err">${esc(C.erro||'Não foi possível ler os ajustes.')}</p><button class="btn btn-ghost" data-close>Fechar</button>`;return}
-    const v=Object.assign({},C.valores),msgs=C.mensagens.map(m=>Object.assign({},m)),novas=[];let verMsgs=false;
+    const v=Object.assign({},C.valores),msgs=C.mensagens.map(m=>Object.assign({},m)),novas=[];let verMsgs=false,ocAno=String((Y()||{}).ano||(DATA.anos[0]||{}).ano||'7');
     const tipoN=t=>{const x=semAcentoJS(t);return x.includes('ativ')?'Atividade':x.includes('unid')?'Unidade':'Resumo'};
     const desenha=()=>{
       o.querySelector('.sheet').innerHTML=`<h2>Ajustes do app</h2>
@@ -3592,6 +3674,7 @@ function ajustesForm(){
         <div class="pav-tg aj-stp"><span><b>Dúvidas por aluno por dia</b></span><span class="aj-n"><button type="button" id="ajMenos" aria-label="Menos">−</button><b>${v.duvPorDia}</b><button type="button" id="ajMais" aria-label="Mais">+</button></span></div>
         <button type="button" class="pav-tg" data-ajtg="avisoNovo" aria-pressed="${!!v.avisoNovo}"><span><b>Avisar quando sair atividade nova</b><span class="meta">Recado no app da turma</span></span><i aria-hidden="true"></i></button>
         <div class="pp-2"><label class="fld"><span>Lembrete na véspera</span><input type="time" id="ajVes" value="${esc(v.vespera)}"></label><label class="fld"><span>Lembrete no dia</span><input type="time" id="ajDia" value="${esc(v.dia)}"></label></div>
+        ${ajOcultos(ocAno)}
         <button type="button" class="pav-tg" id="ajMsgs" aria-expanded="${verMsgs}"><span><b>Mensagens de incentivo</b><span class="meta">${msgs.filter(m=>m.ativo).length} ativas · ${verMsgs?'toque para fechar':'ver e editar'}</span></span><span aria-hidden="true">${verMsgs?'▴':'▾'}</span></button>
         ${verMsgs?`<div class="aj-ms">${msgs.map((m,k)=>`<div class="aj-m${m.ativo?'':' off'}"><span class="meta">${esc(tipoN(m.tipo))}</span><textarea rows="2" maxlength="300" data-ajm="${k}">${esc(m.texto)}</textarea><button type="button" class="meta link" data-ajon="${k}">${m.ativo?'Desativar':'Ativar'}</button></div>`).join('')}
           ${novas.map((m,k)=>`<div class="aj-m"><select data-ajnt="${k}">${['resumo','atividade','unidade'].map(t=>`<option value="${t}"${m.tipo===t?' selected':''}>${t==='resumo'?'Resumo':t==='atividade'?'Atividade':'Unidade'}</option>`).join('')}</select><textarea rows="2" maxlength="300" data-ajn="${k}" placeholder="Nova mensagem">${esc(m.texto)}</textarea></div>`).join('')}
@@ -3606,6 +3689,8 @@ function ajustesForm(){
       o.querySelector('#ajMenos').onclick=()=>{ler();v.duvPorDia=Math.max(1,v.duvPorDia-1);desenha()};
       o.querySelector('#ajMais').onclick=()=>{ler();v.duvPorDia=Math.min(5,v.duvPorDia+1);desenha()};
       o.querySelector('#ajMsgs').onclick=()=>{ler();verMsgs=!verMsgs;desenha()};
+      o.querySelectorAll('[data-ocano]').forEach(b=>b.onclick=()=>{ler();ocAno=b.dataset.ocano;desenha()});
+      o.querySelectorAll('[data-octipo]').forEach(b=>b.onclick=async()=>{ler();const ok=await ocMudar(b,{tipo:b.dataset.octipo});if(ok&&o.isConnected){desenha();render()}});
       o.querySelectorAll('[data-ajon]').forEach(b=>b.onclick=()=>{ler();const m=msgs[+b.dataset.ajon];m.ativo=!m.ativo;desenha()});
       const add=o.querySelector('#ajAdd');if(add)add.onclick=()=>{ler();novas.push({tipo:'resumo',texto:''});desenha()};
       o.querySelector('#ajOk').onclick=async()=>{ler();const b=o.querySelector('#ajOk'),e=o.querySelector('#ajErr');
@@ -3620,6 +3705,14 @@ function ajustesForm(){
     };
     desenha();
   });
+}
+/* Painel › Ajustes: um tipo inteiro por turma (metodologia da turma). Cada toque já vale, sem precisar salvar. */
+function ajOcultos(ano){
+  const anos=(DATA&&DATA.anos)||[],a=anos.find(x=>String(x.ano)===String(ano))||anos[0];if(!a)return '';
+  const o=OC(),tipos=[['resumo','Resumos','Capítulos do livro'],['atividade','Atividades de fixação','Em todas as unidades'],['tema','Aulas de aprofundamento','Com as atividades delas'],['aval','Atividades avaliativas','As que valem ponto']];
+  return `<div class="vis" style="margin:2px 0"><h3>${OLHOIC}O que cada turma vê</h3><p class="meta">Para mudar a forma de trabalhar com uma turma (aulas seguidas ou alternadas). Vale para todas as unidades; o que já foi enviado continua guardado. Cada toque já vale, sem precisar salvar.</p>
+    <div class="seg" role="group" aria-label="Ano">${anos.map(x=>`<button type="button" data-ocano="${x.ano}" aria-selected="${String(x.ano)===String(a.ano)}" style="--sy:${COR[x.ano]||'#1D3F8F'}">${esc(x.nome||x.ano+'º ano')}</button>`).join('')}</div>
+    ${tipos.map(([k,nome,sub])=>`<div class="vr"><span><b>${nome}</b><span class="meta">${sub}</span></span><span class="tp">${a.turmas.map(t=>{const oc=(o.t[t]||[]).includes(k);return `<button type="button" data-octipo="${k}" data-oct="${t}" aria-pressed="${!oc}" aria-label="Turma ${t}: ${oc?'oculto':'vê'}">${t}<small>${oc?'oculto':'vê'}</small></button>`}).join('')}</span></div>`).join('')}</div>`;
 }
 function vProf(){
   const P=profP(),t=store.get('profTok',null);
@@ -4059,6 +4152,7 @@ function vCalendario(){
 }
 
 function render(){
+  if(DATA&&ocChave()!==OC_K)aplicarDados();
   fecharTurmas();
   if(adjusting)cancelAdjust();
   hideBar();
@@ -4215,6 +4309,7 @@ document.addEventListener('click',ev=>{
   const pft=t.closest('[data-pftt]');if(pft){S.turma=pft.dataset.pftt;S.unit=null;store.set('turma',S.turma);render();return}
   const ptb=t.closest('[data-pt]');if(ptb)return ptAbrir(ptb.dataset.pt);
   if(t.closest('#pushTodas'))return ativarPush(TURMAS.concat(pushProf()||PROF()?['PROF']:[]));
+  const ocb=t.closest('[data-oc]');if(ocb){const k=ocb.dataset.oc,[ano,id]=k.split('|');ocMudar(ocb,{chave:k}).then(ok=>{if(ok){const card=document.getElementById('ocCard');const c=capOf(capId(id));if(card&&c){card.outerHTML=ocCard(c)}}});return}
   const lib=t.closest('[data-liberar]');if(lib){const c=capOf(capId(lib.dataset.liberar));if(c)liberarRascunho(c);return}
   if(t.closest('#pavNovo'))return pavForm();
   if(t.closest('#pdvAbrir'))return pdvLista();

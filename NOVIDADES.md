@@ -8,6 +8,20 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.20.0 · 06/11/2026 (com o robô v26)
+
+- **O que cada turma vê:** o professor oculta ou exibe conteúdo por turma, sem apagar nada e sem mexer no Drive.
+  - Item por item, dentro do resumo ou da aula de aprofundamento (resumo, atividade de fixação, aula, atividade escrita, avaliativa).
+  - Um tipo inteiro por turma em Painel › Ajustes (resumos, atividades de fixação, aulas de aprofundamento, avaliativas), para adaptar a metodologia de cada turma.
+- Para a turma oculta, o item some da lista, da busca, da aba Atividades, da barra de progresso, dos avisos e dos lembretes de prazo. No modo professor, a etiqueta cinza diz para quem está oculto.
+- Avaliativa oculta: o robô recusa os envios da turma; respostas e notas continuam na planilha.
+- Roteiro novo no guia do painel e seção nova no manual (cap. 22).
+
+## Robô v26 · 06/11/2026
+
+- Lista de ocultos por turma (propriedade do script), ação do painel `oc.mudar` e campo `ocultos` no arquivo do app.
+- Avisos de resumo/aula nova e lembretes de prazo não vão para a turma que não vê o item; envio de avaliativa oculta é recusado.
+
 ## 1.19.0 · 05/11/2026 (com o robô v25)
 
 - **Liberar para os alunos** (aula de aprofundamento em rascunho): se a aula tiver atividade avaliativa em [rascunho] ou [teste], a mesma janela pergunta o destino dela: *só para eu testar*, *para os alunos* (com a data do prazo, que o robô escreve no Doc) ou *deixar como está*.
