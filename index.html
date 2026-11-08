@@ -1070,6 +1070,11 @@ body.m-escuro .ev{--evs:var(--surface-2)} body.m-escuro .ev-caderno{--evc:color-
 .rev-rasc{margin:0;padding:8px 10px;border:1.5px dashed var(--pen);border-radius:10px;background:var(--pen-soft);font-size:.88rem;line-height:1.45}
 .rev-rasc .profedit{margin-top:8px}
 .sb-tct{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:4px}
+.ufold{border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.ufold>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;cursor:pointer;min-height:48px}.ufold>summary::-webkit-details-marker{display:none}
+.ufold>summary b{display:block;font-size:1rem}.ufold>summary .meta{display:block;font-size:.84rem}
+.ufold .sf-ch{color:var(--muted);transition:transform .2s}.ufold[open]>summary .sf-ch{transform:rotate(180deg)}
+.ufold>.ulist{padding:0 10px 10px}
 .ulist{display:flex;flex-direction:column;gap:10px}
 .ucard{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:12px 14px;width:100%;color:var(--ink)}
 .ucard .ucn{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:1.35rem;background:var(--surface-2);color:var(--muted)}
@@ -1909,7 +1914,7 @@ function secFold(key,titulo,tipo,ic,resumo,corpo,badge){
   let ab=(store.get('secAbertas',{})||{})[key];if(ab===undefined&&key==='resumos')ab=true;
   return `<details class="sfold" data-sfold="${key}"${ab?' open':''}><summary class="sec sec-${tipo}"><span class="sec-ic" aria-hidden="true">${SECIC[ic]}</span><span class="sec-tx"><h2>${titulo}</h2><span class="sec-sub">${resumo}</span></span>${badge||''}${SF_CHEV}</summary><div class="sfold-body">${corpo}</div></details>`;
 }
-document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details.dia')){store.set('diaAberto',d.open);if(d.open&&d.dataset.diaid)diaMarcar(d.dataset.diaid);return}if(d.matches&&d.matches('.yfold')){const m=store.get('anosAbertos',{})||{};m[d.dataset.ano]=d.open;store.set('anosAbertos',m);return}if(d.matches&&d.matches('.sfold.rec')){if(d.open)recAbriu(d);else if(REC_SESSAO.length){REC_SESSAO=[];const y=scrollY;render();scrollTo(0,y)}return}if(!d.matches||!d.matches('.sfold'))return;const m=store.get('secAbertas',{})||{};m[d.dataset.sfold]=d.open;store.set('secAbertas',m)},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details.dia')){store.set('diaAberto',d.open);if(d.open&&d.dataset.diaid)diaMarcar(d.dataset.diaid);return}if(d.matches&&d.matches('.yfold')){const m=store.get('anosAbertos',{})||{};m[d.dataset.ano]=d.open;store.set('anosAbertos',m);return}if(d.matches&&d.matches('.sfold.rec')){if(d.open)recAbriu(d);else if(REC_SESSAO.length){REC_SESSAO=[];const y=scrollY;render();scrollTo(0,y)}return}if(!d.matches||!d.matches('.sfold,.ufold'))return;const m=store.get('secAbertas',{})||{};m[d.dataset.sfold]=d.open;store.set('secAbertas',m)},true);
 function muralFold(){
   const pe=profEdit([['Abrir o mural na planilha',profP().config]]);
   const L=muralDe(S.turma),lid=avLidos(),nov=L.filter(m=>!lid.has(m.id)).length;
@@ -2932,13 +2937,20 @@ function bannersTurma(){
   return `${COMP&&!PROF()?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}${fixosHtml(S.turma)}${DIA_ATIVO?diaTeaser():''}`;
 }
 function vEscolhaUnidade(){
-  const y=Y();
+  const y=Y(),L=[...y.list].sort((p,q)=>p.n-q.n),at=L.filter(u=>+u.n===+y.atual);
+  const fut=u=>u.inicio?u.inicio>HOJE:u.n>y.atual;
+  const ant=L.filter(u=>+u.n!==+y.atual&&!fut(u)),prox=L.filter(u=>+u.n!==+y.atual&&fut(u));
+  /* v1.21: o aluno não escolhe a unidade (só a vigente fica aberta); as outras ficam recolhidas */
+  const ufold=(key,tit,lista)=>{if(!lista.length)return '';const ab=!!(store.get('secAbertas',{})||{})[key];
+    return `<details class="ufold" data-sfold="${key}"${ab?' open':''}><summary><span><b>${tit}</b><span class="meta">${lista.length} ${lista.length===1?'unidade':'unidades'}${PROF()?'':' · '+(key==='uant'?'encerradas':'ainda fechadas')}</span></span>${SF_CHEV}</summary><div class="ulist">${lista.map(u=>uCard(u,y)).join('')}</div></details>`};
   return `<section class="section">
     ${bannersTurma()}
-    <div><span class="ypill">${y.label} · Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Escolha a unidade</h1>
-      <p class="meta" style="margin:4px 0 0">${PROF()?'<b>Modo professor:</b> todas as unidades estão abertas neste aparelho.':'Só a unidade em andamento fica aberta. As outras abrem e fecham conforme o calendário da rede.'}</p></div>
+    <div><span class="ypill">${y.label} · Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Unidade em andamento</h1>
+      <p class="meta" style="margin:4px 0 0">${PROF()?'<b>Modo professor:</b> as outras unidades também ficam abertas neste aparelho.':'As unidades abrem e fecham conforme o calendário da rede.'}</p></div>
     ${profEdit([['Datas das unidades (aba Períodos)',profP().conteudo]])}
-    <div class="ulist">${[...y.list].sort((p,q)=>(+q.n===+y.atual)-(+p.n===+y.atual)||p.n-q.n).map(u=>uCard(u,y)).join('')}</div>
+    <div class="ulist">${at.map(u=>uCard(u,y)).join('')}</div>
+    ${ufold('uant','Unidades anteriores',ant)}
+    ${ufold('uprox','Próximas unidades',prox)}
     ${pushCard()}
     <button class="meta link" data-go="home" style="align-self:center">Trocar de turma</button>
   </section>`;
