@@ -8,6 +8,11 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.21.0 · 08/11/2026
+
+- Tela da turma: "Escolha a unidade" virou **Unidade em andamento** (o aluno não escolhe; só a vigente fica aberta). Logo abaixo, só o cartão da unidade vigente.
+- As unidades passadas ficam no recolhível **Unidades anteriores** (fechado por padrão; o app lembra se ficou aberto). No início do ano, as futuras ficam em **Próximas unidades**.
+
 ## 1.20.2 · 06/11/2026 (limpeza de código)
 
 - App: removidos o cartão antigo de avisos e dúvidas do modo professor (substituído pelo Painel em 1.13), com seus estilos, ícones e cliques. Nenhuma mudança visível.
