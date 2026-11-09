@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## Robô v27 · 09/11/2026
+
+- Nova função `converterFormulariosEmDocs()` (rodar uma vez, à mão): lê os Formulários Google das atividades e escreve um Doc de fixação para cada um em "Meu Drive › Fixações convertidas (2027) › Nº ano › Unidade N › NN Fixação", com alternativas, respostas marcadas e avisos "← REVISAR" onde faltar algo. Os formulários não são alterados. A pasta fica fora do app até as Atividades de Fixação entrarem no GeoEstudos (2027).
+
 ## 1.21.1 · 08/11/2026 (correção urgente)
 
 - Correção: desde a 1.20.0, o app abria com a tela vazia em celulares que já tinham os dados guardados e não estavam no modo professor (a turma era lida antes de existir). Agora abre normalmente.

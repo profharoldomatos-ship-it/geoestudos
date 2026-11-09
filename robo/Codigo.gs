@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-06 · ocultar e exibir por turma v26';
+const VERSAO_ROBO = '2026-11-09 · converter formulários em Docs de fixação v27';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -2482,3 +2482,83 @@ function painelProfessor_() {
     conteudo: pl(GEO.PLANILHA_CONTEUDO)
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* v27: converter os Formulários Google de atividade em Docs de fixação */
+/* ------------------------------------------------------------------ */
+/**
+ * RODE UMA VEZ, à mão, no editor do Apps Script (menu ▸ Executar ▸ converterFormulariosEmDocs).
+ * Na primeira vez o Google pede autorização para ler Formulários: aceite.
+ *
+ * Lê todos os formulários do seu Drive com nome no padrão das atividades
+ * (ex.: "7 ANO | U4 C13 Atividade | Região Nordeste", "GEO 8 U2C5 | Atividade | África")
+ * e escreve, para cada um, um Google Doc no formato do GeoEstudos:
+ *   pasta "Fixações convertidas (2027)" › "7º ano" › "Unidade 4" › "13 Fixação"
+ * A pasta fica FORA da pasta do app de propósito: o robô atual leria "13 Fixação" como resumo.
+ * Nada é apagado nem alterado nos formulários. Rodar de novo não duplica: pula o que já existe.
+ * Ao final, o registro (Execuções) lista o que foi convertido e o que precisa de revisão.
+ */
+function converterFormulariosEmDocs() {
+  const raiz = pastaFilha_(DriveApp.getRootFolder(), 'Fixações convertidas (2027)');
+  const it = DriveApp.searchFiles("mimeType = 'application/vnd.google-apps.form' and trashed = false");
+  const rel = [];
+  while (it.hasNext()) {
+    const f = it.next(), nome = f.getName();
+    const m = nome.match(/(?:^|\D)([789])\s*(?:º|o)?\s*ANO\b|GEO\s*([789])\b/i);
+    const u = nome.match(/U\s*(\d)\s*-?\s*C\s*(\d{1,2})/i);
+    if (!m || !u || !/atividade/i.test(nome)) continue;
+    const ano = m[1] || m[2], uni = u[1], cap = u[2];
+    const pasta = pastaFilha_(pastaFilha_(raiz, ano + 'º ano'), 'Unidade ' + uni);
+    const alvo = cap + ' Fixação';
+    if (pasta.getFilesByName(alvo).hasNext()) { rel.push('já existia: ' + ano + 'º ano · ' + alvo); continue; }
+    let form;
+    try { form = FormApp.openById(f.getId()); } catch (e) { rel.push('NÃO ABRIU: ' + nome + ' (' + e.message + ')'); continue; }
+    const doc = DocumentApp.create(alvo), corpo = doc.getBody();
+    const cab = x => !x || /^atividade$/i.test(x) || /U\s*\d\s*-?\s*C\s*\d/i.test(x) || /ANO$|^GEO\b/i.test(x);
+    let segs = nome.split('|').map(x => x.trim()).filter(x => !cab(x));
+    if (!segs.length) segs = nome.split(/\s+-\s+|\|/).map(x => x.trim()).filter(x => !cab(x));
+    const tit = segs.pop() || nome;
+    corpo.appendParagraph(alvo + ' – ' + tit).setHeading(DocumentApp.ParagraphHeading.HEADING1);
+    corpo.appendParagraph('Prazo: ');
+    corpo.appendParagraph('Convertido do formulário: ' + f.getUrl());
+    let n = 0, revisar = 0;
+    form.getItems().forEach(item => {
+      const tipo = item.getType(), T = FormApp.ItemType;
+      const enun = (item.getTitle() || '').trim(), ajuda = (item.getHelpText() || '').trim();
+      if (tipo === T.SECTION_HEADER || tipo === T.PAGE_BREAK) { if (enun) corpo.appendParagraph('— ' + enun + ' —'); return; }
+      if (tipo === T.IMAGE) { corpo.appendParagraph('[imagem: ' + (enun || 'sem título') + ' — copie do formulário original]'); revisar++; return; }
+      if (tipo === T.VIDEO) { corpo.appendParagraph('[vídeo: ' + (enun || '') + ' — ver formulário original]'); return; }
+      if (/\b(nome|turma|n[uú]mero da chamada|nº da chamada|e-?mail)\b/i.test(enun) && (tipo === T.TEXT || tipo === T.LIST || tipo === T.MULTIPLE_CHOICE)) return; // identificação: o app já pede
+      n++;
+      const L = 'ABCDEFGHIJ';
+      if (tipo === T.MULTIPLE_CHOICE || tipo === T.LIST || tipo === T.CHECKBOX) {
+        const ch = tipo === T.MULTIPLE_CHOICE ? item.asMultipleChoiceItem().getChoices() : tipo === T.LIST ? item.asListItem().getChoices() : item.asCheckboxItem().getChoices();
+        corpo.appendParagraph(n + '. ' + enun + (tipo === T.CHECKBOX ? ' (marque todas as corretas)' : ''));
+        if (ajuda) corpo.appendParagraph(ajuda);
+        const certas = [];
+        ch.forEach((c, k) => { corpo.appendParagraph(L[k] + ') ' + c.getValue()); try { if (c.isCorrectAnswer()) certas.push(L[k]); } catch (e) {} });
+        if (!certas.length) { corpo.appendParagraph('Resposta: ?  ← REVISAR: o formulário não tinha resposta marcada'); revisar++; }
+        else corpo.appendParagraph((tipo === T.CHECKBOX || certas.length > 1 ? 'Respostas: ' : 'Resposta: ') + certas.join(', '));
+        if (ch.length > 4 && tipo !== T.CHECKBOX) { corpo.appendParagraph('← REVISAR: mais de 4 alternativas'); revisar++; }
+      } else if (tipo === T.TEXT) {
+        corpo.appendParagraph(n + '. ' + enun); if (ajuda) corpo.appendParagraph(ajuda);
+        corpo.appendParagraph('Resposta curta: ?  ← REVISAR: escreva as respostas aceitas, separadas por /'); revisar++;
+      } else if (tipo === T.PARAGRAPH_TEXT) {
+        corpo.appendParagraph(n + '. ' + enun); if (ajuda) corpo.appendParagraph(ajuda);
+        let pts = ''; try { pts = item.asParagraphTextItem().getPoints(); } catch (e) {}
+        corpo.appendParagraph('Escrita: ' + (pts || '?') + ' pontos');
+      } else {
+        corpo.appendParagraph(n + '. ' + enun + '  ← REVISAR: tipo de pergunta "' + tipo + '" não tem equivalente no app'); revisar++;
+      }
+      corpo.appendParagraph('');
+    });
+    doc.saveAndClose();
+    const arq = DriveApp.getFileById(doc.getId());
+    pasta.addFile(arq); DriveApp.getRootFolder().removeFile(arq);
+    rel.push('convertido: ' + ano + 'º ano · U' + uni + ' · ' + alvo + ' (' + n + ' questões' + (revisar ? ', ' + revisar + ' para revisar' : '') + ')');
+  }
+  rel.sort();
+  Logger.log('Pasta: ' + raiz.getUrl() + '\n' + rel.join('\n'));
+  return rel;
+}
+function pastaFilha_(pai, nome) { const i = pai.getFoldersByName(nome); return i.hasNext() ? i.next() : pai.createFolder(nome); }
