@@ -2669,7 +2669,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.23.2',APP_DATA='2026-11-09';
+const APP_VERSAO='1.23.3',APP_DATA='2026-11-09';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -4336,11 +4336,21 @@ function compartilhar(title,text,url,cab){
   else fallback();
 }
 
+/* v1.24: botões de atividade abrem a fixação no app direto (e continuam de onde o aluno parou).
+   Só vão para o cartão do resumo quando a atividade já foi enviada (para ver a nota) ou o envio está pendente. */
+function fixAbrirDireto(id){
+  const c=capOf(id);if(!c||c.tema||!fixVisivel(c))return false;
+  const a=c.fix,f=!a.teste&&!COMP&&avFeitas()[a.doc];
+  if(avPend()[a.doc])return false;
+  if(avFechada(a)){avAbrir(id,'fix','gab');return true}
+  if(f)return false;
+  avAbrir(id,'fix');return true;
+}
 const prazoAtv=c=>fixVisivel(c)?(c.fix.prazo||''):prazoDe(c.n,'atividade');
 function atvCard(c){
   const fx=fixVisivel(c),sent=isSent(c.n),pr=prazoAtv(c),late=!sent&&pr&&pr<HOJE;
   if(fx)return `<div class="atv${sent?' ok':late?' late':''}"><div class="atv-h"><span class="cn">${c.n}</span><span style="min-width:0"><span class="eyebrow">Capítulo ${c.n} · no app</span><b>${esc(c.titulo)}</b>${pr?`<span class="meta">Prazo final: ${dm(pr)} · ${quando(pr).toLowerCase()}</span>`:''}</span><span class="atv-st">${sent?CHECK+'Enviada':late?'Prazo encerrado':'Pendente'}</span></div>
-    <div class="atv-acts"><button class="btn act-go" data-act="${c.n}">${sent||late?'Ver no resumo':'Fazer a atividade'}</button></div></div>`;
+    <div class="atv-acts"><button class="btn act-go" data-act="${c.n}">${late?'Ver gabarito':sent?'Ver minha nota':avAnd()[c.fix.doc]?'Continuar a atividade':'Fazer a atividade'}</button></div></div>`;
   return `<div class="atv${sent?' ok':late?' late':''}"><div class="atv-h"><span class="cn">${c.n}</span><span style="min-width:0"><span class="eyebrow">Capítulo ${c.n}</span><b>${esc(c.titulo)}</b>${pr?`<span class="meta">Prazo final: ${dm(pr)} · ${quando(pr).toLowerCase()}</span>`:''}</span><span class="atv-st">${sent?CHECK+'Enviada':late?'Prazo encerrado':'Pendente'}</span></div>
     <div class="atv-acts">${sent?'':`<a class="btn act-go" href="${esc(c.atividade)}" target="_blank" rel="noopener">Fazer a atividade<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`}<button class="btn btn-ghost" data-sent="${c.n}">${sent?'Desmarcar envio':'Já enviei'}</button>${c.resumo?`<button class="btn btn-ghost" data-cap="${c.n}">Ver resumo</button>`:''}</div></div>`;
 }
@@ -4519,8 +4529,8 @@ document.addEventListener('click',ev=>{
   const un=t.closest('[data-unit]');if(un){if(!liberada(un.dataset.unit))return toast(msgFechada(un.dataset.unit));S.unit=+un.dataset.unit;return go('resumos')}
   const ua=t.closest('[data-uabrir]');if(ua){if(!liberada(ua.dataset.uabrir))return toast(msgFechada(ua.dataset.uabrir));S.unit=+ua.dataset.uabrir;S.uAberta=true;return go('turma')}
   if(t.closest('[data-uescolha]')){S.uAberta=false;return go('turma')}
-  const ac=t.closest('[data-act]');if(ac){const id=capId(ac.dataset.act),cc=capOf(id);S.unit=cc?cc.u:null;go('resumos',id);const b=$('#actBox');if(b){b.scrollIntoView({block:'start'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
-  const jp=t.closest('[data-jump]');if(jp){const b=$('#actBox')||$('.avcard');if(b){b.scrollIntoView({block:'start',behavior:'smooth'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
+  const ac=t.closest('[data-act]');if(ac){const id=capId(ac.dataset.act),cc=capOf(id);if(fixAbrirDireto(id))return;S.unit=cc?cc.u:null;go('resumos',id);const b=$('#actBox');if(b){b.scrollIntoView({block:'start'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
+  const jp=t.closest('[data-jump]');if(jp&&S.cap&&fixAbrirDireto(capId(S.cap)))return;if(jp){const b=$('#actBox')||$('.avcard');if(b){b.scrollIntoView({block:'start',behavior:'smooth'});b.classList.add('flash-act');setTimeout(()=>b.classList.remove('flash-act'),1400)}return}
   const avi=t.closest('[data-aviso]');if(avi)marcarVisto([avi.dataset.aviso]);
   const cap=t.closest('[data-cap]');if(cap){const id=capId(cap.dataset.cap),c=capOf(id);if(c)S.unit=c.u;return go('resumos',id)}
   if(t.closest('[data-back]'))return go('resumos');
