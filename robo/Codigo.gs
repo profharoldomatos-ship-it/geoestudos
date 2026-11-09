@@ -2581,6 +2581,11 @@ function painelProfessor_() {
 /* ------------------------------------------------------------------ */
 /* v27: converter os Formulários Google de atividade em Docs de fixação */
 /* ------------------------------------------------------------------ */
+/* TEMPORÁRIO — só para a Unidade 4 de 2026. Em 2027 os formulários antigos
+   serão apagados (livros novos) e as fixações serão escritas direto como
+   Docs "NN Fixação". REMOVER no recesso: CONVERTER_UNIDADES,
+   converterFormulariosEmDocs, videosDoFormulario_ (pastaFilha_ só se nada
+   mais usar) e a pasta "Fixações convertidas (2027)" do Drive.            */
 /**
  * RODE UMA VEZ, à mão, no editor do Apps Script (menu ▸ Executar ▸ converterFormulariosEmDocs).
  * Na primeira vez o Google pede autorização para ler Formulários: aceite.
