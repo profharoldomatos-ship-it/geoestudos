@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-09 · Atividades de Fixação no app v28';
+const VERSAO_ROBO = '2026-11-09 · conversor de formulários: permissão e só Unidade 4 v29';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -2593,7 +2593,16 @@ function painelProfessor_() {
  * Nada é apagado nem alterado nos formulários. Rodar de novo não duplica: pula o que já existe.
  * Ao final, o registro (Execuções) lista o que foi convertido e o que precisa de revisão.
  */
+const CONVERTER_UNIDADES = [4];   // só estas unidades são convertidas (as outras ficam para 2027)
 function converterFormulariosEmDocs() {
+  // Pede a permissão de Formulários de forma explícita. Na janela do Google, marque
+  // "Ver e gerenciar seus formulários" (ou "Selecionar tudo") e clique em Continuar.
+  ScriptApp.requireScopes(ScriptApp.AuthMode.FULL, [
+    'https://www.googleapis.com/auth/forms',
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/documents',
+    'https://www.googleapis.com/auth/script.external_request'
+  ]);
   const raiz = pastaFilha_(DriveApp.getRootFolder(), 'Fixações convertidas (2027)');
   const it = DriveApp.searchFiles("mimeType = 'application/vnd.google-apps.form' and trashed = false");
   const rel = [];
@@ -2603,6 +2612,7 @@ function converterFormulariosEmDocs() {
     const u = nome.match(/U\s*(\d)\s*-?\s*C\s*(\d{1,2})/i);
     if (!m || !u || !/atividade/i.test(nome)) continue;
     const ano = m[1] || m[2], uni = u[1], cap = u[2];
+    if (CONVERTER_UNIDADES.indexOf(+uni) < 0) continue;
     const pasta = pastaFilha_(pastaFilha_(raiz, ano + 'º ano'), 'Unidade ' + uni);
     const alvo = cap + ' Fixação';
     if (pasta.getFilesByName(alvo).hasNext()) { rel.push('já existia: ' + ano + 'º ano · ' + alvo); continue; }
