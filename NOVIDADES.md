@@ -8,6 +8,20 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.22.0 · 09/11/2026 (com o robô v28 e o robô do GeoNotas v11)
+
+- **Atividade de Fixação no app (Nota 2):** Doc "NN Fixação" na pasta da unidade vira atividade dentro do GeoEstudos, no lugar do formulário. Nota de 0 a 10, só o primeiro envio vale, sem envio depois do prazo. Ao enviar, o aluno vê só a nota; gabarito comentado e "Praticar de novo" só depois do prazo.
+- Questões com vídeo do YouTube ("Vídeo: link") e com alternativa E. "[teste] NN Fixação" aparece só no celular do professor; problemas do Doc aparecem para o professor no cartão.
+- Prazo em Painel › Ajustes: mesmo prazo para todas (por unidade, todas as turmas e anos) ou o "Prazo:" de cada Doc.
+- Contra cópia para IA (fixação e avaliativa): texto das questões sem seleção/cópia, ordem embaralhada por aluno e registro de quantas vezes o aluno saiu do app (vai para a planilha de notas das atividades).
+- Avaliativa: depois do prazo, "Ver gabarito comentado".
+- Aba Atividades, progresso e "Já enviei" reconhecem a atividade feita no app.
+
+## Robô v28 · 09/11/2026
+
+- Lê "NN Fixação" ("[teste]" só para o professor, "[rascunho]" fora), aceita "Vídeo:", alternativa E e "Comentário:", ignora as linhas do conversor e aponta questões "marque todas", resposta curta e escrita.
+- Prazo das fixações (fix.ler / fix.salvar), gabarito só depois do prazo (?gabarito=), colunas "Saiu do app" e "Tempo fora do app".
+
 ## Robô v27 · 09/11/2026
 
 - Nova função `converterFormulariosEmDocs()` (rodar uma vez, à mão): lê os Formulários Google das atividades e escreve um Doc de fixação para cada um em "Meu Drive › Fixações convertidas (2027) › Nº ano › Unidade N › NN Fixação", com alternativas, respostas marcadas e avisos "← REVISAR" onde faltar algo. Os formulários não são alterados. A pasta fica fora do app até as Atividades de Fixação entrarem no GeoEstudos (2027).

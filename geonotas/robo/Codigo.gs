@@ -6,7 +6,7 @@
  * o app só grava em células de lançamento (sem fórmula) e lê os resultados.
  */
 
-const VERSAO_ROBO = 'v10'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
+const VERSAO_ROBO = 'v11'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
 
 const CONFIG = {
   ANO: 2026,
@@ -337,30 +337,121 @@ function gravarImport_(turma, cols, itens, formId, processados) {
    As duvidosas ficam esperando a conferência no app. */
 function importarAutomatico() {
   const log = [];
+  const app = fixacoesDoApp_();                          // v11: envios das Atividades de Fixação feitas no GeoEstudos
+  const regApp = registroApp_();
   Object.keys(CONFIG.TURMAS).forEach(turma => {
     let forms = [];
-    try { forms = listarFormularios_(turma).filter(f => f.cap && f.novas); } catch (e) { log.push(turma + ': ' + e.message); }
-    forms.forEach(f => {
-      try {
-        const p = previaImport_(turma, f.id, false), visto = {}, itens = [], proc = [];
-        p.respostas.forEach(x => {
-          if (x.certeza !== 'certo' || x.mesmaTurma !== true || !x.r || visto[x.r]) return;
-          visto[x.r] = 1;
-          // se já há nota (ou marcação) na planilha, não sobrescreve: só registra como processada
-          const at = p.atual[x.r] || {}, temValor = p.cols.nota ? String(at.nota || '') !== '' : at.marca === true;
-          itens.push({ r: x.r, nome: p.alunos.find(a => a.r === x.r).nome, nota: x.nota, soRegistro: temValor });
-          proc.push(x.id);
-        });
-        if (itens.length) {
-          gravarImport_(turma, p.cols, itens, f.id, proc);
-          const novas = itens.filter(x => !x.soRegistro).length;
-          if (novas) log.push(turma + ' · cap. ' + f.cap + ': ' + novas + ' nota(s)');
-        }
-      } catch (e) { log.push(turma + ' · cap. ' + f.cap + ': ' + e.message); }
+    try { forms = listarFormularios_(turma).filter(f => f.cap); } catch (e) { log.push(turma + ': ' + e.message); }
+    const ano = anoDaTurma_(turma), envApp = (app.envios[ano] || []).filter(x => x.turma === turma && !regApp.ids[x.id]);
+    const caps = {};
+    forms.filter(f => f.novas).forEach(f => caps[f.cap] = 1);
+    envApp.forEach(x => caps[x.cap] = 1);
+    Object.keys(caps).map(Number).forEach(cap => {
+      try { importarCap_(turma, cap, forms.filter(f => f.cap === cap && f.novas), envApp.filter(x => x.cap === cap), regApp, log); }
+      catch (e) { log.push(turma + ' · cap. ' + cap + ': ' + e.message); }
+    });
+    // depois do prazo (+3 dias para envios guardados sem internet chegarem): quem não enviou fica com zero
+    Object.keys(app.prazos[ano] || {}).forEach(cap => {
+      try { zerarQuemNaoEnviou_(turma, Number(cap), app.prazos[ano][cap], log); } catch (e) { log.push(turma + ' · cap. ' + cap + ' (zero): ' + e.message); }
     });
   });
+  salvarRegistroApp_(regApp);
   PropertiesService.getScriptProperties().setProperty('auto_ultima', JSON.stringify({ quando: new Date().toISOString(), log: log.slice(0, 40) }));
   Logger.log(log.join('\n') || 'Nada novo para importar.');
+}
+
+/** Junta formulário e app num capítulo: vale o PRIMEIRO envio de cada aluno, venha de onde vier. */
+function importarCap_(turma, cap, forms, envApp, regApp, log) {
+  const sh = sheetFor_(turma, 'notas'), dados = readSheet_(sh, 'notas'), cols = colunasCap_(dados, cap);
+  if (!cols) { log.push(turma + ' · cap. ' + cap + ': não achei a coluna da atividade na aba ' + sh.getName()); return; }
+  const alunos = dados.rows.map(r => ({ r: r.r, nome: r.nome }));
+  const atual = {}; dados.rows.forEach(r => atual[r.r] = { marca: r.cells[cols.marca.c].v, nota: cols.nota ? r.cells[cols.nota.c].v : null });
+  const cand = [], regs = {};
+  forms.forEach(f => {
+    const p = previaImport_(turma, f.id, false);
+    regs[f.id] = registro_(f.id);
+    p.respostas.forEach(x => {
+      if (x.certeza === 'certo' && x.mesmaTurma === true && x.r) cand.push({ fonte: f.id, id: x.id, r: x.r, nota: x.nota, quando: x.quando });
+      else if (x.certeza === 'repetido') { regs[f.id].ids[x.id] = 1; }      // repetido: vale o primeiro, já lançado
+    });
+  });
+  envApp.forEach(x => {
+    const c = casarNome_(x.nome, alunos);
+    if (c.certeza === 'certo' && c.r) cand.push({ fonte: 'app', id: x.id, r: c.r, nota: x.nota, quando: x.quando });
+    else log.push(turma + ' · cap. ' + cap + ' (app): confira o nome "' + x.nome + '" — não achei na planilha com segurança');
+  });
+  cand.sort((a, b) => String(a.quando).localeCompare(String(b.quando)));
+  const visto = {}, itens = [];
+  cand.forEach(x => {
+    const marcar = () => { if (x.fonte === 'app') regApp.ids[x.id] = 1; else regs[x.fonte].ids[x.id] = 1; };
+    marcar();
+    if (visto[x.r]) return;                     // segundo envio do mesmo aluno: não vale
+    visto[x.r] = 1;
+    const at = atual[x.r] || {}, temValor = cols.nota ? String(at.nota == null ? '' : at.nota) !== '' : at.marca === true;
+    const nome = (alunos.find(a => a.r === x.r) || {}).nome;
+    itens.push({ r: x.r, nome: nome, nota: x.nota, soRegistro: temValor });
+    if (x.fonte !== 'app') { const rg = regs[x.fonte]; (rg.rs[turma] = rg.rs[turma] || {})[norm_(nome)] = 1; }
+  });
+  if (itens.length) gravarImport_(turma, cols, itens, null, null);
+  Object.keys(regs).forEach(fid => salvarRegistro_(fid, regs[fid]));
+  const novas = itens.filter(x => !x.soRegistro).length;
+  if (novas) log.push(turma + ' · cap. ' + cap + ': ' + novas + ' nota(s)');
+}
+
+/** Envios das Atividades de Fixação do GeoEstudos (planilha "GeoEstudos - Notas das atividades") e os prazos (arquivo de dados do app). */
+function fixacoesDoApp_() {
+  const out = { envios: {}, prazos: {} };
+  try {
+    const it = DriveApp.getFilesByName('GeoEstudos - Notas das atividades (não apagar)');
+    if (it.hasNext()) {
+      SpreadsheetApp.open(it.next()).getSheets().forEach(sh => {
+        const m = sh.getName().match(/^(\d)º ano · Fixação (\d+)(?!.*teste)/);
+        if (!m || sh.getLastRow() < 2) return;
+        const v = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues();
+        v.forEach((l, k) => {
+          if (!(l[0] instanceof Date) || l[6] === '' || l[6] == null) return;
+          (out.envios[m[1]] = out.envios[m[1]] || []).push({ id: sh.getSheetId() + '|' + (l[9] || k), cap: Number(m[2]), turma: String(l[2]),
+            nome: String(l[3] && !/^\(/.test(String(l[3])) ? l[3] : l[4]), nota: Number(l[6]), quando: l[0].toISOString() });
+        });
+      });
+    }
+  } catch (e) { Logger.log('Planilha de notas do app: ' + e.message); }
+  try {
+    const it = DriveApp.getFilesByName('GeoEstudos - dados do app (não apagar).json');
+    if (it.hasNext()) {
+      const d = JSON.parse(it.next().getBlob().getDataAsString('UTF-8'));
+      (d.anos || []).forEach(a => (a.unidades || []).filter(u => Number(u.n) === CONFIG.PERIODO).forEach(u => (u.caps || []).forEach(c => {
+        if (c.fix && !c.fix.teste && c.fix.prazo) (out.prazos[String(a.ano)] = out.prazos[String(a.ano)] || {})[c.n] = c.fix.prazo;
+      })));
+    }
+  } catch (e) { Logger.log('Dados do app: ' + e.message); }
+  return out;
+}
+function registroApp_() {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('imp_app') || '') || { ids: {}, zeros: {} }; } catch (e) { return { ids: {}, zeros: {} }; }
+}
+function salvarRegistroApp_(reg) {
+  // guarda só o necessário (a propriedade tem limite de tamanho)
+  PropertiesService.getScriptProperties().setProperty('imp_app', JSON.stringify({ ids: reg.ids, zeros: reg.zeros || {} }));
+}
+/** Três dias depois do prazo, quem não tem nada na atividade fica com 0 (uma vez só por turma e capítulo). */
+function zerarQuemNaoEnviou_(turma, cap, prazo, log) {
+  const lim = new Date(prazo + 'T23:59:59'); lim.setDate(lim.getDate() + 3);
+  if (new Date() < lim) return;
+  const reg = registroApp_(), k = turma + '|' + cap + '|' + prazo;
+  if ((reg.zeros || {})[k]) return;
+  const sh = sheetFor_(turma, 'notas'), dados = readSheet_(sh, 'notas'), cols = colunasCap_(dados, cap);
+  if (!cols) return;
+  let n = 0;
+  dados.rows.forEach(r => {
+    const m = r.cells[cols.marca.c], nt = cols.nota ? r.cells[cols.nota.c] : null;
+    const vazio = cols.nota ? String(nt.v == null ? '' : nt.v) === '' : m.v !== true && String(m.v == null ? '' : m.v) === '';
+    if (!vazio) return;
+    if (cols.nota) { const c = sh.getRange(r.r, Number(cols.nota.c)); if (!c.getFormula()) { c.setValue(0); n++; } }
+    else { const c = sh.getRange(r.r, Number(cols.marca.c)); if (!c.getFormula()) { c.setValue(cols.marca.check ? false : 0); n++; } }
+  });
+  reg.zeros = reg.zeros || {}; reg.zeros[k] = new Date().toISOString(); salvarRegistroApp_(reg);
+  if (n) log.push(turma + ' · cap. ' + cap + ': ' + n + ' zero(s) — não enviaram até ' + prazo);
 }
 
 /** Rode uma vez no editor para ligar a importação automática de hora em hora. */

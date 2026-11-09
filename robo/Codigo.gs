@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-09 · converter formulários em Docs de fixação v27';
+const VERSAO_ROBO = '2026-11-09 · Atividades de Fixação no app v28';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -60,6 +60,11 @@ function doGet(e) {
     let b = {};
     try { b = JSON.parse(p.avaliacao); } catch (err) {}
     return ContentService.createTextOutput(JSON.stringify(receberAvaliacao_(b))).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (p.gabarito !== undefined) {
+    let b = {};
+    try { b = JSON.parse(p.gabarito); } catch (err) {}
+    return ContentService.createTextOutput(JSON.stringify(gabaritoDepoisDoPrazo_(b))).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.avalcheck !== undefined) {
     let b = {};
@@ -412,7 +417,7 @@ function prepararAbaPeriodos_(ss) {
 function lerDocs_() {
   // Resultado: { caps: { '7': { 13: {id, nome, unidade, atualizado} } },
   //             temas: { '7': { 4: { 1: {aula: {...}, atividade: {...}} } } } }
-  const docs = {}, temas = {}, revs = {}, avals = {};
+  const docs = {}, temas = {}, revs = {}, avals = {}, fixs = {};
   // Rascunhos de resumos e aulas: não entram nos dados públicos; só o professor vê (profrasc)
   const rascs = { caps: {}, temas: {} };
   const raiz = DriveApp.getFolderById(GEO.PASTA_APP);
@@ -433,8 +438,17 @@ function lerDocs_() {
         let nome = f.getName();
         const rasc = /^\s*\[\s*rascunho/i.test(nome);
         if (rasc) nome = nome.replace(/^\s*\[\s*rascunho\s*\]?\s*/i, '');
+        const testeF = /^\s*\[\s*teste/i.test(nome);
+        if (testeF) nome = nome.replace(/^\s*\[\s*teste\s*\]?\s*/i, '');
         const mc = nome.match(/^\s*(\d+)\s*[-–—.:]?\s*(.*)$/);
         if (!mc) continue;
+        if (/^(fixa[çc][ãa]o|atividade\s+de\s+fixa[çc][ãa]o)\b/i.test(mc[2].trim())) {
+          // v28: "13 Fixação" = Atividade de Fixação do capítulo 13 (vale a Nota 2). "[rascunho]": fora do app.
+          // "[teste] 13 Fixação": aparece só no celular do professor, para experimentar.
+          if (!rasc) (fixs[ano] = fixs[ano] || {})[parseInt(mc[1], 10)] = { id: f.getId(), atualizado: f.getLastUpdated().toISOString(), teste: testeF };
+          continue;
+        }
+        if (testeF) continue;
         if (/^revis[ãa]o\b/i.test(mc[2].trim())) {
           // "14 Revisão": perguntas da revisão rápida do capítulo 14.
           // "[rascunho] 14 Revisão": aparece só no modo professor, para testar antes de liberar.
@@ -494,7 +508,7 @@ function lerDocs_() {
       }
     }
   }
-  return { caps: docs, temas: temas, revs: revs, avals: avals, rascs: rascs };
+  return { caps: docs, temas: temas, revs: revs, avals: avals, fixs: fixs, rascs: rascs };
 }
 
 /**
@@ -508,7 +522,7 @@ function lerDocs_() {
 function lerRevisao_(texto) {
   const linhas = String(texto || '').split(/\r?\n/).map(l => l.replace(/\u00a0/g, ' ').trim());
   const perguntas = [], erros = [];
-  let solto = [], atual = null, primeira = true, num = 0;
+  let solto = [], atual = null, primeira = true, num = 0, video = '';
   const limpaNum = s => s.replace(/^(pergunta|quest[ãa]o)\s*\d*\s*[.:)\-–—]?\s*/i, '').replace(/^\d+\s*[.)\-–—:]\s*/, '').trim();
   const fechar = () => {
     if (!atual) return;
@@ -518,31 +532,53 @@ function lerRevisao_(texto) {
     if (!p.q) falta.push('enunciado');
     const letras = ['A', 'B', 'C', 'D'].filter((L, i) => !p.ops[i]);
     if (letras.length) falta.push('alternativa ' + letras.join(', '));
-    if (p.c < 0) falta.push('linha "Resposta:" com A, B, C ou D');
+    if (p.c < 0) falta.push('linha "Resposta:" com A, B, C' + (p.ops[4] ? ', D ou E' : ' ou D'));
+    if (p.ruim) { erros.push('Pergunta ' + num + (p.q ? ' ("' + p.q.slice(0, 40) + '…")' : '') + ': ' + p.ruim); return; }
     if (falta.length) { erros.push('Pergunta ' + num + (p.q ? ' ("' + p.q.slice(0, 40) + '…")' : '') + ': falta ' + falta.join('; ')); return; }
-    perguntas.push({ q: p.q, a: p.ops.slice(0, 4), c: p.c, e: p.e });
+    const per = { q: p.q, a: p.ops.slice(0, p.ops[4] ? 5 : 4), c: p.c, e: p.e };
+    if (p.v) per.v = p.v;
+    perguntas.push(per);
   };
   linhas.forEach(l => {
     if (!l) return;
-    let m = l.match(/^([A-Da-d])\s*[)\].:\-–—]\s*(.+)$/);
+    // linhas que o conversor de formulários escreve e não fazem parte das questões
+    if (/^—.*—$/.test(l) || /^convertido do formul/i.test(l) || /^←/.test(l)) return;
+    let m = l.match(/^v[íi]deo\s*:\s*(https?:\/\/\S+)/i);
+    if (m) {
+      // "Vídeo: link do YouTube": vale para a questão em que está (ou para a próxima)
+      if (atual && (atual.c >= 0 || atual.temExp)) fechar();
+      if (atual) atual.v = m[1]; else video = m[1];
+      return;
+    }
+    if (/^v[íi]deo\s*:/i.test(l)) return;
+    m = l.match(/^([A-Ea-e])\s*[)\].:\-–—]\s*(.+)$/);
     if (m && !(atual && (atual.c >= 0 || atual.temExp))) {
-      const i = 'ABCD'.indexOf(m[1].toUpperCase());
+      const i = 'ABCDE'.indexOf(m[1].toUpperCase());
       if (!atual || atual.ops[i]) {
         fechar();
         let enun = solto;
-        if (primeira) {
+        {
           let k = -1; enun.forEach((x, j) => { if (/^(\d+\s*[.)\-–—:]|pergunta|quest[ãa]o)/i.test(x)) k = j; });
-          enun = k >= 0 ? enun.slice(k) : enun.slice(-1);
+          enun = k >= 0 ? enun.slice(k) : primeira ? enun.slice(-1) : enun;
         }
-        atual = { q: limpaNum(enun.join(' ')), ops: [], c: -1, e: '', temExp: false };
-        solto = []; primeira = false;
+        atual = { q: limpaNum(enun.join(' ')), ops: [], c: -1, e: '', temExp: false, v: video, ruim: '' };
+        solto = []; primeira = false; video = '';
       }
       atual.ops[i] = m[2].trim();
       return;
     }
-    m = l.match(/^(resposta|gabarito)[^:]*:\s*(?:letra\s*)?\(?\s*([A-Da-d])\b/i);
-    if (m && atual) { atual.c = 'ABCD'.indexOf(m[2].toUpperCase()); return; }
-    m = l.match(/^explica[çc][ãa]o\s*:?\s*(.*)$/i);
+    if (atual && /^respostas\s*:/i.test(l) && (l.match(/\b[A-E]\b/g) || []).length > 1) { atual.ruim = '"marque todas" ainda não é aceito no app: deixe uma só alternativa correta'; atual.c = 0; return; }
+    if (atual && /^resposta\s+curta\b/i.test(l)) { atual.ruim = 'resposta curta ainda não é aceita no app: transforme em alternativas A a D'; atual.c = 0; return; }
+    if (/^escrita\s*:/i.test(l)) {
+      if (atual && atual.c < 0 && !atual.ops.length) { atual.ruim = 'questão escrita ainda não é aceita no app'; atual.c = 0; return; }
+      const enun = solto.filter(x => /^\d+\s*[.)\-–—:]/.test(x)).pop() || solto[solto.length - 1] || '';
+      erros.push('Questão escrita ("' + limpaNum(enun).slice(0, 40) + '…") ainda não é aceita no app: ficou de fora.');
+      solto = []; return;
+    }
+    m = l.match(/^(resposta|gabarito)[^:]*:\s*(?:letra\s*)?\(?\s*([A-Ea-e])\b/i);
+    if (m && atual) { atual.c = 'ABCDE'.indexOf(m[2].toUpperCase()); if (atual.c > 3 && !atual.ops[4]) atual.c = -1; return; }
+    if (atual && /^(resposta|gabarito)[^:]*:/i.test(l)) { atual.ruim = 'falta a letra da resposta (A, B, C ou D) na linha "Resposta:"'; atual.c = 0; return; }
+    m = l.match(/^(?:explica[çc][ãa]o|coment[áa]rio)\s*:?\s*(.*)$/i);
     if (m && atual) { atual.e = m[1].trim(); atual.temExp = true; return; }
     if (atual && (atual.temExp || atual.c >= 0)) { fechar(); solto = [l]; return; }
     if (atual && atual.ops.length) { atual.ops[atual.ops.length - 1] += ' ' + l; return; }
@@ -662,13 +698,14 @@ function textoComEstilo_(el) {
 /* Monta anos, unidades e capítulos                                    */
 /* ------------------------------------------------------------------ */
 function montarAnos_(conf, conteudo, docs, anterior) {
-  const antCaps = {}, antTxt = {}, antRev = {}, antPdf = {}, antAval = {};
+  const antCaps = {}, antTxt = {}, antRev = {}, antPdf = {}, antAval = {}, antFix = {};
   ((anterior && anterior.anos) || []).forEach(a => (a.unidades || []).forEach(u => {
     (u.caps || []).forEach(c => {
       if (c.doc) antCaps[c.doc] = c;
       if (c.doc && c.pdfDoc) antPdf[c.doc] = { at: c.atualizado, pdf: c.pdfDoc };
       if (c.docRevisao) antRev[c.docRevisao] = { at: c.atualizadoRevisao, r: c.revisao, err: c.revisaoErros };
       if (c.aval) antAval[c.aval.doc] = { at: c.atualizadoAval, a: c.aval, err: c.avalErros };
+      if (c.fix) antFix[c.fix.doc] = { at: c.atualizadoFix, a: c.fix, err: c.fixErros };
     });
     (u.temas || []).forEach(t => {
       if (t.doc) antTxt[t.doc] = { at: t.atualizado, txt: t.resumo };
@@ -750,6 +787,27 @@ function montarAnos_(conf, conteudo, docs, anterior) {
         cap.avalErros = lido.erros;
         if (lido.perguntas.length) cap.aval = avaliacaoPublica_(d.id, lido);
       } catch (err) { Logger.log('Não consegui ler a avaliação ' + d.id + ': ' + err); if (ant) { cap.aval = ant.a; cap.avalErros = ant.err || []; } }
+    });
+    // v28: Atividade de Fixação do Doc "NN Fixação" (vale a Nota 2): todas as questões, nota de 0 a 10, gabarito só no robô
+    const fAno = (docs.fixs || {})[ano] || {}, fConf = fixConf_();
+    Object.keys(fAno).forEach(n => {
+      const d = fAno[n];
+      const u = Object.keys(unidades).map(k => unidades[k]).filter(x => x.caps[n])[0];
+      if (!u) return;
+      const cap = u.caps[n], ant = antFix[d.id];
+      cap.atualizadoFix = d.atualizado;
+      if (ant && ant.a && ant.at === d.atualizado) { cap.fix = JSON.parse(JSON.stringify(ant.a)); cap.fixErros = ant.err || []; }
+      else {
+        try {
+          const lido = lerAvaliacao_(DocumentApp.openById(d.id).getBody().getText());
+          cap.fixErros = lido.erros.filter(e => !/por aluno/.test(e));
+          if (lido.perguntas.length) { cap.fix = avaliacaoPublica_(d.id, lido); cap.fix.prazoDoc = lido.prazo || ''; }
+        } catch (err) { Logger.log('Não consegui ler a fixação ' + d.id + ': ' + err); if (ant) { cap.fix = ant.a; cap.fixErros = ant.err || []; } }
+      }
+      if (!cap.fix) return;
+      cap.fix.tipo = 'fix'; cap.fix.valor = 10; cap.fix.qtd = cap.fix.qs.length;
+      if (d.teste) cap.fix.teste = true; else delete cap.fix.teste;
+      cap.fix.prazo = prazoFix_(fConf, u.n, cap.fix.prazoDoc);
     });
     // Temas Transversais (aulas extras · recuperação paralela)
     const sheetT = conteudo.temas[ano] || {};
@@ -1484,6 +1542,8 @@ function painelAcao_(b) {
     if (a === 'rasc.publicar') return publicarRascunho_(String(b.id || ''));
     if (a === 'rasc.aval') return liberarAvaliacao_(String(b.id || ''), String(b.modo || ''), String(b.prazo || ''));
     if (a === 'oc.mudar') return ocultosMudar_(b);
+    if (a === 'fix.ler') return { ok: true, fix: fixConf_() };
+    if (a === 'fix.salvar') return fixSalvar_(b);
     if (a === 'conf.ler') return confLer_();
     if (a === 'conf.salvar') return confSalvar_(b);
     return { ok: false, erro: 'Ação desconhecida.' };
@@ -1674,6 +1734,36 @@ function ocultosMudar_(b) {
     agendarAtualizacaoPainel_();
     return { ok: true, ocultos: oc };
   } finally { lock.releaseLock(); }
+}
+/* ------------------------------------------------------------------ */
+/* v28: Atividades de Fixação no app (valem a Nota 2)                    */
+/* ------------------------------------------------------------------ */
+/** Prazo das fixações: { modo: 'unico' | 'cada', u: { '4': '2026-12-20' } } (propriedade do script; vale para todas as turmas e anos). */
+function fixConf_() {
+  try { const o = JSON.parse(PropertiesService.getScriptProperties().getProperty('fixPrazo') || '{}'); return { modo: o.modo === 'cada' ? 'cada' : 'unico', u: o.u || {} }; }
+  catch (e) { return { modo: 'unico', u: {} }; }
+}
+/** Prazo de uma fixação: o prazo único da unidade; no modo "cada", o "Prazo:" do Doc (se faltar, o da unidade). */
+function prazoFix_(conf, unidade, prazoDoc) {
+  if (conf.modo === 'cada' && prazoDoc) return prazoDoc;
+  return (conf.u || {})[String(unidade)] || prazoDoc || '';
+}
+function fixSalvar_(b) {
+  const modo = b.modo === 'cada' ? 'cada' : 'unico', u = {};
+  Object.keys(b.u || {}).forEach(k => { const v = String(b.u[k] || ''); if (/^\d$/.test(k) && /^\d{4}-\d{2}-\d{2}$/.test(v)) u[k] = v; });
+  PropertiesService.getScriptProperties().setProperty('fixPrazo', JSON.stringify({ modo: modo, u: u }));
+  agendarAtualizacaoPainel_();
+  return { ok: true, fix: { modo: modo, u: u } };
+}
+/** Depois do prazo, o app pode mostrar a resposta certa e o comentário de cada questão (antes disso, nada sai do robô). */
+function gabaritoDepoisDoPrazo_(b) {
+  try {
+    const info = avaliacaoPublicada_(String(b.doc || ''));
+    if (!info) return { ok: false, erro: 'Esta atividade não está mais disponível.' };
+    if (!info.aval.teste && !encerrada_(info.aval.prazo)) return { ok: false, erro: 'O gabarito aparece depois do prazo.' };
+    const lido = lerAvaliacao_(DocumentApp.openById(info.aval.doc).getBody().getText());
+    return { ok: true, qs: lido.perguntas.map(p => ({ h: hashTexto_(p.q), c: hashTexto_(p.a[p.c]), e: p.e || '' })) };
+  } catch (err) { return { ok: false, erro: 'Não foi possível buscar o gabarito agora.' }; }
 }
 const CHAVES_CONF_ = [
   ['mensagem', 'mensagem da tela inicial', 'Mensagem da tela inicial', 'Faixa amarela na página inicial do app (em branco: sem faixa)'],
@@ -2148,6 +2238,7 @@ function lerAvaliacao_(texto) {
       let a = m[3] ? parseInt(m[3], 10) : new Date().getFullYear(); if (a < 100) a += 2000;
       prazo = a + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); return;
     }
+    if (/^prazo[^:]*:\s*$/i.test(l)) return;
     if (/^prazo[^:]*:/i.test(l)) { erros.push('Prazo não entendido: "' + l + '" (use dia/mês/ano, ex.: 30/11/2026)'); return; }
     if ((m = l.match(/^quest[õo]es\s+por\s+aluno[^:]*:\s*(\d+)/i))) { qtd = Math.max(1, parseInt(m[1], 10)); return; }
     resto.push(l0);
@@ -2162,7 +2253,7 @@ function avaliacaoPublica_(docId, lido) {
   return {
     doc: docId, valor: lido.valor, prazo: lido.prazo, qtd: Math.min(lido.qtd, lido.perguntas.length),
     // alternativas em ordem alfabética: nem a ordem do Doc vai para o app
-    qs: lido.perguntas.map(p => ({ h: hashTexto_(p.q), q: p.q, a: p.a.slice().sort((x, y) => x.localeCompare(y, 'pt')) }))
+    qs: lido.perguntas.map(p => { const o = { h: hashTexto_(p.q), q: p.q, a: p.a.slice().sort((x, y) => x.localeCompare(y, 'pt')) }; if (p.v) o.v = p.v; return o; })
   };
 }
 function chaveNome_(nome) { return semAcento_(nome).toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim(); }
@@ -2173,6 +2264,7 @@ function avaliacaoPublicada_(docId) {
   let achou = null;
   ((d && d.anos) || []).forEach(a => (a.unidades || []).forEach(u => (u.caps || []).forEach(c => {
     if (c.aval && c.aval.doc === docId) achou = { ano: String(a.ano), id: String(c.n), rot: 'Cap. ' + c.n, titulo: c.titulo, aval: c.aval, turmas: a.turmas || [], oc: d.ocultos };
+    if (c.fix && c.fix.doc === docId) achou = { ano: String(a.ano), id: String(c.n), rot: 'Fixação ' + c.n, titulo: c.titulo, aval: c.fix, turmas: a.turmas || [], oc: d.ocultos, fix: true };
   })));
   ((d && d.anos) || []).forEach(a => (a.unidades || []).forEach(u => (u.temas || []).forEach(t => {
     if (t.aval && t.aval.doc === docId) achou = { ano: String(a.ano), id: 't' + t.n, rot: 'Aprofundamento ' + t.n, titulo: t.titulo, aval: t.aval, turmas: a.turmas || [], oc: d.ocultos };
@@ -2204,7 +2296,7 @@ function abaNotas_(info) {
   let nome = base, i = 2;
   while (ss.getSheetByName(nome)) nome = base + ' (' + (i++) + ')';
   const sh = ss.insertSheet(nome);
-  const cab = ['Enviado em', 'Ano', 'Turma', 'Nome (na lista de alunos)', 'Nome digitado pelo aluno', 'Acertos', 'Nota', 'Tempo', 'Respostas (número da questão no Doc)', 'Chave'];
+  const cab = ['Enviado em', 'Ano', 'Turma', 'Nome (na lista de alunos)', 'Nome digitado pelo aluno', 'Acertos', 'Nota', 'Tempo', 'Respostas (número da questão no Doc)', 'Chave', 'Saiu do app (vezes)', 'Tempo fora do app'];
   sh.getRange(1, 1, 1, cab.length).setValues([cab]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F').setWrap(true);
   sh.setFrozenRows(1);
   [17, 7, 7, 32, 26, 9, 7, 9, 60, 10].forEach((w, j) => sh.setColumnWidth(j + 1, w * 7));
@@ -2223,7 +2315,7 @@ function validarIdent_(b, info) {
   if (chaveNome_(nome).split(' ').filter(x => x.length > 1).length < 2) return { erro: 'Escreva o seu nome completo (nome e sobrenome).' };
   if (info.aval.teste) return { turma: turma, nome: nome, oficial: '(teste do professor)', chave: chaveNome_(nome) + '|' + turma + '|' + Date.now() };
   // v26: avaliativa oculta para esta turma (Painel › O que cada turma vê): ninguém da turma envia, mesmo trocando de turma no app
-  if (info.oc && ocultoPara_(info.oc, info.ano, info.id, 'aval', turma)) return { erro: 'Esta atividade não está disponível para a Turma ' + turma + '.' };
+  if (info.oc && ocultoPara_(info.oc, info.ano, info.id, info.fix ? 'atividade' : 'aval', turma)) return { erro: 'Esta atividade não está disponível para a Turma ' + turma + '.' };
   const lista = alunosDaTurma_(turma);
   if (!lista.length) return { turma: turma, nome: nome, oficial: '(turma sem lista)', chave: chaveNome_(nome) + '|' + turma };
   const r = acharAluno_(nome, lista);
@@ -2328,8 +2420,11 @@ function receberAvaliacao_(b) {
     try {
       const sh = abaNotas_(info);
       if (jaEnviou_(sh, v.chave)) return { ok: false, ja: true, erro: 'Já existe uma atividade enviada com este nome na Turma ' + v.turma + '. Cada estudante só pode fazer uma vez.' };
+      const saidas = Math.max(0, Math.min(999, parseInt(b.saidas, 10) || 0)), fora = Math.max(0, Math.min(36000, parseInt(b.fora, 10) || 0));
+      if (sh.getLastColumn() < 12) sh.getRange(1, 11, 1, 2).setValues([['Saiu do app (vezes)', 'Tempo fora do app']]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F');
       sh.appendRow([new Date(), info.ano + 'º', v.turma, v.oficial, v.nome, acertos + ' de ' + qtd, nota, tempo,
-        detalhe.map(x => 'Q' + x.n + (x.branco ? ' –' : x.ok ? ' ✓' : ' ✗')).join(' · '), v.chave]);
+        detalhe.map(x => 'Q' + x.n + (x.branco ? ' –' : x.ok ? ' ✓' : ' ✗')).join(' · '), v.chave,
+        saidas, Math.floor(fora / 60) + ' min ' + ('0' + (fora % 60)).slice(-2) + ' s']);
     } finally { lock.releaseLock(); }
     cache.put(kA, String(nA + 1), 21600);
     return { ok: true, nota: nota, valor: info.aval.valor };

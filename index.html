@@ -1167,6 +1167,14 @@ body.m-escuro .not-al .g{color:#9FDDB1}body.m-escuro .not-al .r{color:#F5A59C}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tp [aria-pressed=false]{color:#F4C46A}}:root[data-theme="dark"] .tp [aria-pressed=false]{color:#F4C46A}
 .oc-tag{display:inline-block;background:#5B6472;color:#fff;border-radius:6px;padding:0 6px;font-size:.72rem;font-weight:700;letter-spacing:0;text-transform:none;margin-right:4px;align-self:flex-start}
 .seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden}.seg button{flex:1;padding:9px 4px;font:inherit;font-weight:700;background:var(--surface);color:var(--ink);border:0;border-right:1px solid var(--line);white-space:nowrap;cursor:pointer}.seg button:last-child{border-right:0}.seg [aria-selected=true]{background:var(--sy,#1D3F8F);color:#fff}
+.avl-o{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.avl-o input,.avl-o textarea,.avl-o select{-webkit-user-select:text;user-select:text}
+.fx-video{display:flex;flex-direction:column;gap:6px}.fx-video .media{margin:0}
+.fx-nota{margin:2px 0}
+.fx-exp{border-left:4px solid var(--ok);background:var(--ok-soft);border-radius:10px;padding:10px 12px}.fx-exp.bad{border-color:#B7791F;background:color-mix(in srgb,#F59E0B 12%,var(--surface))}
+.gl{display:flex;flex-direction:column;gap:10px}.gi{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.gi .h{display:flex;justify-content:space-between;align-items:center;font-weight:700}.gi .s{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:.85rem}.gi .s.ok{background:var(--ok)}.gi .s.no{background:var(--bad)}
+.gi .gr{font-size:.95rem;padding:6px 8px;border-radius:8px;border:1px solid var(--line)}.gi .gr.ok{border-color:var(--ok);background:var(--ok-soft);font-weight:700}.gi .gr.no{border-color:var(--bad);background:var(--bad-soft)}
+.gi .c{font-size:.9rem;background:var(--surface-2);border-radius:8px;padding:6px 8px}
 .lb-av{border:1px solid var(--line);border-radius:14px;padding:12px;margin:0;display:flex;flex-direction:column;gap:8px;background:color-mix(in srgb,var(--year) 6%,var(--surface))}
 .lb-avt{padding:0;margin:0 0 2px;font-size:.92rem;color:var(--ink)}.lb-avi{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--year);color:#fff;vertical-align:-4px;margin-right:4px}.lb-avi svg{width:12px;height:12px}
 .lb-op{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);cursor:pointer}
@@ -1377,10 +1385,10 @@ function ocAplicar(anos,T){
     (a.unidades||[]).forEach(u=>{
       (u.caps||[]).forEach(c=>{
         if(ocPara(ano,c.n,'resumo',T)){c.resumo='';c.pdf='';c.ocR=true}
-        if(ocPara(ano,c.n,'atividade',T)){c.atividade='';c.atividadeTexto=''}
+        if(ocPara(ano,c.n,'atividade',T)){c.atividade='';c.atividadeTexto='';c.fix=null}
         if(c.aval&&ocPara(ano,c.n,'aval',T))c.aval=null;
       });
-      u.caps=(u.caps||[]).filter(c=>!c.ocR||c.atividade||c.atividadeTexto);
+      u.caps=(u.caps||[]).filter(c=>!c.ocR||c.atividade||c.atividadeTexto||c.fix);
       u.temas=(u.temas||[]).filter(t=>!ocPara(ano,'t'+t.n,'aula',T));
       u.temas.forEach(t=>{if(ocPara(ano,'t'+t.n,'atividade',T)){t.atividade='';t.atividadeTexto=''}if(t.aval&&ocPara(ano,'t'+t.n,'aval',T))t.aval=null});
     });
@@ -1504,7 +1512,11 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const Y=()=>YEARS[anoT()]||{list:[],units:{}};
 const key=n=>anoT()+'-'+n;
 const isCopied=n=>!!S.copied[key(n)];
-const isSent=n=>!!S.sent[key(n)];
+/* v1.22: Atividade de Fixação feita no app (Doc "NN Fixação") conta como enviada sozinha */
+const fixVisivel=c=>!!(c&&c.fix&&c.fix.qs&&c.fix.qs.length&&(!c.fix.teste||PROF()));
+const temAtvCap=c=>!!(c&&(c.atividade||fixVisivel(c)));
+const fixFeita=n=>{if(String(n)[0]==='t')return false;try{const c=capOf(n);return !!(c&&c.fix&&!c.fix.teste&&avFeitas()[c.fix.doc])}catch(e){return false}};
+const isSent=n=>!!S.sent[key(n)]||fixFeita(n);
 let lastMsg='';
 function cheer(kind,sub){
   const pool=MSGS[kind].filter(m=>m!==lastMsg);const msg=pool[Math.floor(Math.random()*pool.length)];lastMsg=msg;
@@ -2457,7 +2469,7 @@ const TOURS={
     {alvo:'.paper',t:'Destaque e comente',x:'Selecione um trecho do texto (toque e segure numa palavra) para destacar, sublinhar ou escrever um comentário. Fica salvo só no seu celular.'},
     {alvo:'#copyBtn',t:'Copiou no caderno? Marque aqui',x:'Assim você acompanha o seu progresso. Lembre: quem confere de verdade é o professor, no seu caderno.'},
     {alvo:'.revcard',t:'Revisão rápida: é opcional',x:'Perguntas sobre o resumo, só para reforçar o aprendizado. Não vale nota: faça se quiser, quantas vezes quiser. O app corrige e explica cada resposta.',opcional:true},
-    {alvo:'#actBox',t:'Atividade de fixação',x:'Esta atividade vale ponto. Faça com atenção, envie uma vez só e depois marque “Já enviei”.',opcional:true}
+    {alvo:'#actBox',t:'Atividade de fixação',x:'Vale nota (Nota 2). Faça com atenção até o prazo: vale só o primeiro envio. A correção aparece depois do prazo.',opcional:true}
   ],
   aprofundamento:[
     {alvo:'.paper',t:'Aula de aprofundamento',x:'Uma aula extra que vale ponto e ajuda a melhorar a sua média (recuperação paralela). Leia com atenção: ela é a base das atividades desta aula. Ouvir, Aa e as marcações funcionam aqui também.'},
@@ -2610,7 +2622,7 @@ function vGuia(){
       'No fim de alguns resumos há a <b>Revisão rápida</b>: perguntas sorteadas sobre o capítulo.',
       'O app corrige na hora e explica cada resposta. Faça quantas vezes quiser.']))}
     ${bloco('ano','atv','Atividades','Fixação, aprofundamento e atividade avaliativa',ol([
-      '<b>Atividade de fixação:</b> vale ponto. Toque em <b>Fazer a atividade</b>, responda com atenção, envie uma vez só e volte para marcar <b>“Já enviei”</b>.',
+      '<b>Atividade de fixação:</b> vale a Nota 2. Toque em <b>Fazer a atividade</b> e responda com atenção até o prazo: vale só o primeiro envio. Quando ela é feita no próprio app, o envio fica registrado sozinho e a correção aparece depois do prazo. Se abrir um formulário, volte e marque <b>“Já enviei”</b>.',
       '<b>Aulas de aprofundamento:</b> aulas extras que valem ponto e ajudam a melhorar a média (recuperação paralela).',
       '<b>Atividade avaliativa:</b> informe a turma e o <b>nome completo, como está na chamada</b>. São 10 questões sorteadas, e você faz uma única vez. No fim aparece só a sua nota.',
       'Se a internet cair durante a atividade avaliativa, as respostas ficam guardadas e o app envia quando a conexão voltar.']))}
@@ -2642,7 +2654,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.21.1',APP_DATA='2026-11-08';
+const APP_VERSAO='1.22.0',APP_DATA='2026-11-09';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2789,7 +2801,7 @@ function capBtn(c){
   if(!c.resumo)return `<div class="capitem off"><div class="capbtn"><span class="cn">${c.n}</span><span class="ct"><span class="eyebrow">Capítulo ${c.n}</span><b>${esc(c.titulo)}</b><span class="meta">Resumo ainda não publicado</span></span></div></div>`;
   const done=isCopied(c.n),sent=isSent(c.n);
   return `<div class="capitem"><button class="capbtn" data-cap="${c.n}"><span class="cn">${c.n}</span><span class="ct"><span class="eyebrow">${c.rascunho?'<span class="rasc-tag">Rascunho · só você vê</span> ':''}${ocTag(c)}Capítulo ${c.n}</span><b>${esc(c.titulo)}</b></span>${CHEVR}</button>
-    <div class="capacts${c.atividade?'':' one'}"><button data-cap="${c.n}" class="ca-res${done?' ok':''}">${done?CHECK:''}${done?'Resumo copiado':'Copiar resumo'}</button>${c.atividade?`<button data-act="${c.n}" class="ca-act${sent?' ok':''}">${sent?CHECK+'Atividade enviada':'Atividade de fixação'}</button>`:''}</div></div>`;
+    <div class="capacts${temAtvCap(c)?'':' one'}"><button data-cap="${c.n}" class="ca-res${done?' ok':''}">${done?CHECK:''}${done?'Resumo copiado':'Copiar resumo'}</button>${temAtvCap(c)?`<button data-act="${c.n}" class="ca-act${sent?' ok':''}">${sent?CHECK+'Atividade enviada':'Atividade de fixação'}</button>`:''}</div></div>`;
 }
 /* Caixa de dúvidas: a pergunta vai para uma planilha que só o professor vê.
    As respostas publicadas aparecem aqui, sem o nome de quem perguntou. */
@@ -2891,7 +2903,7 @@ function avisosSheet(){
 }
 function vTurma(){
   if(!S.uAberta)return vEscolhaUnidade();
-  const y=Y(),ua=(S.unit&&liberada(S.unit,y))?+S.unit:y.atual,uo=y.units[ua]||{titulo:''},pub=capsDe(y,ua).filter(c=>c.resumo),total=pub.length,done=pub.filter(c=>isCopied(c.n)).length,acts=capsDe(y,ua).filter(c=>c.atividade),sent=acts.filter(c=>isSent(c.n)).length;
+  const y=Y(),ua=(S.unit&&liberada(S.unit,y))?+S.unit:y.atual,uo=y.units[ua]||{titulo:''},pub=capsDe(y,ua).filter(c=>c.resumo),total=pub.length,done=pub.filter(c=>isCopied(c.n)).length,acts=capsDe(y,ua).filter(temAtvCap),sent=acts.filter(c=>isSent(c.n)).length;
   const pct=(a,b)=>b?Math.round(a/b*100):0,prox=proximos(3);
   return `<section class="section">
     ${COMP&&!PROF()?`<div class="cel"><span>👥 Celular compartilhado · <button class="link" id="ccComo">como funciona</button></span><button class="link" data-fixar="${esc(S.turma)}">A Turma ${esc(S.turma)} é a minha</button></div>`:''}
@@ -2913,7 +2925,7 @@ function vTurma(){
     <div class="sfolds">
     ${secFold('resumos','Resumos da Unidade '+ua,'ano','livro',total?`${total} ${total===1?'resumo':'resumos'} · ${done} ${done===1?'copiado':'copiados'} no caderno`:'Nenhum resumo publicado ainda',
       `${continuarCard(ua)}<div class="capgrid">${capsDe(y,ua).filter(c=>!c.ocR).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
-    ${acts.length?secFold('atvs','Atividades de fixação','ano','atv',(()=>{const pend=acts.filter(c=>!isSent(c.n)),pr=pend.map(c=>prazoDe(c.n,'atividade')).filter(x=>x&&x>=HOJE).sort()[0];return `${acts.length} ${acts.length===1?'atividade':'atividades'} · ${sent} ${sent===1?'enviada':'enviadas'}${pr?' · próximo prazo '+dm(pr):''}`})(),
+    ${acts.length?secFold('atvs','Atividades de fixação','ano','atv',(()=>{const pend=acts.filter(c=>!isSent(c.n)),pr=pend.map(c=>prazoAtv(c)).filter(x=>x&&x>=HOJE).sort()[0];return `${acts.length} ${acts.length===1?'atividade':'atividades'} · ${sent} ${sent===1?'enviada':'enviadas'}${pr?' · próximo prazo '+dm(pr):''}`})(),
       `<div class="atvlist">${acts.map(atvCard).join('')}</div>`):''}
     ${temasDe(y,ua).length?secFold('temas','Aulas de aprofundamento','ano','globo',`${temasDe(y,ua).length} ${temasDe(y,ua).length===1?'aula extra':'aulas extras'} · valem ponto`,
       `<div class="capgrid">${temasDe(y,ua).map(temaBtn).join('')}</div>`):''}
@@ -3009,7 +3021,7 @@ function vCap(n){
     ${avCard(c,n)}
     ${revCard(c,n)}
     ${pdfCard(pdfDe(c),'Resumo em PDF','Para imprimir, guardar ou enviar a um colega.','res')}
-    ${c.atividade?`<div class="card act" id="actBox">
+    ${fixVisivel(c)?fixCard(c,n):c.atividade?`<div class="card act" id="actBox">
       <div class="act-head"><span class="act-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg></span><span><b class="act-t">Atividade de fixação</b><br><span class="act-sub">Capítulo ${n} · ${esc(c.titulo)}</span></span><span class="vale">Vale nota</span></div>
       <p class="act-why">Esta atividade gera pontuação para a sua nota no período.${pAt?` <b>Prazo final: ${dm(pAt)}.</b>`:''}</p>
       <ul class="act-rules"><li>Responda com muita atenção.</li><li>Responda somente uma vez: vale apenas a resposta mais antiga.</li><li>Qualquer problema, avise o Prof. Haroldo.</li></ul>
@@ -3182,6 +3194,7 @@ const ROTEIROS=[
   ['Atividade de fixação (formulário)',6,['Crie o formulário no Google Formulários, com perguntas de nome completo e turma.','Toque em Enviar › ícone de link e copie o endereço.','Cole na planilha Conteúdo › Capítulos, coluna Atividade, na linha do capítulo.','Marque o prazo na agenda de cada turma: Atividade de fixação · Cap. 14.'],P=>[['Planilha de Conteúdo',P.conteudo],['Agendas',P.agendaGeral]]],
   ['Aula de aprofundamento',7,['Na subpasta das aulas de aprofundamento da unidade, crie o Doc com o número e o título: 1 Título da aula.','Atividade escrita no próprio app: Doc 1 Atividade. Por formulário: link na aba Temas Transversais da planilha de Conteúdo.','Prazo na agenda: Aula de aprofundamento 1 · prazo.','Para escrever sem publicar, comece o nome com [rascunho]: a aula aparece só no modo professor, com a etiqueta “Rascunho · só você vê”.','Para publicar, abra a aula no app e toque em Liberar para os alunos, ou tire o [rascunho] do nome. Se a aula tiver atividade avaliativa, a mesma janela pergunta se ela fica para você testar, sai para os alunos com prazo ou continua como está.'],P=>[['Planilha de Conteúdo',P.conteudo]]],
   ['Revisão rápida (não vale nota)',8,['Ao lado do resumo, crie o Doc 14 Revisão.','Cada pergunta: enunciado, A) a D), linha Resposta: e, se quiser, Explicação:.','Até 12 perguntas; o app sorteia 6 a cada vez.','Pode pedir ao Claude para escrever as perguntas a partir do resumo.','Com o nome [rascunho] 14 Revisão, a revisão aparece só no modo professor: teste no app e, quando estiver boa, apague o [rascunho] do nome.'],P=>[]],
+  ['Atividade de fixação no app (Nota 2)',9,['Na pasta da unidade, crie o Doc "13 Fixação" (número do capítulo + Fixação), com as questões de A a D (ou E) e "Resposta:". "Comentário:" é opcional e aparece no gabarito.','Para vídeo, ponha a linha "Vídeo: link do YouTube" antes da questão.','Para testar antes, use "[teste] 13 Fixação": só aparece no seu celular. "[rascunho]" fica fora do app.','Prazo: Painel › Ajustes › Prazo das atividades de fixação (mesmo prazo para todas, ou o "Prazo:" de cada Doc). Depois do prazo, o app não aceita envios.','A nota (0 a 10) vai sozinha para a Nota 2 no GeoNotas: vale o primeiro envio, do app ou do formulário. Três dias após o prazo, quem não enviou fica com 0.','O gabarito comentado aparece para os alunos só depois do prazo.'],P=>[]],
   ['Ocultar ou exibir para uma turma',22,['Um item: abra o resumo ou a aula no modo professor e, no quadro O que cada turma vê, toque na turma (azul = vê, tracejado = oculto).','Um tipo inteiro (metodologia da turma): Painel › Ajustes › O que cada turma vê. Escolha o ano e toque na turma. Já vale, sem salvar.','Ocultar a aula de aprofundamento esconde também as atividades dela. Muda para os alunos em 1 a 3 minutos e nada é apagado.','Avaliativa oculta: a turma não envia mais; respostas e notas continuam na planilha.'],P=>[]],
   ['Atividade avaliativa (vale nota)',9,['Enquanto a aula for rascunho, crie [rascunho] 1 Avaliação, com 20 questões (A a D e Resposta:). Assim ela fica fora do app.','Para testar: ao liberar a aula, escolha Liberar só para eu testar (ou troque [rascunho] por [teste] no nome).','Com o modo professor ligado, abra a aula no app e faça a atividade para testar: os envios vão para a aba (teste).','Para liberar aos alunos: escolha Liberar para os alunos e a data do prazo na janela da aula; ou acrescente Prazo: dd/mm/aaaa e tire o [teste] do nome; ou publique em Painel › Rascunhos.','Confira a lista de alunos (aba Alunos) e veja as notas na planilha de notas.'],P=>[['Planilha de notas e alunos',P.notas]]],
   ['Datas na agenda',10,['Use a agenda da turma (Geografia 71, 72…).','Títulos reconhecidos: Entrega do caderno · Cap. 14, Atividade de fixação · Cap. 14, Aula de aprofundamento 1 · prazo, Avaliação…','O primeiro link da descrição vira botão no app.'],P=>[['Abrir a Agenda',P.agendaGeral]]],
@@ -3652,6 +3665,9 @@ function ajustesForm(){
     try{C=await ppChamar({acao:'conf.ler'})}catch(e){C={ok:false,erro:'Sem conexão para ler os ajustes.'}}
     if(!o.isConnected)return;
     if(!C.ok){o.querySelector('.sheet').innerHTML=`<h2>Ajustes do app</h2><p class="avl-err">${esc(C.erro||'Não foi possível ler os ajustes.')}</p><button class="btn btn-ghost" data-close>Fechar</button>`;return}
+    let F0=null;try{const jf=await ppChamar({acao:'fix.ler'});if(jf&&jf.ok&&jf.fix)F0=jf.fix}catch(e){}
+    const uAt=String(((DATA&&DATA.anos)||[]).map(a=>a.atual).filter(Boolean)[0]||(Y()||{}).atual||1);
+    const fx=F0?{modo:F0.modo,u:Object.assign({},F0.u)}:null;
     const v=Object.assign({},C.valores),msgs=C.mensagens.map(m=>Object.assign({},m)),novas=[];let verMsgs=false,ocAno=String((Y()||{}).ano||(DATA.anos[0]||{}).ano||'7');
     const tipoN=t=>{const x=semAcentoJS(t);return x.includes('ativ')?'Atividade':x.includes('unid')?'Unidade':'Resumo'};
     const desenha=()=>{
@@ -3661,6 +3677,10 @@ function ajustesForm(){
         <div class="pav-tg aj-stp"><span><b>Dúvidas por aluno por dia</b></span><span class="aj-n"><button type="button" id="ajMenos" aria-label="Menos">−</button><b>${v.duvPorDia}</b><button type="button" id="ajMais" aria-label="Mais">+</button></span></div>
         <button type="button" class="pav-tg" data-ajtg="avisoNovo" aria-pressed="${!!v.avisoNovo}"><span><b>Avisar quando sair atividade nova</b><span class="meta">Recado no app da turma</span></span><i aria-hidden="true"></i></button>
         <div class="pp-2"><label class="fld"><span>Lembrete na véspera</span><input type="time" id="ajVes" value="${esc(v.vespera)}"></label><label class="fld"><span>Lembrete no dia</span><input type="time" id="ajDia" value="${esc(v.dia)}"></label></div>
+        ${fx?`<div class="vis" style="margin:2px 0"><h3>${FIXIC}Prazo das atividades de fixação</h3><p class="meta">Vale para todas as turmas e anos. Depois do prazo, o app não aceita mais envios e a nota de quem não enviou é zero.</p>
+          <label class="lb-op"><input type="radio" name="fxModo" value="unico"${fx.modo!=='cada'?' checked':''}><span><b>Mesmo prazo para todas</b><small>Unidade ${uAt}: <span class="lb-pz"><input type="date" id="fxData" value="${esc(fx.u[uAt]||'')}" aria-label="Prazo das atividades de fixação da unidade ${uAt}"></span></small></span></label>
+          <label class="lb-op"><input type="radio" name="fxModo" value="cada"${fx.modo==='cada'?' checked':''}><span><b>Prazo de cada atividade</b><small>Pela linha "Prazo:" escrita no Doc de cada fixação. Se faltar, vale a data acima.</small></span></label></div>`
+          :`<p class="meta" style="margin:0">Prazo das atividades de fixação: atualize o robô (v28) para definir aqui.</p>`}
         ${ajOcultos(ocAno)}
         <button type="button" class="pav-tg" id="ajMsgs" aria-expanded="${verMsgs}"><span><b>Mensagens de incentivo</b><span class="meta">${msgs.filter(m=>m.ativo).length} ativas · ${verMsgs?'toque para fechar':'ver e editar'}</span></span><span aria-hidden="true">${verMsgs?'▴':'▾'}</span></button>
         ${verMsgs?`<div class="aj-ms">${msgs.map((m,k)=>`<div class="aj-m${m.ativo?'':' off'}"><span class="meta">${esc(tipoN(m.tipo))}</span><textarea rows="2" maxlength="300" data-ajm="${k}">${esc(m.texto)}</textarea><button type="button" class="meta link" data-ajon="${k}">${m.ativo?'Desativar':'Ativar'}</button></div>`).join('')}
@@ -3668,7 +3688,8 @@ function ajustesForm(){
           <button type="button" class="btn btn-ghost" id="ajAdd">+ Nova mensagem</button><span class="meta">Aparecem quando o aluno marca um resumo copiado, envia uma atividade ou termina uma unidade.</span></div>`:''}
         <p class="avl-err" id="ajErr" role="alert" hidden></p>
         <div class="pav-bts"><button class="btn btn-primary" id="ajOk">Salvar ajustes</button><button class="btn btn-ghost" data-close>Cancelar</button></div>`;
-      const ler=()=>{v.mensagem=o.querySelector('#ajMsg').value;v.vespera=o.querySelector('#ajVes').value;v.dia=o.querySelector('#ajDia').value;
+      const ler=()=>{if(fx){const md=o.querySelector('input[name=fxModo]:checked'),dt=o.querySelector('#fxData');if(md)fx.modo=md.value;if(dt)fx.u[uAt]=dt.value}
+        v.mensagem=o.querySelector('#ajMsg').value;v.vespera=o.querySelector('#ajVes').value;v.dia=o.querySelector('#ajDia').value;
         o.querySelectorAll('[data-ajm]').forEach(t=>msgs[+t.dataset.ajm].texto=t.value);
         o.querySelectorAll('[data-ajn]').forEach(t=>novas[+t.dataset.ajn].texto=t.value);
         o.querySelectorAll('[data-ajnt]').forEach(t=>novas[+t.dataset.ajnt].tipo=t.value)};
@@ -3683,9 +3704,12 @@ function ajustesForm(){
       o.querySelector('#ajOk').onclick=async()=>{ler();const b=o.querySelector('#ajOk'),e=o.querySelector('#ajErr');
         const mud={};Object.keys(v).forEach(k=>{if(String(v[k])!==String(C.valores[k]))mud[k]=v[k]});
         const mm=msgs.filter((m,k)=>m.texto!==C.mensagens[k].texto||m.ativo!==C.mensagens[k].ativo),nn=novas.filter(m=>m.texto.trim());
-        if(!Object.keys(mud).length&&!mm.length&&!nn.length){close();return toast('Nada foi alterado.')}
+        const fxMud=fx&&(fx.modo!==F0.modo||JSON.stringify(fx.u)!==JSON.stringify(F0.u));
+        if(!Object.keys(mud).length&&!mm.length&&!nn.length&&!fxMud){close();return toast('Nada foi alterado.')}
         b.disabled=true;b.textContent='Salvando…';
-        try{const j=await ppChamar({acao:'conf.salvar',valores:mud,mensagens:mm,novas:nn});
+        try{if(fxMud){const jf=await ppChamar({acao:'fix.salvar',modo:fx.modo,u:fx.u});if(!jf.ok){b.disabled=false;b.textContent='Salvar ajustes';e.textContent=jf.erro||'Não foi possível salvar o prazo.';e.hidden=false;return}}
+          if(!Object.keys(mud).length&&!mm.length&&!nn.length){close();toast('Prazo salvo. Vale no app em 1 a 3 minutos.');setTimeout(carregar,150e3);return}
+          const j=await ppChamar({acao:'conf.salvar',valores:mud,mensagens:mm,novas:nn});
           if(!j.ok){b.disabled=false;b.textContent='Salvar ajustes';e.textContent=j.erro||'Não foi possível salvar.';e.hidden=false;return}
           close();toast('Ajustes salvos. Valem no app em 1 a 3 minutos.');setTimeout(carregar,150e3);
         }catch(err){b.disabled=false;b.textContent='Salvar ajustes';e.textContent='Sem conexão. Tente de novo com internet.';e.hidden=false}};
@@ -3755,28 +3779,73 @@ function avCard(c,n){
   const feita=!a.teste&&!COMP&&avFeitas()[a.doc],pend=avPend()[a.doc],and=avAnd()[a.doc],fech=avFechada(a);
   let est,btn='';
   if(pend){est=`<p class="avl-st avl-pend"><b>Envio pendente.</b> Suas respostas estão guardadas neste celular e serão enviadas quando houver internet.</p>`;btn=`<button class="avl-go" data-av="reenviar" data-doc="${esc(a.doc)}">Tentar enviar agora</button>`}
-  else if(feita){est=`<p class="avl-st avl-ok">${CHECK}<span><b>Atividade enviada${feita.nota!=null?` · Nota ${String(feita.nota).replace('.',',')}`:''}</b><span class="meta">Cada estudante faz uma única vez.</span></span></p>`;if(!fech)btn=`<button class="meta link avl-outro" data-av="abrir" data-avcap="${esc(String(n))}">Outro estudante usa este celular? Toque aqui</button>`}
-  else if(fech){est=`<p class="avl-st"><b>Prazo encerrado</b> em ${dm(a.prazo)}. Esta atividade não recebe mais respostas.</p>`}
+  else if(feita){est=`<p class="avl-st avl-ok">${CHECK}<span><b>Atividade enviada${feita.nota!=null?` · Nota ${String(feita.nota).replace('.',',')}`:''}</b><span class="meta">Cada estudante faz uma única vez.</span></span></p>`;if(!fech)btn=`<button class="meta link avl-outro" data-av="abrir" data-avcap="${esc(String(n))}">Outro estudante usa este celular? Toque aqui</button>`;else btn=`<button class="avl-go" data-av="gab" data-avcap="${esc(String(n))}" data-avk="aval">Ver gabarito comentado</button>`}
+  else if(fech){est=`<p class="avl-st"><b>Prazo encerrado</b> em ${dm(a.prazo)}. Esta atividade não recebe mais respostas.</p>`;btn=`<button class="avl-go" data-av="gab" data-avcap="${esc(String(n))}" data-avk="aval">Ver gabarito comentado</button>`}
   else{btn=`<button class="avl-go" data-av="abrir" data-avcap="${esc(String(n))}">${and?`Continuar a atividade (${Object.keys(and.resp||{}).length} de ${and.ids.length} respondidas)`:'Começar a atividade'}</button>`;est=''}
   return `<div class="card avcard"><div class="avl-head"><span class="avl-ic">${AVIC}</span><span class="avl-ht"><span class="avl-vale">Vale nota</span><b>Atividade avaliativa</b><span class="avl-sub">${a.qtd} questões objetivas · cada uma vale 1 ponto${a.prazo?` · prazo ${dm(a.prazo)}`:''}</span></span></div>${a.teste?`<p class="avl-teste"><b>Prévia do professor.</b> Só aparece neste celular; os alunos não veem. Pode fazer quantas vezes quiser, com qualquer nome. Os envios vão para a aba “(teste)” da planilha de notas.</p>`:''}
     <div class="avl-body">${est}${!feita&&!fech&&!pend?`<ul class="avl-rules"><li><b>Você só pode fazer uma vez.</b> Responda com calma e atenção.</li><li>Antes de enviar, dá para voltar e trocar respostas.</li><li>Precisa de internet para começar. Ao final, você vê a sua nota.</li></ul>`:''}${btn}</div></div>`;
 }
-function avAbrir(n){
-  const c=capOf(n);if(!c||!c.aval)return;const a=c.aval;
+const FIXIC='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg>';
+const notaTx=x=>String(x).replace('.',',');
+const diaSeguinte=p=>{const d=new Date(p+'T12:00:00');d.setDate(d.getDate()+1);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')};
+/* Atividade de Fixação no app (vale a Nota 2): cartão no resumo do capítulo */
+function fixCard(c,n){
+  const a=c.fix;if(!fixVisivel(c))return '';
+  const feita=!a.teste&&!COMP&&avFeitas()[a.doc],pend=avPend()[a.doc],and=avAnd()[a.doc],fech=avFechada(a),nv=a.qs.filter(q=>q.v).length;
+  const N=esc(String(n));let corpo;
+  if(pend)corpo=`<p class="act-why"><b>Envio pendente.</b> Suas respostas estão guardadas neste celular e serão enviadas quando houver internet.</p><button class="btn act-go" data-av="reenviar">Tentar enviar agora</button>`;
+  else if(fech)corpo=`<p class="act-why"><b>Prazo encerrado em ${dm(a.prazo)}.</b> ${feita?(feita.nota!=null?`Sua nota: <b>${notaTx(feita.nota)}</b>.`:'Atividade enviada.'):'Se você não enviou, a nota desta atividade é 0.'}</p>
+      <button class="btn act-go" data-av="gab" data-avcap="${N}" data-avk="fix">Ver gabarito comentado</button>
+      <button class="copy-btn" data-av="pratica" data-avcap="${N}" data-avk="fix">Praticar de novo (não muda a nota)</button>`;
+  else if(feita)corpo=`<div class="avl-nota fx-nota"><span>Sua nota</span><b>${feita.nota!=null?notaTx(feita.nota):'—'}</b><span>de 10</span></div>
+      <p class="act-why">${CHECK} Enviada${feita.em?' em '+dm(feita.em):''}. O gabarito e os comentários aparecem a partir de <b>${a.prazo?diaSeguinte(a.prazo):'o fim do prazo'}</b>, depois do prazo.</p>
+      <button class="meta link avl-outro" data-av="abrir" data-avcap="${N}" data-avk="fix">Outro estudante usa este celular? Toque aqui</button>`;
+  else corpo=`<p class="act-why">Vale de 0 a 10 na sua Nota 2.${a.prazo?` <b>Prazo final: ${dm(a.prazo)}.</b>`:''}</p>
+      <ul class="act-rules"><li>${a.qs.length} questões${nv?`, com ${nv} ${nv===1?'vídeo':'vídeos'}`:''}.</li><li>Envio único: vale só o primeiro envio.</li><li>A correção aparece depois do prazo.</li></ul>
+      <button class="btn act-go" data-av="abrir" data-avcap="${N}" data-avk="fix">${and?`Continuar (${Object.keys(and.resp||{}).length} de ${and.ids.length} respondidas)`:'Fazer a atividade'}</button>`;
+  const errs=PROF()&&(c.fixErros||[]).length?`<div class="avl-teste"><b>Revise o Doc "${esc(String(n))} Fixação":</b><ul style="margin:4px 0 0;padding-left:18px">${c.fixErros.slice(0,8).map(e=>`<li>${esc(e)}</li>`).join('')}</ul></div>`:'';
+  return `<div class="card act" id="actBox">
+    <div class="act-head"><span class="act-ic">${FIXIC}</span><span><b class="act-t">Atividade de fixação</b><br><span class="act-sub">Capítulo ${N} · ${esc(c.titulo)}</span></span><span class="vale">Nota 2</span></div>
+    ${a.teste?'<p class="avl-teste"><b>Prévia do professor.</b> "[teste]" no nome do Doc: só aparece neste celular, e dá para repetir.</p>':''}${errs}${corpo}</div>`;
+}
+function avAbrir(n,k,etapa){
+  const c=capOf(n);k=k||'aval';if(!c||!c[k])return;const a=c[k];
   if(TTS.on)ttsParar();
-  const and=avAnd()[a.doc];
-  AV={n,c,a,etapa:and?'q':'ident',st:and||null,i:and?(and.i||0):0,erro:'',conf:false};
+  const and=etapa?null:avAnd()[a.doc];
+  AV={n,c,a,k,etapa:etapa||(and?'q':'ident'),st:and||null,i:and?(and.i||0):0,erro:'',conf:false};
   if(and&&!and.ids.every(h=>a.qs.some(q=>q.h===h))){AV.etapa='ident';AV.st=null;const x=avAnd();delete x[a.doc];store.set('avAnd',x)}
   let o=document.querySelector('.avl-o');
-  if(!o){o=document.createElement('div');o.className='qz-o avl-o overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Atividade avaliativa');document.body.appendChild(o);o.addEventListener('click',avClique)}
-  document.body.style.overflow='hidden';avRender();
+  if(!o){o=document.createElement('div');o.className='qz-o avl-o overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');document.body.appendChild(o);o.addEventListener('click',avClique);
+    // contra copiar e colar numa IA: sem seleção, sem copiar, sem menu de toque longo (o campo de nome continua normal)
+    o.addEventListener('copy',e=>{if(!e.target.closest||!e.target.closest('input,textarea'))e.preventDefault()});
+    o.addEventListener('contextmenu',e=>{if(!e.target.closest('input,textarea'))e.preventDefault()})}
+  o.setAttribute('aria-label',k==='fix'?'Atividade de fixação':'Atividade avaliativa');
+  document.body.style.overflow='hidden';
+  if(AV.etapa==='gab'||AV.etapa==='pra')return avGabarito();
+  avRender();
+}
+/* Gabarito comentado e prática: só depois do prazo (o robô não entrega antes) */
+async function avGabarito(){
+  const a=AV.a,gs=store.get('gabs',{})||{};
+  if(!gs[a.doc]){
+    AV.carregando=true;avRender();
+    try{const j=await avChamar('gabarito',{doc:a.doc});
+      if(!j.ok){AV.carregando=false;AV.etapa='fim';AV.res={msg:j.erro||'Não foi possível buscar o gabarito.'};return avRender()}
+      const m={};j.qs.forEach(q=>m[q.h]={c:q.c,e:q.e});gs[a.doc]=m;store.set('gabs',gs);
+    }catch(e){AV.carregando=false;AV.etapa='fim';AV.res={msg:'Sem conexão. Para ver o gabarito pela primeira vez, o celular precisa estar com internet.'};return avRender()}
+  }
+  AV.carregando=false;AV.gab=gs[a.doc];
+  if(AV.etapa==='pra'){const emb=x=>{const v=x.slice();for(let i=v.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[v[i],v[j]]=[v[j],v[i]]}return v};
+    AV.pr={ids:emb(a.qs.map(q=>q.h)),i:0,r:null,ac:0,ord:{}};AV.pr.ids.forEach(h=>AV.pr.ord[h]=emb(a.qs.find(q=>q.h===h).a.map((_,i)=>i)))}
+  avRender();
 }
 function avFechar(){document.querySelector('.avl-o')?.remove();document.body.style.overflow='';AV=null;render()}
 function avGuardar(){if(!AV||!AV.st)return;AV.st.i=AV.i;const x=avAnd();x[AV.a.doc]=AV.st;store.set('avAnd',x)}
 function avRender(){
   const o=document.querySelector('.avl-o');if(!o||!AV)return;
   const {a,c,st}=AV,y=Y();
-  const topo=`<div class="qz-top"><span class="rev-ic avl-ic2">${AVIC}</span><span class="qz-tt"><b>Atividade avaliativa</b><span class="meta">${c.tema?'Aula de aprofundamento':'Cap.'} ${c.n} · ${esc(c.titulo)}</span></span>${document.fullscreenEnabled?`<button class="qz-x" data-av="tela" aria-label="Tela inteira">${FOCOIC}</button>`:''}<button class="qz-x" data-av="sair" aria-label="Sair da atividade">${XIC}</button></div>`;
+  const fx=AV.k==='fix',L5='ABCDE';
+  const topo=`<div class="qz-top"><span class="rev-ic avl-ic2">${AVIC}</span><span class="qz-tt"><b>${fx?'Atividade de fixação':'Atividade avaliativa'}</b><span class="meta">${c.tema?'Aula de aprofundamento':'Cap.'} ${c.n} · ${esc(c.titulo)}</span></span>${document.fullscreenEnabled?`<button class="qz-x" data-av="tela" aria-label="Tela inteira">${FOCOIC}</button>`:''}<button class="qz-x" data-av="sair" aria-label="Sair da atividade">${XIC}</button></div>`;
   let corpo='',dots='';
   if(AV.etapa==='ident'){
     const ts=y.turmas||[],tur=ts.includes(S.turma)?S.turma:ts.includes(MINHA)?MINHA:'';
@@ -3787,30 +3856,49 @@ function avRender(){
       <label class="fld"><span>Sua turma *</span><select id="avTurma"><option value="">Escolha</option>${ts.map(t=>`<option${t===tur?' selected':''}>${t}</option>`).join('')}</select></label>
       <label class="fld"><span>Seu nome completo *</span><input id="avNome" maxlength="70" autocomplete="name" value="${esc(nm)}"></label>
       ${nm?`<p class="meta" style="margin:-4px 0 0">Nome lembrado neste celular. <button class="link" data-av="naosoueu">Não é você? Apagar o nome</button></p>`:''}
-      <div class="duv-regra"><b>Atenção</b><span>Você só pode fazer esta atividade <b>uma vez</b>. Ela tem ${a.qtd} questões, e cada uma vale 1 ponto. Faça a atividade com o seu próprio nome: usar o nome de um colega é uma falta grave.</span></div>
+      <div class="duv-regra"><b>Atenção</b><span>Você só pode fazer esta atividade <b>uma vez</b>. ${fx?`Ela tem ${a.qtd} questões e vale de 0 a 10 na sua Nota 2. A correção aparece depois do prazo.`:`Ela tem ${a.qtd} questões, e cada uma vale 1 ponto.`} Faça a atividade com o seu próprio nome: usar o nome de um colega é uma falta grave.</span></div>
+      <p class="meta" style="margin:0">Durante a atividade, o texto das questões não pode ser copiado, e o app registra para o professor quantas vezes você sai dele.</p>
       ${AV.erro?`<p class="avl-err" role="alert">${esc(AV.erro)}</p>`:''}
       <div class="qz-btns"><button class="btn btn-primary" data-av="comecar"${AV.busy?' disabled':''}>${AV.busy?'Conferindo…':'Começar'}</button><button class="btn btn-ghost" data-av="sair">Agora não</button></div>`;
   }else if(AV.etapa==='q'||AV.etapa==='rev'){
     dots=`<div class="qz-dots avl-dots">${st.ids.map((h,k)=>`<button class="${st.resp[h]?'feito':''}${AV.etapa==='q'&&k===AV.i?' cur':''}" data-av-ir="${k}" aria-label="Questão ${k+1}${st.resp[h]?' respondida':' em branco'}"></button>`).join('')}</div>`;
     if(AV.etapa==='q'){
       const h=st.ids[AV.i],q=a.qs.find(x=>x.h===h),ord=st.ord[h],esc_=st.resp[h];
-      const ops=ord.map((k,j)=>{const t=q.a[k],on=esc_===hashAv(t);return `<button class="qz-op avl-op${on?' on':''}" data-avop="${j}" aria-pressed="${on}"><span class="qz-l" aria-hidden="true">${'ABCD'[j]}</span><span>${esc(t)}</span></button>`}).join('');
+      const ops=ord.map((k,j)=>{const t=q.a[k],on=esc_===hashAv(t);return `<button class="qz-op avl-op${on?' on':''}" data-avop="${j}" aria-pressed="${on}"><span class="qz-l" aria-hidden="true">${L5[j]}</span><span>${esc(t)}</span></button>`}).join('');
       const ult=AV.i===st.ids.length-1;
-      corpo=`<p class="qz-n">Questão ${AV.i+1} de ${st.ids.length}</p><h2 class="qz-q" id="avQ" tabindex="-1">${esc(q.q)}</h2><div class="qz-ops" role="group" aria-labelledby="avQ">${ops}</div>
+      corpo=`<p class="qz-n">Questão ${AV.i+1} de ${st.ids.length}</p>${q.v?`<div class="fx-video">${midia(q.v,'Vídeo da questão')}<span class="meta">Assista ao vídeo antes de responder.</span></div>`:''}<h2 class="qz-q" id="avQ" tabindex="-1">${esc(q.q)}</h2><div class="qz-ops" role="group" aria-labelledby="avQ">${ops}</div>
         <div class="avl-nav"><button class="btn btn-ghost" data-av="ant"${AV.i===0?' disabled':''}>Anterior</button><button class="btn btn-primary" data-av="${ult?'revisar':'prox'}">${ult?'Revisar e enviar':'Próxima'}</button></div>
         <p class="meta" style="margin:0;text-align:center">Suas respostas ficam guardadas neste celular até você enviar.</p>`;
     }else{
       const br=st.ids.filter(h=>!st.resp[h]).length;
       corpo=`<p class="qz-n">Revisão antes de enviar</p>
-        <div class="avl-lista">${st.ids.map((h,k)=>{const r=st.resp[h],ord=st.ord[h],q=a.qs.find(x=>x.h===h);const j=r?ord.findIndex(i=>hashAv(q.a[i])===r):-1;return `<button class="avl-li${r?'':' br'}" data-av-q="${k}"><span>Questão ${k+1}</span><b>${j>=0?'Letra '+'ABCD'[j]:'Em branco'}</b></button>`}).join('')}</div>
+        <div class="avl-lista">${st.ids.map((h,k)=>{const r=st.resp[h],ord=st.ord[h],q=a.qs.find(x=>x.h===h);const j=r?ord.findIndex(i=>hashAv(q.a[i])===r):-1;return `<button class="avl-li${r?'':' br'}" data-av-q="${k}"><span>Questão ${k+1}</span><b>${j>=0?'Letra '+L5[j]:'Em branco'}</b></button>`}).join('')}</div>
         ${br?`<p class="avl-err">${br===1?'1 questão está em branco.':br+' questões estão em branco.'} Questão em branco vale zero.</p>`:''}
         ${AV.erro?`<p class="avl-err" role="alert">${esc(AV.erro)}</p>`:''}
         ${AV.conf?`<div class="avl-conf"><b>Enviar agora?</b><span>Depois de enviar, não dá para mudar as respostas nem fazer de novo.</span><div class="qz-btns"><button class="btn btn-primary" data-av="enviar"${AV.busy?' disabled':''}>${AV.busy?'Enviando…':'Sim, enviar'}</button><button class="btn btn-ghost" data-av="naoenv">Voltar e conferir</button></div></div>`
         :`<div class="qz-btns"><button class="btn btn-primary" data-av="confirmar">Enviar respostas</button><button class="btn btn-ghost" data-av-q="0">Voltar às questões</button></div>`}`;
     }
+  }else if(AV.carregando){
+    corpo=`<p class="qz-n">Gabarito</p><p style="margin:0">Buscando o gabarito…</p>`;
+  }else if(AV.etapa==='gab'){
+    const f=avFeitas()[a.doc],mr=(f&&f.resp)||{};
+    corpo=`<p class="qz-n">Gabarito comentado</p>${f&&f.nota!=null?`<div class="avl-nota"><span>Sua nota</span><b>${notaTx(f.nota)}</b><span>de ${notaTx(a.valor||10)}</span></div>`:''}
+      <div class="gl">${a.qs.map((q,k)=>{const g=AV.gab[q.h]||{},mine=mr[q.h];return `<div class="gi"><div class="h"><span>Questão ${k+1}</span>${mine?`<span class="s ${mine===g.c?'ok':'no'}">${mine===g.c?'✓':'✕'}</span>`:''}</div>
+        ${q.v?midia(q.v,'Vídeo da questão'):''}<span class="r"><b>${esc(q.q)}</b></span>
+        ${q.a.map(t=>{const h=hashAv(t),cl=h===g.c?'ok':h===mine?'no':'';return `<span class="gr ${cl}">${h===g.c?'✓ ':h===mine?'✕ ':''}${esc(t)}${h===mine?' <i>(sua resposta)</i>':''}</span>`}).join('')}
+        ${g.e?`<span class="c">${esc(g.e)}</span>`:''}</div>`}).join('')}</div>
+      <div class="qz-btns"><button class="btn btn-primary" data-av="praticar">Praticar de novo</button><button class="btn btn-ghost" data-av="sair">Voltar ao resumo</button></div>`;
+  }else if(AV.etapa==='pra'){
+    const P=AV.pr;
+    if(P.i>=P.ids.length){corpo=`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">Prática concluída</p><div class="qz-score">${P.ac} de ${P.ids.length}</div><p class="meta" style="margin:0">A prática não muda a sua nota.</p><div class="qz-btns"><button class="btn btn-primary" data-av="praticar">Praticar de novo</button><button class="btn btn-ghost" data-av="sair">Voltar ao resumo</button></div></div>`}
+    else{const h=P.ids[P.i],q=a.qs.find(x=>x.h===h),g=AV.gab[h]||{},ord=P.ord[h],r=P.r;
+      const ops=ord.map((k,j)=>{const t=q.a[k],ht=hashAv(t);let cl='';if(r!==null){cl=ht===g.c?'ok':ht===r?'bad':'dim'}
+        return `<button class="qz-op ${cl}" data-avpr="${j}"${r!==null?' disabled':''}><span class="qz-l" aria-hidden="true">${r!==null&&ht===g.c?'✓':r!==null&&ht===r?'✕':L5[j]}</span><span>${esc(t)}</span></button>`}).join('');
+      corpo=`<p class="qz-n">Prática · questão ${P.i+1} de ${P.ids.length}</p>${q.v?`<div class="fx-video">${midia(q.v,'Vídeo da questão')}</div>`:''}<h2 class="qz-q" id="avQ" tabindex="-1">${esc(q.q)}</h2><div class="qz-ops">${ops}</div>
+        ${r!==null?`<div class="fx-exp${r===g.c?'':' bad'}" role="status"><b>${r===g.c?'Isso!':'Não foi dessa vez.'}</b> ${esc(g.e||'')}</div><div class="qz-btns"><button class="btn btn-primary" data-av="prox-pr">${P.i===P.ids.length-1?'Ver resultado':'Próxima'}</button></div>`:''}`}
   }else if(AV.etapa==='fim'){
     const r=AV.res;
-    corpo=r.nota!=null?`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">Atividade enviada</p><div class="avl-nota"><span>Sua nota</span><b>${String(r.nota).replace('.',',')}</b><span>de ${String(r.valor||10).replace('.',',')}</span></div><p style="margin:0">Sua nota foi registrada para o Prof. Haroldo.</p><div class="qz-btns"><button class="btn btn-primary" data-av="sair">Voltar ao resumo</button></div></div>`
+    corpo=r.nota!=null?`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">Atividade enviada</p><div class="avl-nota"><span>Sua nota</span><b>${String(r.nota).replace('.',',')}</b><span>de ${String(r.valor||10).replace('.',',')}</span></div><p style="margin:0">${fx?`Sua nota foi registrada na Nota 2. O gabarito e os comentários aparecem a partir de ${a.prazo?diaSeguinte(a.prazo):'o fim do prazo'}.`:'Sua nota foi registrada para o Prof. Haroldo.'}</p><div class="qz-btns"><button class="btn btn-primary" data-av="sair">Voltar ao resumo</button></div></div>`
       :`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">${r.pend?'Sem internet agora':'Não foi possível enviar'}</p><p style="margin:0;font-weight:700">${esc(r.msg)}</p><div class="qz-btns"><button class="btn btn-primary" data-av="sair">Voltar ao resumo</button></div></div>`;
   }
   o.innerHTML=`<div class="qz">${topo}${dots}${corpo}</div>`;
@@ -3825,18 +3913,21 @@ async function avChamar(param,obj){
 function avSortear(a){
   const emb=x=>{const v=x.slice();for(let i=v.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[v[i],v[j]]=[v[j],v[i]]}return v};
   const ids=emb(a.qs.map(q=>q.h)).slice(0,a.qtd),ord={};
-  ids.forEach(h=>ord[h]=emb([0,1,2,3]));
+  ids.forEach(h=>ord[h]=emb(a.qs.find(q=>q.h===h).a.map((_,i)=>i)));
   return ids.length?{ids,ord}:null;
 }
 async function avClique(e){
   if(!AV)return;
   const op=e.target.closest('[data-avop]'),ir=e.target.closest('[data-av-ir]'),iq=e.target.closest('[data-av-q]'),b=e.target.closest('[data-av]');
-  const st=AV.st;
+  const st=AV.st,pr=e.target.closest('[data-avpr]');
+  if(pr&&AV.etapa==='pra'&&AV.pr.r===null){const P=AV.pr,h=P.ids[P.i],q=AV.a.qs.find(x=>x.h===h),t=q.a[P.ord[h][+pr.dataset.avpr]];P.r=hashAv(t);if(P.r===(AV.gab[h]||{}).c)P.ac++;return avRender()}
   if(op&&AV.etapa==='q'){const h=st.ids[AV.i],q=AV.a.qs.find(x=>x.h===h),t=q.a[st.ord[h][+op.dataset.avop]],v=hashAv(t);st.resp[h]=st.resp[h]===v?'':v;if(!st.resp[h])delete st.resp[h];avGuardar();avRender();return}
   if(ir&&st){AV.i=+ir.dataset.avIr;AV.etapa='q';AV.conf=false;avGuardar();avRender();return}
   if(iq&&st){AV.i=+iq.dataset.avQ;AV.etapa='q';AV.conf=false;avGuardar();avRender();return}
   if(!b)return;const a=b.dataset.av;
   if(a==='sair')return avFechar();
+  if(a==='praticar'){AV.etapa='pra';return avGabarito()}
+  if(a==='prox-pr'){AV.pr.i++;AV.pr.r=null;return avRender()}
   if(a==='tela')return telaCheiaAlternar();
   if(a==='prox'){AV.i++;avGuardar();return avRender()}
   if(a==='ant'){AV.i=Math.max(0,AV.i-1);avGuardar();return avRender()}
@@ -3862,7 +3953,7 @@ async function avClique(e){
     return;
   }
   if(a==='enviar'){
-    const pl={teste:!!AV.a.teste,doc:AV.a.doc,turma:st.turma,nome:st.nome,resp:st.ids.map(h=>({h,r:st.resp[h]||''})),tempo:Math.round((Date.now()-st.ini)/1000),em:new Date().toISOString()};
+    const pl={teste:!!AV.a.teste,doc:AV.a.doc,turma:st.turma,nome:st.nome,resp:st.ids.map(h=>({h,r:st.resp[h]||''})),tempo:Math.round((Date.now()-st.ini)/1000),em:new Date().toISOString(),saidas:st.saidas||0,fora:st.fora||0};
     AV.busy=true;avRender();
     const r=await avEnviar(pl);
     AV.busy=false;AV.etapa='fim';AV.res=r;avRender();
@@ -3875,7 +3966,7 @@ async function avEnviar(pl){
   try{
     const j=await avChamar('avaliacao',pl);
     const p=avPend();delete p[doc];store.set('avPend',p);
-    if(j.ok){limpa();if(!COMP&&!pl.teste){const f=avFeitas();f[doc]={nota:j.nota,em:HOJE};store.set('avFeitas',f)}return {nota:j.nota,valor:j.valor}}
+    if(j.ok){limpa();if(!COMP&&!pl.teste){const f=avFeitas(),mr={};(pl.resp||[]).forEach(x=>{if(x.r)mr[x.h]=x.r});f[doc]={nota:j.nota,em:HOJE,resp:mr};store.set('avFeitas',f)}return {nota:j.nota,valor:j.valor}}
     if(j.ja||j.encerrada){limpa();if(j.ja&&!COMP&&!pl.teste){const f=avFeitas();f[doc]=f[doc]||{nota:null};store.set('avFeitas',f)}return {msg:j.erro}}
     return {msg:j.erro||'Não foi possível enviar. Tente de novo.'};
   }catch(e){
@@ -3891,6 +3982,13 @@ async function avReenviar(){
   avTentando=false;if(mud&&!AV)render();
 }
 addEventListener('online',avReenviar);
+/* Registro de saídas do app durante a atividade (vai junto com o envio; o professor vê na planilha) */
+document.addEventListener('visibilitychange',()=>{
+  if(!AV||!AV.st||!['q','rev'].includes(AV.etapa))return;const st=AV.st;
+  if(document.hidden){st.saidas=(st.saidas||0)+1;st.saiu=Date.now()}
+  else if(st.saiu){st.fora=(st.fora||0)+Math.round((Date.now()-st.saiu)/1000);st.saiu=0}
+  avGuardar();
+});
 
 
 /* Tela inteira no leitor: esconde o topo, as abas e o rodapé; marcações, Ouvir e Aa continuam funcionando */
@@ -4093,14 +4191,17 @@ function compartilhar(title,text,url,cab){
   else fallback();
 }
 
+const prazoAtv=c=>fixVisivel(c)?(c.fix.prazo||''):prazoDe(c.n,'atividade');
 function atvCard(c){
-  const sent=isSent(c.n),pr=prazoDe(c.n,'atividade'),late=!sent&&pr&&pr<HOJE;
+  const fx=fixVisivel(c),sent=isSent(c.n),pr=prazoAtv(c),late=!sent&&pr&&pr<HOJE;
+  if(fx)return `<div class="atv${sent?' ok':late?' late':''}"><div class="atv-h"><span class="cn">${c.n}</span><span style="min-width:0"><span class="eyebrow">Capítulo ${c.n} · no app</span><b>${esc(c.titulo)}</b>${pr?`<span class="meta">Prazo final: ${dm(pr)} · ${quando(pr).toLowerCase()}</span>`:''}</span><span class="atv-st">${sent?CHECK+'Enviada':late?'Prazo encerrado':'Pendente'}</span></div>
+    <div class="atv-acts"><button class="btn act-go" data-act="${c.n}">${sent||late?'Ver no resumo':'Fazer a atividade'}</button></div></div>`;
   return `<div class="atv${sent?' ok':late?' late':''}"><div class="atv-h"><span class="cn">${c.n}</span><span style="min-width:0"><span class="eyebrow">Capítulo ${c.n}</span><b>${esc(c.titulo)}</b>${pr?`<span class="meta">Prazo final: ${dm(pr)} · ${quando(pr).toLowerCase()}</span>`:''}</span><span class="atv-st">${sent?CHECK+'Enviada':late?'Prazo encerrado':'Pendente'}</span></div>
     <div class="atv-acts">${sent?'':`<a class="btn act-go" href="${esc(c.atividade)}" target="_blank" rel="noopener">Fazer a atividade<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`}<button class="btn btn-ghost" data-sent="${c.n}">${sent?'Desmarcar envio':'Já enviei'}</button>${c.resumo?`<button class="btn btn-ghost" data-cap="${c.n}">Ver resumo</button>`:''}</div></div>`;
 }
 function vAtividades(){
-  const y=Y(),atuais=capsDe(y,y.atual).filter(c=>c.atividade),sent=atuais.filter(c=>isSent(c.n)).length;
-  const outras=y.list.filter(u=>u.n!==y.atual&&liberada(u.n,y)&&u.caps.some(c=>c.atividade)).sort((a,b)=>b.n-a.n);
+  const y=Y(),atuais=capsDe(y,y.atual).filter(temAtvCap),sent=atuais.filter(c=>isSent(c.n)).length;
+  const outras=y.list.filter(u=>u.n!==y.atual&&liberada(u.n,y)&&u.caps.some(temAtvCap)).sort((a,b)=>b.n-a.n);
   return `<section class="section">
     <div><span class="ypill">${y.label} · Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Atividades</h1></div>
     <div class="atv-top"><div class="at-row"><span class="at-ic" aria-hidden="true">${SECIC.atv}</span><span class="at-tx"><b>Atividades de fixação</b><span>Unidade ${y.atual} · vale nota</span></span>${atuais.length?`<span class="at-num">${sent}/${atuais.length}</span>`:''}</div>
@@ -4110,7 +4211,7 @@ function vAtividades(){
     ${(()=>{const ts=[...y.list].sort((a,b)=>(b.n===y.atual)-(a.n===y.atual)||b.n-a.n).filter(u=>liberada(u.n,y)).flatMap(u=>(u.temas||[]).filter(t=>t.resumo||temAtv(t)));
       const tf=ts.filter(t=>isSent('t'+t.n)).length;
       return ts.length?`<div class="atv-top tt-top"><div class="at-row"><span class="at-ic" aria-hidden="true">${SECIC.globo}</span><span class="at-tx"><b>Aulas de aprofundamento</b><span>Aulas extras · recuperação paralela · vale ponto</span></span><span class="at-num">${tf}/${ts.length}</span></div></div><div class="atvlist">${ts.map(ttAtvCard).join('')}</div>`:''})()}
-    ${outras.length?`<div class="sfolds">${outras.map(u=>{const l=u.caps.filter(c=>c.atividade),e=l.filter(c=>isSent(c.n)).length;return secFold('atv-u'+u.n,'Atividades · Unidade '+u.n,'ano','atv',`${l.length} ${l.length===1?'atividade':'atividades'} · ${e} ${e===1?'enviada':'enviadas'}`,`<div class="atvlist">${l.map(atvCard).join('')}</div>`)}).join('')}</div>`:''}
+    ${outras.length?`<div class="sfolds">${outras.map(u=>{const l=u.caps.filter(temAtvCap),e=l.filter(c=>isSent(c.n)).length;return secFold('atv-u'+u.n,'Atividades · Unidade '+u.n,'ano','atv',`${l.length} ${l.length===1?'atividade':'atividades'} · ${e} ${e===1?'enviada':'enviadas'}`,`<div class="atvlist">${l.map(atvCard).join('')}</div>`)}).join('')}</div>`:''}
   </section>`;
 }
 function vCalendario(){
@@ -4285,7 +4386,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#readBtn'))return readSheet();
   if(t.closest('#apresBtn'))return abrirApres();
   if(t.closest('#focoBtn'))return document.body.classList.contains('foco')?focoSair():focoEntrar();
-  {const av=t.closest('[data-av]');if(av&&!t.closest('.avl-o')){if(av.dataset.av==='abrir')return avAbrir(capId(av.dataset.avcap));if(av.dataset.av==='reenviar'){avReenviar().then(()=>render());return}}}
+  {const av=t.closest('[data-av]');if(av&&!t.closest('.avl-o')){if(av.dataset.av==='abrir')return avAbrir(capId(av.dataset.avcap),av.dataset.avk);if(av.dataset.av==='gab'||av.dataset.av==='pratica')return avAbrir(capId(av.dataset.avcap),av.dataset.avk,av.dataset.av==='gab'?'gab':'pra');if(av.dataset.av==='reenviar'){avReenviar().then(()=>render());return}}}
   if(t.closest('#listBtn'))return listSheet();
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
   if(t.closest('#recAnt'))return recAnteriores();

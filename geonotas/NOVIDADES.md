@@ -8,6 +8,12 @@ Formato **MAIOR.MENOR.CORREÇÃO** (o mesmo do GeoEstudos):
 
 A versão do app e a do robô aparecem no rodapé do GeoNotas. O robô (Google Apps Script) tem numeração própria (v1, v2…): sempre que ele muda, é preciso colar o código novo e fazer uma nova versão da implantação.
 
+## Robô v11 · 09/11/2026
+
+- A importação automática junta os formulários e as **Atividades de Fixação feitas no GeoEstudos**: vale o primeiro envio de cada aluno, venha de onde vier.
+- Três dias depois do prazo da fixação, quem não enviou fica com **0** na atividade (uma vez por turma e capítulo; um formulário importado à mão pode substituir o zero).
+- Nomes do app que não batem com segurança aparecem no registro da última importação, para conferir.
+
 ## 1.12.0 · 08/11/2026
 
 - Seletores com seta própria, afastada da borda (antes ficava quase fora do campo).
