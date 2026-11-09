@@ -2585,7 +2585,7 @@ function painelProfessor_() {
    serão apagados (livros novos) e as fixações serão escritas direto como
    Docs "NN Fixação". REMOVER no recesso: CONVERTER_UNIDADES,
    converterFormulariosEmDocs, videosDoFormulario_ (pastaFilha_ só se nada
-   mais usar) e a pasta "Fixações convertidas (2027)" do Drive.            */
+   mais usar) e a pasta "Fixações convertidas dos formulários (temporário)".            */
 /**
  * RODE UMA VEZ, à mão, no editor do Apps Script (menu ▸ Executar ▸ converterFormulariosEmDocs).
  * Na primeira vez o Google pede autorização para ler Formulários: aceite.
@@ -2593,8 +2593,8 @@ function painelProfessor_() {
  * Lê todos os formulários do seu Drive com nome no padrão das atividades
  * (ex.: "7 ANO | U4 C13 Atividade | Região Nordeste", "GEO 8 U2C5 | Atividade | África")
  * e escreve, para cada um, um Google Doc no formato do GeoEstudos:
- *   pasta "Fixações convertidas (2027)" › "7º ano" › "Unidade 4" › "13 Fixação"
- * A pasta fica FORA da pasta do app de propósito: o robô atual leria "13 Fixação" como resumo.
+ *   App Geografia › "Fixações convertidas dos formulários (temporário)" › "7º ano" › "Unidade 4" › "13 Fixação"
+ * O robô não lê essa pasta como conteúdo (o nome não é de um ano); só vale depois de copiar o Doc para a pasta da unidade.
  * Nada é apagado nem alterado nos formulários. Rodar de novo não duplica: pula o que já existe.
  * Ao final, o registro (Execuções) lista o que foi convertido e o que precisa de revisão.
  */
@@ -2608,7 +2608,7 @@ function converterFormulariosEmDocs() {
     'https://www.googleapis.com/auth/documents',
     'https://www.googleapis.com/auth/script.external_request'
   ]);
-  const raiz = pastaFilha_(DriveApp.getRootFolder(), 'Fixações convertidas (2027)');
+  const raiz = pastaFilha_(DriveApp.getFolderById(GEO.PASTA_APP), 'Fixações convertidas dos formulários (temporário)');
   const it = DriveApp.searchFiles("mimeType = 'application/vnd.google-apps.form' and trashed = false");
   const rel = [];
   while (it.hasNext()) {
