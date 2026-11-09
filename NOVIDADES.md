@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.24.0 · 09/11/2026
+
+- No fim do resumo, a atividade de fixação virou um **convite discreto** (cartão claro, borda tracejada): "Quer fazer a atividade de fixação? … Se quiser, faça agora. Ou depois, pela aba Atividades". Sem a lista de regras (elas aparecem na identificação, antes de começar). Parou no meio: "Continuar agora". Já enviou: uma linha com a nota.
+
 ## 1.23.3 · 09/11/2026
 
 - Os botões de atividade de fixação (aba Atividades, capítulos da unidade, topo do resumo, Calendário) **abrem a atividade no app direto**, continuando de onde o aluno parou. Depois do prazo, abrem o gabarito; já enviada, levam ao cartão com a nota.
