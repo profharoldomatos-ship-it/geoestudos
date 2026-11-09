@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.23.1 · 09/11/2026 (correção)
+
+- Atividade (fixação e avaliativa): quando a questão era maior que a tela (vídeo + enunciado longo), o topo ficava escondido e não dava para rolar até o vídeo. Agora a tela rola normalmente, do vídeo até os botões.
+
 ## 1.23.0 · 09/11/2026 (com o robô v30 e o robô do GeoNotas v12)
 
 - **Questão escrita nas Atividades de Fixação:** no Doc, o enunciado e a linha "Escrita: 5 pontos". O aluno escreve numa caixa com contador (até 1.500 caracteres); colar texto não funciona nessa caixa. Os pontos que sobram ficam divididos entre as objetivas.
