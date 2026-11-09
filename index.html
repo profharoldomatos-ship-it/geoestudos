@@ -1171,6 +1171,20 @@ body.m-escuro .not-al .g{color:#9FDDB1}body.m-escuro .not-al .r{color:#F5A59C}
 .fx-video{display:flex;flex-direction:column;gap:6px}.fx-video .media{margin:0}
 .fx-nota{margin:2px 0}
 .fx-exp{border-left:4px solid var(--ok);background:var(--ok-soft);border-radius:10px;padding:10px 12px}.fx-exp.bad{border-color:#B7791F;background:color-mix(in srgb,#F59E0B 12%,var(--surface))}
+.esc-pts{display:inline-block;vertical-align:middle;font-size:.78rem;font-weight:700;padding:2px 8px;border-radius:99px;background:color-mix(in srgb,var(--year) 14%,var(--surface));color:var(--ink);margin-left:6px;white-space:nowrap}
+.esc-caixa{display:flex;flex-direction:column;gap:6px}.esc-lb{font-weight:700;font-size:.9rem}
+.esc-caixa textarea{font:inherit;font-size:1rem;line-height:1.5;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);width:100%;min-height:210px;resize:vertical;user-select:text;-webkit-user-select:text}
+.esc-caixa textarea:focus{outline:none;border-color:var(--year);box-shadow:0 0 0 3px color-mix(in srgb,var(--year) 22%,transparent)}
+.esc-rod{display:flex;justify-content:space-between;gap:8px;font-size:.8rem;color:var(--muted)}.esc-rod>span:last-child{white-space:nowrap}.esc-rod .esc-aviso{color:var(--bad);font-weight:700}
+.esc-pend{display:flex;gap:10px;align-items:flex-start;border-left:4px solid var(--hl);background:var(--hl-soft);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:.88rem;line-height:1.45;text-align:left}
+.gi .esc-tx{white-space:pre-wrap}.gi .s.esc-s{width:auto;height:auto;padding:2px 9px;border-radius:99px;font-size:.8rem}.gi .s.meio{background:#B7791F}.esc-ag{font-size:.78rem;font-weight:700;color:var(--muted)}
+.cor-seg{display:flex;gap:6px;flex-wrap:wrap}.cor-seg button{flex:1;min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font:inherit;font-weight:700;color:var(--ink);padding:4px 8px}.cor-seg button.on{background:var(--year);border-color:var(--year);color:#fff}
+.cor-prog{height:6px;border-radius:9px;background:var(--line);overflow:hidden}.cor-prog i{display:block;height:100%;background:var(--year)}
+.cor-al{border:1.5px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--surface);text-align:left;font:inherit;color:var(--ink)}
+.cor-al.fechado{cursor:pointer}.cor-al .nm{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.cor-al .nm b{font-size:1rem}
+.cor-tx{font-size:.92rem;line-height:1.5;background:var(--bg);border-radius:10px;padding:10px 12px;max-height:260px;overflow:auto;white-space:pre-wrap;user-select:text}
+.cor-q{font-size:.85rem;color:var(--muted)}.cor-meta{font-size:.78rem;color:var(--muted)}.cor-flag{color:var(--bad);font-weight:700}.cor-ok{color:var(--ok);font-weight:700}
+.cor-pts{display:flex;gap:6px}.cor-pts button{flex:1;min-width:0;min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font:inherit;font-weight:700;color:var(--ink)}.cor-pts .meio{flex:1.3}.cor-pts button.on{background:var(--year);border-color:var(--year);color:#fff}.cor-pts button:disabled{opacity:.4}
 .gl{display:flex;flex-direction:column;gap:10px}.gi{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
 .gi .h{display:flex;justify-content:space-between;align-items:center;font-weight:700}.gi .s{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:.85rem}.gi .s.ok{background:var(--ok)}.gi .s.no{background:var(--bad)}
 .gi .gr{font-size:.95rem;padding:6px 8px;border-radius:8px;border:1px solid var(--line)}.gi .gr.ok{border-color:var(--ok);background:var(--ok-soft);font-weight:700}.gi .gr.no{border-color:var(--bad);background:var(--bad-soft)}
@@ -2654,7 +2668,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.22.0',APP_DATA='2026-11-09';
+const APP_VERSAO='1.23.0',APP_DATA='2026-11-09';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3194,7 +3208,7 @@ const ROTEIROS=[
   ['Atividade de fixação (formulário)',6,['Crie o formulário no Google Formulários, com perguntas de nome completo e turma.','Toque em Enviar › ícone de link e copie o endereço.','Cole na planilha Conteúdo › Capítulos, coluna Atividade, na linha do capítulo.','Marque o prazo na agenda de cada turma: Atividade de fixação · Cap. 14.'],P=>[['Planilha de Conteúdo',P.conteudo],['Agendas',P.agendaGeral]]],
   ['Aula de aprofundamento',7,['Na subpasta das aulas de aprofundamento da unidade, crie o Doc com o número e o título: 1 Título da aula.','Atividade escrita no próprio app: Doc 1 Atividade. Por formulário: link na aba Temas Transversais da planilha de Conteúdo.','Prazo na agenda: Aula de aprofundamento 1 · prazo.','Para escrever sem publicar, comece o nome com [rascunho]: a aula aparece só no modo professor, com a etiqueta “Rascunho · só você vê”.','Para publicar, abra a aula no app e toque em Liberar para os alunos, ou tire o [rascunho] do nome. Se a aula tiver atividade avaliativa, a mesma janela pergunta se ela fica para você testar, sai para os alunos com prazo ou continua como está.'],P=>[['Planilha de Conteúdo',P.conteudo]]],
   ['Revisão rápida (não vale nota)',8,['Ao lado do resumo, crie o Doc 14 Revisão.','Cada pergunta: enunciado, A) a D), linha Resposta: e, se quiser, Explicação:.','Até 12 perguntas; o app sorteia 6 a cada vez.','Pode pedir ao Claude para escrever as perguntas a partir do resumo.','Com o nome [rascunho] 14 Revisão, a revisão aparece só no modo professor: teste no app e, quando estiver boa, apague o [rascunho] do nome.'],P=>[]],
-  ['Atividade de fixação no app (Nota 2)',9,['Na pasta da unidade, crie o Doc "13 Fixação" (número do capítulo + Fixação), com as questões de A a D (ou E) e "Resposta:". "Comentário:" é opcional e aparece no gabarito.','Para vídeo, ponha a linha "Vídeo: link do YouTube" antes da questão.','Para testar antes, use "[teste] 13 Fixação": só aparece no seu celular. "[rascunho]" fica fora do app.','Prazo: Painel › Ajustes › Prazo das atividades de fixação (mesmo prazo para todas, ou o "Prazo:" de cada Doc). Depois do prazo, o app não aceita envios.','A nota (0 a 10) vai sozinha para a Nota 2 no GeoNotas: vale o primeiro envio, do app ou do formulário. Três dias após o prazo, quem não enviou fica com 0.','O gabarito comentado aparece para os alunos só depois do prazo.'],P=>[]],
+  ['Atividade de fixação no app (Nota 2)',9,['Na pasta da unidade, crie o Doc "13 Fixação" (número do capítulo + Fixação), com as questões de A a D (ou E) e "Resposta:". "Comentário:" é opcional e aparece no gabarito.','Para vídeo, ponha a linha "Vídeo: link do YouTube" antes da questão.','Questão escrita: escreva o enunciado e, na linha de baixo, "Escrita: 5 pontos". Os pontos que sobram ficam divididos entre as objetivas. Corrija em "Corrigir questões escritas", no cartão da atividade (modo professor); a nota só vai para o GeoNotas depois da correção.','Para testar antes, use "[teste] 13 Fixação": só aparece no seu celular. "[rascunho]" fica fora do app.','Prazo: Painel › Ajustes › Prazo das atividades de fixação (mesmo prazo para todas, ou o "Prazo:" de cada Doc). Depois do prazo, o app não aceita envios.','A nota (0 a 10) vai sozinha para a Nota 2 no GeoNotas: vale o primeiro envio, do app ou do formulário. Três dias após o prazo, quem não enviou fica com 0.','O gabarito comentado aparece para os alunos só depois do prazo.'],P=>[]],
   ['Ocultar ou exibir para uma turma',22,['Um item: abra o resumo ou a aula no modo professor e, no quadro O que cada turma vê, toque na turma (azul = vê, tracejado = oculto).','Um tipo inteiro (metodologia da turma): Painel › Ajustes › O que cada turma vê. Escolha o ano e toque na turma. Já vale, sem salvar.','Ocultar a aula de aprofundamento esconde também as atividades dela. Muda para os alunos em 1 a 3 minutos e nada é apagado.','Avaliativa oculta: a turma não envia mais; respostas e notas continuam na planilha.'],P=>[]],
   ['Atividade avaliativa (vale nota)',9,['Enquanto a aula for rascunho, crie [rascunho] 1 Avaliação, com 20 questões (A a D e Resposta:). Assim ela fica fora do app.','Para testar: ao liberar a aula, escolha Liberar só para eu testar (ou troque [rascunho] por [teste] no nome).','Com o modo professor ligado, abra a aula no app e faça a atividade para testar: os envios vão para a aba (teste).','Para liberar aos alunos: escolha Liberar para os alunos e a data do prazo na janela da aula; ou acrescente Prazo: dd/mm/aaaa e tire o [teste] do nome; ou publique em Painel › Rascunhos.','Confira a lista de alunos (aba Alunos) e veja as notas na planilha de notas.'],P=>[['Planilha de notas e alunos',P.notas]]],
   ['Datas na agenda',10,['Use a agenda da turma (Geografia 71, 72…).','Títulos reconhecidos: Entrega do caderno · Cap. 14, Atividade de fixação · Cap. 14, Aula de aprofundamento 1 · prazo, Avaliação…','O primeiro link da descrição vira botão no app.'],P=>[['Abrir a Agenda',P.agendaGeral]]],
@@ -3613,11 +3627,11 @@ function notasLista(gid){
       else{
         const ts=Object.keys(D.turmas||{});if(!ts.includes(NOT.turma))NOT.turma=ts[0];
         const T=(D.turmas||{})[NOT.turma]||{feitos:[],faltam:[],total:0};
-        const notas=T.feitos.map(x=>x.nota).filter(x=>!isNaN(x)),med=notas.length?(notas.reduce((a,b)=>a+b,0)/notas.length):null;
+        const notas=T.feitos.map(x=>x.nota).filter(x=>x!=null&&!isNaN(x)),med=notas.length?(notas.reduce((a,b)=>a+b,0)/notas.length):null;
         corpo=`<label class="fld"><span>Atividade</span><select id="notGid">${D.abas.slice().reverse().map(a=>`<option value="${esc(a.gid)}"${a.gid===D.gid?' selected':''}>${esc(a.nome)}</option>`).join('')}</select></label>
           ${ts.length?`<div class="seg" style="grid-template-columns:repeat(${ts.length},minmax(0,1fr))">${ts.map(t=>`<button data-nott="${t}" aria-pressed="${t===NOT.turma}">Turma ${t}</button>`).join('')}</div>`:''}
           <div class="not-st"><div><b>${T.feitos.length}</b><span class="meta">${T.total?'de '+T.total+' fizeram':'fizeram'}</span></div><div><b>${med==null?'—':med.toFixed(1).replace('.',',')}</b><span class="meta">média</span></div><div><b>${notas.filter(x=>x<7).length}</b><span class="meta">abaixo de 7</span></div></div>
-          ${T.feitos.length?`<div>${T.feitos.map(x=>`<div class="not-al"><span>${esc(x.nome)}</span><b class="${x.nota>=7?'g':'r'}">${isNaN(x.nota)?'—':String(x.nota).replace('.',',')}</b></div>`).join('')}</div>`:'<p class="meta" style="margin:0">Ninguém desta turma enviou ainda.</p>'}
+          ${T.feitos.length?`<div>${T.feitos.map(x=>`<div class="not-al"><span>${esc(x.nome)}</span><b class="${x.nota==null?'':x.nota>=7?'g':'r'}">${x.nota==null?'em correção':isNaN(x.nota)?'—':String(x.nota).replace('.',',')}</b></div>`).join('')}</div>`:'<p class="meta" style="margin:0">Ninguém desta turma enviou ainda.</p>'}
           ${T.faltam.length?`<p class="not-fal"><b>Ainda não fizeram (${T.faltam.length}):</b> ${esc(T.faltam.join(', '))}</p>`:T.total?'<p class="meta" style="margin:0">Toda a turma já fez. 🎉</p>':'<p class="meta" style="margin:0">A lista desta turma não está na aba Alunos, por isso não dá para mostrar quem falta.</p>'}`;
       }
       o.querySelector('.sheet').innerHTML=`<h2>Notas das avaliativas</h2>${corpo}<div class="pav-bts">${D&&D.url?`<a class="btn btn-ghost" style="flex:1" href="${esc(D.url)}" target="_blank" rel="noopener">Abrir a planilha</a>`:''}<button class="btn btn-ghost" data-close${D&&D.url?'':' style="flex:1"'}>Fechar</button></div>`;
@@ -3791,22 +3805,27 @@ const diaSeguinte=p=>{const d=new Date(p+'T12:00:00');d.setDate(d.getDate()+1);r
 /* Atividade de Fixação no app (vale a Nota 2): cartão no resumo do capítulo */
 function fixCard(c,n){
   const a=c.fix;if(!fixVisivel(c))return '';
-  const feita=!a.teste&&!COMP&&avFeitas()[a.doc],pend=avPend()[a.doc],and=avAnd()[a.doc],fech=avFechada(a),nv=a.qs.filter(q=>q.v).length;
+  const feita=!a.teste&&!COMP&&avFeitas()[a.doc],pend=avPend()[a.doc],and=avAnd()[a.doc],fech=avFechada(a),nv=a.qs.filter(q=>q.v).length,ne=a.qs.filter(q=>q.esc).length;
   const N=esc(String(n));let corpo;
+  if(feita&&feita.escPend&&fech)fixMeuAtualizar(a);
   if(pend)corpo=`<p class="act-why"><b>Envio pendente.</b> Suas respostas estão guardadas neste celular e serão enviadas quando houver internet.</p><button class="btn act-go" data-av="reenviar">Tentar enviar agora</button>`;
-  else if(fech)corpo=`<p class="act-why"><b>Prazo encerrado em ${dm(a.prazo)}.</b> ${feita?(feita.nota!=null?`Sua nota: <b>${notaTx(feita.nota)}</b>.`:'Atividade enviada.'):'Se você não enviou, a nota desta atividade é 0.'}</p>
+  else if(fech)corpo=`<p class="act-why"><b>Prazo encerrado em ${dm(a.prazo)}.</b> ${feita?(feita.nota!=null?`Sua nota: <b>${notaTx(feita.nota)}</b>.`:feita.escPend?'Você enviou. A nota final sai depois que o professor corrigir a questão escrita.':'Atividade enviada.'):'Se você não enviou, a nota desta atividade é 0.'}</p>
       <button class="btn act-go" data-av="gab" data-avcap="${N}" data-avk="fix">Ver gabarito comentado</button>
       <button class="copy-btn" data-av="pratica" data-avcap="${N}" data-avk="fix">Praticar de novo (não muda a nota)</button>`;
+  else if(feita&&feita.escPend&&feita.nota==null)corpo=`<div class="avl-nota fx-nota"><span>Questões objetivas</span><b>${notaTx(feita.obj)}</b><span>de ${notaTx(feita.objMax)}</span></div>
+      <div class="esc-pend"><span>✍️</span><span>Enviada${feita.em?' em '+dm(feita.em):''}. <b>A questão escrita está com o professor para correção.</b> A nota final e o gabarito aparecem a partir de <b>${a.prazo?diaSeguinte(a.prazo):'o fim do prazo'}</b>.</span></div>
+      <button class="meta link avl-outro" data-av="abrir" data-avcap="${N}" data-avk="fix">Outro estudante usa este celular? Toque aqui</button>`;
   else if(feita)corpo=`<div class="avl-nota fx-nota"><span>Sua nota</span><b>${feita.nota!=null?notaTx(feita.nota):'—'}</b><span>de 10</span></div>
       <p class="act-why">${CHECK} Enviada${feita.em?' em '+dm(feita.em):''}. O gabarito e os comentários aparecem a partir de <b>${a.prazo?diaSeguinte(a.prazo):'o fim do prazo'}</b>, depois do prazo.</p>
       <button class="meta link avl-outro" data-av="abrir" data-avcap="${N}" data-avk="fix">Outro estudante usa este celular? Toque aqui</button>`;
   else corpo=`<p class="act-why">Vale de 0 a 10 na sua Nota 2.${a.prazo?` <b>Prazo final: ${dm(a.prazo)}.</b>`:''}</p>
-      <ul class="act-rules"><li>${a.qs.length} questões${nv?`, com ${nv} ${nv===1?'vídeo':'vídeos'}`:''}.</li><li>Envio único: vale só o primeiro envio.</li><li>A correção aparece depois do prazo.</li></ul>
-      <button class="btn act-go" data-av="abrir" data-avcap="${N}" data-avk="fix">${and?`Continuar (${Object.keys(and.resp||{}).length} de ${and.ids.length} respondidas)`:'Fazer a atividade'}</button>`;
+      <ul class="act-rules"><li>${a.qs.length} questões${ne?` (${ne===1?'1 escrita':ne+' escritas'})`:''}${nv?`, com ${nv} ${nv===1?'vídeo':'vídeos'}`:''}.</li><li>Envio único: vale só o primeiro envio.</li><li>A correção aparece depois do prazo.</li></ul>
+      <button class="btn act-go" data-av="abrir" data-avcap="${N}" data-avk="fix">${and?`Continuar (${Object.keys(and.resp||{}).length} de ${and.ids.length} respondidas)`:'Fazer a atividade'}</button>${a.teste?`<button class="copy-btn" data-av="gab" data-avcap="${N}" data-avk="fix">Ver gabarito comentado (prévia)</button>`:''}`;
   const errs=PROF()&&(c.fixErros||[]).length?`<div class="avl-teste"><b>Revise o Doc "${esc(String(n))} Fixação":</b><ul style="margin:4px 0 0;padding-left:18px">${c.fixErros.slice(0,8).map(e=>`<li>${esc(e)}</li>`).join('')}</ul></div>`:'';
+  const corBtn=PROF()&&ne?`<button class="btn act-go" data-av="corrigir" data-avcap="${N}">${PENIC} Corrigir questões escritas</button>`:'';
   return `<div class="card act" id="actBox">
     <div class="act-head"><span class="act-ic">${FIXIC}</span><span><b class="act-t">Atividade de fixação</b><br><span class="act-sub">Capítulo ${N} · ${esc(c.titulo)}</span></span><span class="vale">Nota 2</span></div>
-    ${a.teste?'<p class="avl-teste"><b>Prévia do professor.</b> "[teste]" no nome do Doc: só aparece neste celular, e dá para repetir.</p>':''}${errs}${corpo}</div>`;
+    ${a.teste?'<p class="avl-teste"><b>Prévia do professor.</b> "[teste]" no nome do Doc: só aparece neste celular, e dá para repetir.</p>':''}${errs}${corpo}${corBtn}</div>`;
 }
 function avAbrir(n,k,etapa){
   const c=capOf(n);k=k||'aval';if(!c||!c[k])return;const a=c[k];
@@ -3818,7 +3837,11 @@ function avAbrir(n,k,etapa){
   if(!o){o=document.createElement('div');o.className='qz-o avl-o overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');document.body.appendChild(o);o.addEventListener('click',avClique);
     // contra copiar e colar numa IA: sem seleção, sem copiar, sem menu de toque longo (o campo de nome continua normal)
     o.addEventListener('copy',e=>{if(!e.target.closest||!e.target.closest('input,textarea'))e.preventDefault()});
-    o.addEventListener('contextmenu',e=>{if(!e.target.closest('input,textarea'))e.preventDefault()})}
+    o.addEventListener('contextmenu',e=>{if(!e.target.closest('input,textarea'))e.preventDefault()});
+    // questão escrita: sem colar nem arrastar texto (contra respostas prontas de IA)
+    const semColar=e=>{if(e.target.closest&&e.target.closest('#avEsc')&&(e.type!=='beforeinput'||/^insertFrom(Paste|Drop|PasteAsQuotation)/.test(e.inputType||''))){e.preventDefault();avEscAviso()}};
+    ['paste','drop','beforeinput'].forEach(t=>o.addEventListener(t,semColar));
+    o.addEventListener('input',avEscDigitou)}
   o.setAttribute('aria-label',k==='fix'?'Atividade de fixação':'Atividade avaliativa');
   document.body.style.overflow='hidden';
   if(AV.etapa==='gab'||AV.etapa==='pra')return avGabarito();
@@ -3826,20 +3849,118 @@ function avAbrir(n,k,etapa){
 }
 /* Gabarito comentado e prática: só depois do prazo (o robô não entrega antes) */
 async function avGabarito(){
-  const a=AV.a,gs=store.get('gabs',{})||{};
-  if(!gs[a.doc]){
+  const a=AV.a,gs=store.get('gabs',{})||{},fe=avMinha(a),precisaMeu=!!(fe&&fe.tok&&(fe.escPend||a.teste));
+  if(!gs[a.doc]||(precisaMeu&&AV.etapa==='gab')){
     AV.carregando=true;avRender();
-    try{const j=await avChamar('gabarito',{doc:a.doc});
-      if(!j.ok){AV.carregando=false;AV.etapa='fim';AV.res={msg:j.erro||'Não foi possível buscar o gabarito.'};return avRender()}
-      const m={};j.qs.forEach(q=>m[q.h]={c:q.c,e:q.e});gs[a.doc]=m;store.set('gabs',gs);
-    }catch(e){AV.carregando=false;AV.etapa='fim';AV.res={msg:'Sem conexão. Para ver o gabarito pela primeira vez, o celular precisa estar com internet.'};return avRender()}
+    try{const j=await avChamar('gabarito',{doc:a.doc,tok:fe&&fe.tok||''});
+      if(!j.ok){if(!gs[a.doc]){AV.carregando=false;AV.etapa='fim';AV.res={msg:j.erro||'Não foi possível buscar o gabarito.'};return avRender()}}
+      else{const m={};j.qs.forEach(q=>m[q.h]={c:q.c,e:q.e,esc:q.esc});gs[a.doc]=m;store.set('gabs',gs);if(j.meu)fixMeuAplicar(a.doc,j.meu)}
+    }catch(e){if(!gs[a.doc]){AV.carregando=false;AV.etapa='fim';AV.res={msg:'Sem conexão. Para ver o gabarito pela primeira vez, o celular precisa estar com internet.'};return avRender()}}
   }
   AV.carregando=false;AV.gab=gs[a.doc];
   if(AV.etapa==='pra'){const emb=x=>{const v=x.slice();for(let i=v.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[v[i],v[j]]=[v[j],v[i]]}return v};
-    AV.pr={ids:emb(a.qs.map(q=>q.h)),i:0,r:null,ac:0,ord:{}};AV.pr.ids.forEach(h=>AV.pr.ord[h]=emb(a.qs.find(q=>q.h===h).a.map((_,i)=>i)))}
+    AV.pr={ids:emb(a.qs.filter(q=>q.a).map(q=>q.h)),i:0,r:null,ac:0,ord:{}};AV.pr.ids.forEach(h=>AV.pr.ord[h]=emb(a.qs.find(q=>q.h===h).a.map((_,i)=>i)))}
   avRender();
 }
+/* v1.23: nota corrigida da questão escrita (só a do próprio aluno, pela chave recebida ao enviar) */
+function fixMeuAplicar(doc,meu){
+  [['avFeitas',avFeitas()],['avTestes',store.get('avTestes',{})||{}]].forEach(([k,f])=>{const x=f[doc];if(!x)return;x.cor=meu.esc||{};if(meu.nota!=null){x.nota=meu.nota;x.escPend=false}store.set(k,f)});
+}
+const avMinha=a=>avFeitas()[a.doc]||(a.teste?(store.get('avTestes',{})||{})[a.doc]:null);
+const fixMeuBusca={};
+function fixMeuAtualizar(a){
+  const fe=avFeitas()[a.doc];if(!fe||!fe.tok||!fe.escPend||fixMeuBusca[a.doc]||!navigator.onLine)return;fixMeuBusca[a.doc]=1;
+  avChamar('gabarito',{doc:a.doc,tok:fe.tok}).then(j=>{if(j&&j.ok&&j.meu&&j.meu.nota!=null){const gs=store.get('gabs',{})||{},m={};j.qs.forEach(q=>m[q.h]={c:q.c,e:q.e,esc:q.esc});gs[a.doc]=m;store.set('gabs',gs);fixMeuAplicar(a.doc,j.meu);if(!AV)render()}}).catch(()=>{});
+}
+/* v1.23: correção das questões escritas das fixações (modo professor) */
+const PENIC='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+let CRG=null;
+const corFeito=x=>Object.keys(x.esc||{}).every(h=>x.esc[h].p!=null);
+async function corAbrir(n){
+  const c=capOf(n);if(!c||!c.fix)return;
+  CRG={n,c,doc:c.fix.doc,carregando:true,erro:'',d:null,turma:'',aberto:null,sel:{},busy:false};
+  let o=document.querySelector('.cor-o');
+  if(!o){o=document.createElement('div');o.className='qz-o cor-o overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Corrigir questões escritas');document.body.appendChild(o);o.addEventListener('click',corClique)}
+  document.body.style.overflow='hidden';corRender();
+  try{const j=await ppChamar({acao:'esc.listar',doc:CRG.doc});CRG.carregando=false;
+    if(!j.ok){CRG.erro=j.erro||'Não foi possível carregar.';return corRender()}
+    CRG.d=j;const ts=(j.turmas||[]).filter(t=>j.alunos.some(x=>x.turma===t));
+    CRG.turma=ts.find(t=>j.alunos.some(x=>x.turma===t&&!corFeito(x)))||ts[0]||(j.turmas||[])[0]||'';
+    corProximo();corRender();
+  }catch(e){CRG.carregando=false;CRG.erro='Sem conexão. Tente de novo com internet.';corRender()}
+}
+function corProximo(){const l=CRG.d.alunos.filter(x=>x.turma===CRG.turma).sort((a,b)=>a.nome.localeCompare(b.nome));const p=l.find(x=>!corFeito(x));CRG.aberto=p?p.linha:null;if(p)corSelIni(p)}
+function corSelIni(x){const s={};CRG.d.qs.forEach(q=>{const e=(x.esc||{})[q.h]||{};const p=e.p;s[q.h]={b:p==null?null:Math.floor(p),m:p!=null&&p%1!==0,c:e.c||''}});CRG.sel[x.linha]=s}
+const corPts=(q,s)=>s.b==null?null:Math.min(q.esc,s.b+(s.m?.5:0));
+function corRender(){
+  const o=document.querySelector('.cor-o');if(!o||!CRG)return;
+  const c=CRG.c,d=CRG.d;
+  const topo=`<div class="qz-top"><span class="qz-tt"><b>Corrigir questões escritas</b><span class="meta">${d?esc(d.ano)+'º ano · ':''}Fixação ${esc(String(CRG.n))} · ${esc(c.titulo)}</span></span><button class="qz-x" data-cor="sair" aria-label="Fechar">${XIC}</button></div>`;
+  let corpo='';
+  if(CRG.carregando)corpo='<p class="meta" style="margin:0">Carregando os envios…</p>';
+  else if(CRG.erro)corpo=`<p class="avl-err" role="alert">${esc(CRG.erro)}</p><div class="qz-btns"><button class="btn btn-ghost" data-cor="sair">Fechar</button></div>`;
+  else{
+    const ts=d.turmas||[],porT=t=>d.alunos.filter(x=>x.turma===t);
+    const seg=`<div class="cor-seg" role="tablist">${ts.map(t=>{const l=porT(t);return `<button class="${t===CRG.turma?'on':''}" data-cor-t="${esc(t)}" role="tab" aria-selected="${t===CRG.turma}">${esc(t)} · ${l.filter(corFeito).length} de ${l.length}</button>`}).join('')}</div>`;
+    const l=porT(CRG.turma).sort((a,b)=>a.nome.localeCompare(b.nome)),feitos=l.filter(corFeito).length;
+    const qtx=d.qs.map(q=>`<p class="cor-q" style="margin:0"><b>Questão ${q.n} (${notaTx(q.esc)} ${q.esc==1?'ponto':'pontos'}):</b> ${esc(q.q)}</p>${q.e?`<p class="cor-q" style="margin:0"><b>Comentário do Doc:</b> ${esc(q.e)}</p>`:''}`).join('');
+    const lista=l.map(x=>{
+      const fl=x.saidas>=3?`<span class="cor-flag">Saiu do app ${x.saidas} vezes${x.fora?' ('+esc(x.fora)+' fora)':''}</span>`:`Saiu do app ${x.saidas} ${x.saidas===1?'vez':'vezes'}`;
+      const meta=`<span class="cor-meta">${fl} · objetivas ${notaTx(x.obj)} de ${notaTx(d.objMax)}</span>`;
+      const st=corFeito(x)?`<span class="cor-ok">Nota ${notaTx(x.nota)}</span>`:`<span class="cor-meta">enviou ${esc(x.quando)}</span>`;
+      if(CRG.aberto!==x.linha)return `<button class="cor-al fechado" data-cor-al="${x.linha}"><span class="nm"><b>${esc(x.nome)}</b>${st}</span>${meta}</button>`;
+      const s=CRG.sel[x.linha];
+      const qs=d.qs.map(q=>{const e=(x.esc||{})[q.h]||{},sq=s[q.h],p=corPts(q,sq),ints=[];for(let i=0;i<=Math.floor(q.esc);i++)ints.push(i);
+        return `${d.qs.length>1?`<span class="cor-q"><b>Questão ${q.n}</b></span>`:''}<div class="cor-tx">${e.t?esc(e.t):'<i>(em branco)</i>'}</div>
+        <span class="esc-lb">Pontos${d.qs.length>1?' da questão '+q.n:''}${p!=null?': '+notaTx(p)+' de '+notaTx(q.esc):''}</span>
+        <div class="cor-pts" role="group">${ints.map(i=>`<button class="${sq.b===i?'on':''}" data-cor-p="${i}" data-cor-h="${q.h}" aria-pressed="${sq.b===i}">${i}</button>`).join('')}<button class="meio${sq.m?' on':''}" data-cor-m="${q.h}" aria-pressed="${!!sq.m}"${sq.b!=null&&sq.b>=q.esc?' disabled':''} aria-label="Mais meio ponto">+½</button></div>
+        <label class="fld"><span>Comentário para o aluno (opcional)</span><textarea data-cor-c="${q.h}" maxlength="600" style="min-height:64px">${esc(sq.c)}</textarea></label>`}).join('');
+      const ok=d.qs.every(q=>s[q.h].b!=null);
+      return `<div class="cor-al" id="corAb"><span class="nm"><b>${esc(x.nome)}</b><span class="cor-meta">enviou ${esc(x.quando)}</span></span>${meta}${qs}
+        ${CRG.erroS?`<p class="avl-err" role="alert">${esc(CRG.erroS)}</p>`:''}
+        <div class="qz-btns"><button class="btn btn-primary" data-cor="salvar"${!ok||CRG.busy?' disabled':''}>${CRG.busy?'Salvando…':'Salvar · próximo aluno'}</button></div></div>`;
+    }).join('');
+    corpo=`${ts.length>1?seg:''}<div class="cor-prog" aria-hidden="true"><i style="width:${l.length?Math.round(feitos/l.length*100):0}%"></i></div>
+      <details class="cor-enun"><summary class="meta">Ver o enunciado</summary>${qtx}</details>
+      ${l.length?lista:`<p class="meta" style="margin:0">Ninguém da Turma ${esc(CRG.turma)} enviou esta atividade ainda.</p>`}
+      ${l.length&&feitos===l.length?`<p class="cor-ok" style="margin:0;text-align:center">Turma ${esc(CRG.turma)} toda corrigida. As notas entram na Nota 2 do GeoNotas na próxima importação.</p>`:''}`;
+  }
+  const y=o.scrollTop;o.innerHTML=`<div class="qz">${topo}${corpo}</div>`;o.scrollTop=y;
+}
+function corClique(e){
+  if(!CRG)return;const t=e.target;
+  const b=t.closest('[data-cor]'),tb=t.closest('[data-cor-t]'),al=t.closest('[data-cor-al]'),pb=t.closest('[data-cor-p]'),mb=t.closest('[data-cor-m]');
+  const ler=()=>{document.querySelectorAll('.cor-o [data-cor-c]').forEach(x=>{const s=CRG.sel[CRG.aberto];if(s&&s[x.dataset.corC])s[x.dataset.corC].c=x.value})};
+  if(b&&b.dataset.cor==='sair'){document.querySelector('.cor-o')?.remove();document.body.style.overflow='';CRG=null;return}
+  if(tb){ler();CRG.turma=tb.dataset.corT;CRG.erroS='';corProximo();return corRender()}
+  if(al){ler();const x=CRG.d.alunos.find(z=>z.linha===+al.dataset.corAl);if(!x)return;CRG.aberto=x.linha;CRG.erroS='';corSelIni(x);corRender();document.getElementById('corAb')?.scrollIntoView({block:'start',behavior:'smooth'});return}
+  if(pb||mb){ler();const s=CRG.sel[CRG.aberto],h=(pb||mb).dataset[pb?'corH':'corM'],q=CRG.d.qs.find(z=>z.h===h);if(!s||!q)return;
+    if(pb)s[h].b=+pb.dataset.corP;else s[h].m=!s[h].m;if(s[h].b!=null&&s[h].b>=q.esc)s[h].m=false;return corRender()}
+  if(b&&b.dataset.cor==='salvar'){ler();corSalvar()}
+}
+async function corSalvar(){
+  const x=CRG.d.alunos.find(z=>z.linha===CRG.aberto),s=CRG.sel[CRG.aberto];if(!x||!s)return;
+  const cor={};CRG.d.qs.forEach(q=>cor[q.h]={p:corPts(q,s[q.h]),c:s[q.h].c.trim()});
+  CRG.busy=true;CRG.erroS='';corRender();
+  try{const j=await ppChamar({acao:'esc.salvar',doc:CRG.doc,linha:x.linha,cor});CRG.busy=false;
+    if(!j.ok){CRG.erroS=j.erro||'Não foi possível salvar.';return corRender()}
+    Object.keys(cor).forEach(h=>{x.esc[h]=Object.assign({},x.esc[h],cor[h])});x.nota=j.nota;
+    toast(j.nota!=null?x.nome.split(' ')[0]+': nota '+notaTx(j.nota)+' salva':'Correção salva');corProximo();corRender();
+    document.getElementById('corAb')?.scrollIntoView({block:'start',behavior:'smooth'});
+  }catch(e){CRG.busy=false;CRG.erroS='Sem conexão. A correção não foi salva.';corRender()}
+}
 function avFechar(){document.querySelector('.avl-o')?.remove();document.body.style.overflow='';AV=null;render()}
+const ESCMAX=1500;
+let avEscT=0;
+function avEscDigitou(e){
+  const ta=e.target.closest&&e.target.closest('#avEsc');if(!ta||!AV||!AV.st||AV.etapa!=='q')return;
+  const st=AV.st,h=st.ids[AV.i],v=ta.value.slice(0,ESCMAX);
+  if(v.trim())st.resp[h]=v;else delete st.resp[h];
+  const n=document.getElementById('avEscN');if(n)n.textContent=v.length+' / '+ESCMAX;
+  const d=document.querySelectorAll('.avl-o .avl-dots button')[AV.i];if(d)d.classList.toggle('feito',!!v.trim());
+  clearTimeout(avEscT);avEscT=setTimeout(avGuardar,400);
+}
+function avEscAviso(){const s=document.getElementById('avEscAv');if(s){s.textContent='Colar texto não é permitido nesta questão. Escreva com suas palavras.';s.className='esc-aviso'}}
 function avGuardar(){if(!AV||!AV.st)return;AV.st.i=AV.i;const x=avAnd();x[AV.a.doc]=AV.st;store.set('avAnd',x)}
 function avRender(){
   const o=document.querySelector('.avl-o');if(!o||!AV)return;
@@ -3864,15 +3985,24 @@ function avRender(){
     dots=`<div class="qz-dots avl-dots">${st.ids.map((h,k)=>`<button class="${st.resp[h]?'feito':''}${AV.etapa==='q'&&k===AV.i?' cur':''}" data-av-ir="${k}" aria-label="Questão ${k+1}${st.resp[h]?' respondida':' em branco'}"></button>`).join('')}</div>`;
     if(AV.etapa==='q'){
       const h=st.ids[AV.i],q=a.qs.find(x=>x.h===h),ord=st.ord[h],esc_=st.resp[h];
-      const ops=ord.map((k,j)=>{const t=q.a[k],on=esc_===hashAv(t);return `<button class="qz-op avl-op${on?' on':''}" data-avop="${j}" aria-pressed="${on}"><span class="qz-l" aria-hidden="true">${L5[j]}</span><span>${esc(t)}</span></button>`}).join('');
       const ult=AV.i===st.ids.length-1;
-      corpo=`<p class="qz-n">Questão ${AV.i+1} de ${st.ids.length}</p>${q.v?`<div class="fx-video">${midia(q.v,'Vídeo da questão')}<span class="meta">Assista ao vídeo antes de responder.</span></div>`:''}<h2 class="qz-q" id="avQ" tabindex="-1">${esc(q.q)}</h2><div class="qz-ops" role="group" aria-labelledby="avQ">${ops}</div>
+      const vid=q.v?`<div class="fx-video">${midia(q.v,'Vídeo da questão')}<span class="meta">Assista ao vídeo antes de responder.</span></div>`:'';
+      let miolo;
+      if(q.esc){const t=esc_||'';
+        miolo=`<h2 class="qz-q" id="avQ" tabindex="-1">${esc(q.q)} <span class="esc-pts">vale ${notaTx(q.esc)} ${q.esc==1?'ponto':'pontos'}</span></h2>
+        <label class="esc-caixa"><span class="esc-lb">Sua resposta</span><textarea id="avEsc" maxlength="${ESCMAX}" rows="8" spellcheck="true">${esc(t)}</textarea>
+        <span class="esc-rod"><span id="avEscAv">Escreva com suas palavras. Colar texto não funciona aqui.</span><span id="avEscN">${t.length} / ${ESCMAX}</span></span></label>`}
+      else{const ops=ord.map((k,j)=>{const t=q.a[k],on=esc_===hashAv(t);return `<button class="qz-op avl-op${on?' on':''}" data-avop="${j}" aria-pressed="${on}"><span class="qz-l" aria-hidden="true">${L5[j]}</span><span>${esc(t)}</span></button>`}).join('');
+        miolo=`<h2 class="qz-q" id="avQ" tabindex="-1">${esc(q.q)}</h2><div class="qz-ops" role="group" aria-labelledby="avQ">${ops}</div>`}
+      corpo=`<p class="qz-n">Questão ${AV.i+1} de ${st.ids.length}</p>${vid}${miolo}
         <div class="avl-nav"><button class="btn btn-ghost" data-av="ant"${AV.i===0?' disabled':''}>Anterior</button><button class="btn btn-primary" data-av="${ult?'revisar':'prox'}">${ult?'Revisar e enviar':'Próxima'}</button></div>
         <p class="meta" style="margin:0;text-align:center">Suas respostas ficam guardadas neste celular até você enviar.</p>`;
     }else{
       const br=st.ids.filter(h=>!st.resp[h]).length;
       corpo=`<p class="qz-n">Revisão antes de enviar</p>
-        <div class="avl-lista">${st.ids.map((h,k)=>{const r=st.resp[h],ord=st.ord[h],q=a.qs.find(x=>x.h===h);const j=r?ord.findIndex(i=>hashAv(q.a[i])===r):-1;return `<button class="avl-li${r?'':' br'}" data-av-q="${k}"><span>Questão ${k+1}</span><b>${j>=0?'Letra '+L5[j]:'Em branco'}</b></button>`}).join('')}</div>
+        <div class="avl-lista">${st.ids.map((h,k)=>{const r=st.resp[h],ord=st.ord[h],q=a.qs.find(x=>x.h===h);
+          if(q.esc){const n=(r||'').trim().length;return `<button class="avl-li${n?'':' br'}" data-av-q="${k}"><span>Questão ${k+1} · escrita</span><b>${n?`Respondida (${n} caracteres)`:'Em branco'}</b></button>`}
+          const j=r?ord.findIndex(i=>hashAv(q.a[i])===r):-1;return `<button class="avl-li${r?'':' br'}" data-av-q="${k}"><span>Questão ${k+1}</span><b>${j>=0?'Letra '+L5[j]:'Em branco'}</b></button>`}).join('')}</div>
         ${br?`<p class="avl-err">${br===1?'1 questão está em branco.':br+' questões estão em branco.'} Questão em branco vale zero.</p>`:''}
         ${AV.erro?`<p class="avl-err" role="alert">${esc(AV.erro)}</p>`:''}
         ${AV.conf?`<div class="avl-conf"><b>Enviar agora?</b><span>Depois de enviar, não dá para mudar as respostas nem fazer de novo.</span><div class="qz-btns"><button class="btn btn-primary" data-av="enviar"${AV.busy?' disabled':''}>${AV.busy?'Enviando…':'Sim, enviar'}</button><button class="btn btn-ghost" data-av="naoenv">Voltar e conferir</button></div></div>`
@@ -3881,9 +4011,15 @@ function avRender(){
   }else if(AV.carregando){
     corpo=`<p class="qz-n">Gabarito</p><p style="margin:0">Buscando o gabarito…</p>`;
   }else if(AV.etapa==='gab'){
-    const f=avFeitas()[a.doc],mr=(f&&f.resp)||{};
-    corpo=`<p class="qz-n">Gabarito comentado</p>${f&&f.nota!=null?`<div class="avl-nota"><span>Sua nota</span><b>${notaTx(f.nota)}</b><span>de ${notaTx(a.valor||10)}</span></div>`:''}
-      <div class="gl">${a.qs.map((q,k)=>{const g=AV.gab[q.h]||{},mine=mr[q.h];return `<div class="gi"><div class="h"><span>Questão ${k+1}</span>${mine?`<span class="s ${mine===g.c?'ok':'no'}">${mine===g.c?'✓':'✕'}</span>`:''}</div>
+    const f=avMinha(a),mr=(f&&f.resp)||{};
+    corpo=`<p class="qz-n">Gabarito comentado</p>${f&&f.nota!=null?`<div class="avl-nota"><span>Sua nota</span><b>${notaTx(f.nota)}</b><span>de ${notaTx(a.valor||10)}</span></div>`:f&&f.escPend?`<div class="esc-pend"><span>✍️</span><span><b>Questões objetivas: ${notaTx(f.obj)} de ${notaTx(f.objMax)}.</b> A questão escrita ainda está sendo corrigida pelo Prof. Haroldo; a nota final aparece aqui depois da correção.</span></div>`:''}
+      <div class="gl">${a.qs.map((q,k)=>{const g=AV.gab[q.h]||{},mine=mr[q.h];
+        if(q.esc){const meu=((f&&f.cor)||{})[q.h]||{},pts=meu.p;
+          return `<div class="gi"><div class="h"><span>Questão ${k+1} · escrita</span>${pts!=null?`<span class="s esc-s ${pts>=q.esc?'ok':pts>0?'meio':'no'}">${notaTx(pts)} de ${notaTx(q.esc)}</span>`:f?'<span class="esc-ag">aguardando correção</span>':`<span class="esc-ag">vale ${notaTx(q.esc)}</span>`}</div>
+          ${q.v?midia(q.v,'Vídeo da questão'):''}<span class="r"><b>${esc(q.q)}</b></span>
+          ${f?`<span class="gr esc-tx">${mine?esc(mine)+' <i>(sua resposta)</i>':'<i>(em branco)</i>'}</span>`:''}
+          ${meu.c?`<span class="c"><b>Comentário do professor para você:</b> ${esc(meu.c)}</span>`:''}${g.e?`<span class="c"><b>Comentário:</b> ${esc(g.e)}</span>`:''}</div>`}
+        return `<div class="gi"><div class="h"><span>Questão ${k+1}</span>${mine?`<span class="s ${mine===g.c?'ok':'no'}">${mine===g.c?'✓':'✕'}</span>`:''}</div>
         ${q.v?midia(q.v,'Vídeo da questão'):''}<span class="r"><b>${esc(q.q)}</b></span>
         ${q.a.map(t=>{const h=hashAv(t),cl=h===g.c?'ok':h===mine?'no':'';return `<span class="gr ${cl}">${h===g.c?'✓ ':h===mine?'✕ ':''}${esc(t)}${h===mine?' <i>(sua resposta)</i>':''}</span>`}).join('')}
         ${g.e?`<span class="c">${esc(g.e)}</span>`:''}</div>`}).join('')}</div>
@@ -3898,7 +4034,8 @@ function avRender(){
         ${r!==null?`<div class="fx-exp${r===g.c?'':' bad'}" role="status"><b>${r===g.c?'Isso!':'Não foi dessa vez.'}</b> ${esc(g.e||'')}</div><div class="qz-btns"><button class="btn btn-primary" data-av="prox-pr">${P.i===P.ids.length-1?'Ver resultado':'Próxima'}</button></div>`:''}`}
   }else if(AV.etapa==='fim'){
     const r=AV.res;
-    corpo=r.nota!=null?`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">Atividade enviada</p><div class="avl-nota"><span>Sua nota</span><b>${String(r.nota).replace('.',',')}</b><span>de ${String(r.valor||10).replace('.',',')}</span></div><p style="margin:0">${fx?`Sua nota foi registrada na Nota 2. O gabarito e os comentários aparecem a partir de ${a.prazo?diaSeguinte(a.prazo):'o fim do prazo'}.`:'Sua nota foi registrada para o Prof. Haroldo.'}</p><div class="qz-btns"><button class="btn btn-primary" data-av="sair">Voltar ao resumo</button></div></div>`
+    corpo=r.escPend?`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">Atividade enviada</p><div class="avl-nota"><span>Questões objetivas</span><b>${notaTx(r.obj)}</b><span>de ${notaTx(r.objMax)}</span></div><div class="esc-pend"><span>✍️</span><span><b>A questão escrita vale ${notaTx((r.valor||10)-r.objMax)} pontos</b> e será corrigida pelo Prof. Haroldo. Sua nota final, de 0 a 10, aparece junto com o gabarito, depois do prazo${a.prazo?' ('+dm(a.prazo)+')':''}.</span></div><div class="qz-btns"><button class="btn btn-primary" data-av="sair">Voltar ao resumo</button></div></div>`
+      :r.nota!=null?`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">Atividade enviada</p><div class="avl-nota"><span>Sua nota</span><b>${String(r.nota).replace('.',',')}</b><span>de ${String(r.valor||10).replace('.',',')}</span></div><p style="margin:0">${fx?`Sua nota foi registrada na Nota 2. O gabarito e os comentários aparecem a partir de ${a.prazo?diaSeguinte(a.prazo):'o fim do prazo'}.`:'Sua nota foi registrada para o Prof. Haroldo.'}</p><div class="qz-btns"><button class="btn btn-primary" data-av="sair">Voltar ao resumo</button></div></div>`
       :`<div class="qz-end avl-fim" tabindex="-1" id="avFoco"><p class="qz-n">${r.pend?'Sem internet agora':'Não foi possível enviar'}</p><p style="margin:0;font-weight:700">${esc(r.msg)}</p><div class="qz-btns"><button class="btn btn-primary" data-av="sair">Voltar ao resumo</button></div></div>`;
   }
   o.innerHTML=`<div class="qz">${topo}${dots}${corpo}</div>`;
@@ -3907,13 +4044,16 @@ function avRender(){
 async function avChamar(param,obj){
   let ap=store.get('aparelho','');if(!ap){ap=Math.random().toString(36).slice(2)+Date.now().toString(36);store.set('aparelho',ap)}
   obj.aparelho=ap;
-  const r=await fetch(CFG.DATA_URL+(CFG.DATA_URL.includes('?')?'&':'?')+param+'='+encodeURIComponent(JSON.stringify(obj))+'&t='+Date.now(),{cache:'no-store'});
+  const url=CFG.DATA_URL+(CFG.DATA_URL.includes('?')?'&':'?')+param+'='+encodeURIComponent(JSON.stringify(obj))+'&t='+Date.now();
+  // respostas escritas longas: o endereço ficaria grande demais, então vão pelo corpo do pedido
+  if(url.length>7000&&param==='avaliacao'){const r=await fetch(CFG.DATA_URL,{method:'POST',body:JSON.stringify(Object.assign({acao:'avaliacao'},obj)),cache:'no-store'});return r.json()}
+  const r=await fetch(url,{cache:'no-store'});
   return r.json();
 }
 function avSortear(a){
   const emb=x=>{const v=x.slice();for(let i=v.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[v[i],v[j]]=[v[j],v[i]]}return v};
   const ids=emb(a.qs.map(q=>q.h)).slice(0,a.qtd),ord={};
-  ids.forEach(h=>ord[h]=emb(a.qs.find(q=>q.h===h).a.map((_,i)=>i)));
+  ids.forEach(h=>ord[h]=emb((a.qs.find(q=>q.h===h).a||[]).map((_,i)=>i)));
   return ids.length?{ids,ord}:null;
 }
 async function avClique(e){
@@ -3953,7 +4093,7 @@ async function avClique(e){
     return;
   }
   if(a==='enviar'){
-    const pl={teste:!!AV.a.teste,doc:AV.a.doc,turma:st.turma,nome:st.nome,resp:st.ids.map(h=>({h,r:st.resp[h]||''})),tempo:Math.round((Date.now()-st.ini)/1000),em:new Date().toISOString(),saidas:st.saidas||0,fora:st.fora||0};
+    const pl={teste:!!AV.a.teste,doc:AV.a.doc,turma:st.turma,nome:st.nome,resp:st.ids.map(h=>{const q=AV.a.qs.find(x=>x.h===h);return q&&q.esc?{h,t:(st.resp[h]||'').trim()}:{h,r:st.resp[h]||''}}),tempo:Math.round((Date.now()-st.ini)/1000),em:new Date().toISOString(),saidas:st.saidas||0,fora:st.fora||0};
     AV.busy=true;avRender();
     const r=await avEnviar(pl);
     AV.busy=false;AV.etapa='fim';AV.res=r;avRender();
@@ -3966,7 +4106,11 @@ async function avEnviar(pl){
   try{
     const j=await avChamar('avaliacao',pl);
     const p=avPend();delete p[doc];store.set('avPend',p);
-    if(j.ok){limpa();if(!COMP&&!pl.teste){const f=avFeitas(),mr={};(pl.resp||[]).forEach(x=>{if(x.r)mr[x.h]=x.r});f[doc]={nota:j.nota,em:HOJE,resp:mr};store.set('avFeitas',f)}return {nota:j.nota,valor:j.valor}}
+    if(j.ok){limpa();const mr={};(pl.resp||[]).forEach(x=>{if(x.r||x.t)mr[x.h]=x.r||x.t});
+      const reg={nota:j.nota,em:HOJE,resp:mr,tok:j.tok||''};if(j.escPend){reg.escPend=true;reg.obj=j.obj;reg.objMax=j.objMax}
+      // teste do professor: guarda à parte (para ver a correção depois), sem marcar a atividade como feita
+      if(!COMP&&!pl.teste){const f=avFeitas();f[doc]=reg;store.set('avFeitas',f)}else if(pl.teste){const t=store.get('avTestes',{})||{};t[doc]=reg;store.set('avTestes',t)}
+      return {nota:j.nota,valor:j.valor,escPend:!!j.escPend,obj:j.obj,objMax:j.objMax}}
     if(j.ja||j.encerrada){limpa();if(j.ja&&!COMP&&!pl.teste){const f=avFeitas();f[doc]=f[doc]||{nota:null};store.set('avFeitas',f)}return {msg:j.erro}}
     return {msg:j.erro||'Não foi possível enviar. Tente de novo.'};
   }catch(e){
@@ -3978,7 +4122,7 @@ let avTentando=false;
 async function avReenviar(){
   if(avTentando||!navigator.onLine)return;const p=avPend(),ks=Object.keys(p);if(!ks.length)return;
   avTentando=true;let mud=false;
-  for(const k of ks){const r=await avEnviar(p[k]);if(!r.pend){mud=true;if(r.nota!=null)toast('Atividade avaliativa enviada. Nota '+String(r.nota).replace('.',','));else if(r.msg)toast(r.msg)}}
+  for(const k of ks){const r=await avEnviar(p[k]);if(!r.pend){mud=true;if(r.escPend)toast('Atividade enviada. A questão escrita será corrigida pelo professor.');else if(r.nota!=null)toast('Atividade enviada. Nota '+String(r.nota).replace('.',','));else if(r.msg)toast(r.msg)}}
   avTentando=false;if(mud&&!AV)render();
 }
 addEventListener('online',avReenviar);
@@ -4386,7 +4530,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#readBtn'))return readSheet();
   if(t.closest('#apresBtn'))return abrirApres();
   if(t.closest('#focoBtn'))return document.body.classList.contains('foco')?focoSair():focoEntrar();
-  {const av=t.closest('[data-av]');if(av&&!t.closest('.avl-o')){if(av.dataset.av==='abrir')return avAbrir(capId(av.dataset.avcap),av.dataset.avk);if(av.dataset.av==='gab'||av.dataset.av==='pratica')return avAbrir(capId(av.dataset.avcap),av.dataset.avk,av.dataset.av==='gab'?'gab':'pra');if(av.dataset.av==='reenviar'){avReenviar().then(()=>render());return}}}
+  {const av=t.closest('[data-av]');if(av&&!t.closest('.avl-o')){if(av.dataset.av==='abrir')return avAbrir(capId(av.dataset.avcap),av.dataset.avk);if(av.dataset.av==='corrigir')return corAbrir(capId(av.dataset.avcap));if(av.dataset.av==='gab'||av.dataset.av==='pratica')return avAbrir(capId(av.dataset.avcap),av.dataset.avk,av.dataset.av==='gab'?'gab':'pra');if(av.dataset.av==='reenviar'){avReenviar().then(()=>render());return}}}
   if(t.closest('#listBtn'))return listSheet();
   if(t.closest('#tipOk')){S.tip=false;store.set('tip',false);t.closest('.tip').remove();return}
   if(t.closest('#recAnt'))return recAnteriores();

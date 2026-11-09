@@ -8,6 +8,20 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.23.0 · 09/11/2026 (com o robô v30 e o robô do GeoNotas v12)
+
+- **Questão escrita nas Atividades de Fixação:** no Doc, o enunciado e a linha "Escrita: 5 pontos". O aluno escreve numa caixa com contador (até 1.500 caracteres); colar texto não funciona nessa caixa. Os pontos que sobram ficam divididos entre as objetivas.
+- Ao enviar, o aluno vê a nota das objetivas e o aviso de que a escrita será corrigida pelo professor. A nota final e o comentário do professor aparecem com o gabarito, depois do prazo.
+- **Corrigir questões escritas** (modo professor, no cartão da fixação): por turma, com o texto de cada aluno, quantas vezes saiu do app, pontos de 0 ao máximo com meio ponto e comentário opcional. "Salvar · próximo aluno".
+- Painel › Notas mostra "em correção" para quem ainda não foi corrigido.
+- "[teste] NN Fixação": o professor pode ver o gabarito (prévia) e a própria correção.
+
+## Robô v30 · 09/11/2026
+
+- Lê "Escrita: N pontos" (só nas fixações; na avaliativa a questão fica de fora, com aviso). Grava a resposta escrita na planilha de notas (colunas "Objetivas", "Escrita", "Situação", "Respostas escritas") e deixa a nota em branco até a correção.
+- Ações do painel `esc.listar` e `esc.salvar`; o gabarito devolve ao aluno a própria correção (pela chave que o app recebe ao enviar). Envios longos podem chegar por POST.
+- Conversor de formulários: pasta dentro de App Geografia, só Unidade 4, pede a permissão de Formulários (marcado como temporário: sai em 2027).
+
 ## 1.22.0 · 09/11/2026 (com o robô v28 e o robô do GeoNotas v11)
 
 - **Atividade de Fixação no app (Nota 2):** Doc "NN Fixação" na pasta da unidade vira atividade dentro do GeoEstudos, no lugar do formulário. Nota de 0 a 10, só o primeiro envio vale, sem envio depois do prazo. Ao enviar, o aluno vê só a nota; gabarito comentado e "Praticar de novo" só depois do prazo.

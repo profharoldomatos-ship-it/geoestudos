@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-09 · conversor de formulários: permissão e só Unidade 4 v29';
+const VERSAO_ROBO = '2026-11-09 · questões escritas nas fixações v30';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -522,7 +522,7 @@ function lerDocs_() {
 function lerRevisao_(texto) {
   const linhas = String(texto || '').split(/\r?\n/).map(l => l.replace(/\u00a0/g, ' ').trim());
   const perguntas = [], erros = [];
-  let solto = [], atual = null, primeira = true, num = 0, video = '';
+  let solto = [], atual = null, primeira = true, num = 0, video = '', escAtual = null;
   const limpaNum = s => s.replace(/^(pergunta|quest[ãa]o)\s*\d*\s*[.:)\-–—]?\s*/i, '').replace(/^\d+\s*[.)\-–—:]\s*/, '').trim();
   const fechar = () => {
     if (!atual) return;
@@ -562,7 +562,7 @@ function lerRevisao_(texto) {
           enun = k >= 0 ? enun.slice(k) : primeira ? enun.slice(-1) : enun;
         }
         atual = { q: limpaNum(enun.join(' ')), ops: [], c: -1, e: '', temExp: false, v: video, ruim: '' };
-        solto = []; primeira = false; video = '';
+        solto = []; primeira = false; video = ''; escAtual = null;
       }
       atual.ops[i] = m[2].trim();
       return;
@@ -570,16 +570,24 @@ function lerRevisao_(texto) {
     if (atual && /^respostas\s*:/i.test(l) && (l.match(/\b[A-E]\b/g) || []).length > 1) { atual.ruim = '"marque todas" ainda não é aceito no app: deixe uma só alternativa correta'; atual.c = 0; return; }
     if (atual && /^resposta\s+curta\b/i.test(l)) { atual.ruim = 'resposta curta ainda não é aceita no app: transforme em alternativas A a D'; atual.c = 0; return; }
     if (/^escrita\s*:/i.test(l)) {
-      if (atual && atual.c < 0 && !atual.ops.length) { atual.ruim = 'questão escrita ainda não é aceita no app'; atual.c = 0; return; }
-      const enun = solto.filter(x => /^\d+\s*[.)\-–—:]/.test(x)).pop() || solto[solto.length - 1] || '';
-      erros.push('Questão escrita ("' + limpaNum(enun).slice(0, 40) + '…") ainda não é aceita no app: ficou de fora.');
-      solto = []; return;
+      // v30: questão escrita ("Escrita: 5 pontos" depois do enunciado): o aluno escreve, o professor corrige
+      if (atual) fechar();
+      let enun = solto;
+      { let k = -1; enun.forEach((x, j) => { if (/^(\d+\s*[.)\-–—:]|pergunta|quest[ãa]o)/i.test(x)) k = j; }); enun = k >= 0 ? enun.slice(k) : primeira ? enun.slice(-1) : enun; }
+      const q = limpaNum(enun.join(' ')), mp = l.match(/(\d+(?:[.,]\d+)?)/), pts = mp ? parseFloat(mp[1].replace(',', '.')) : 0;
+      num++;
+      if (!q) erros.push('Pergunta ' + num + ': a questão escrita está sem enunciado.');
+      else if (!(pts > 0)) erros.push('Pergunta ' + num + ' ("' + q.slice(0, 40) + '…"): escreva quantos pontos vale, ex.: "Escrita: 5 pontos".');
+      else { escAtual = { q: q, esc: Math.round(pts * 2) / 2, e: '' }; if (video) escAtual.v = video; perguntas.push(escAtual); }
+      solto = []; primeira = false; video = '';
+      return;
     }
     m = l.match(/^(resposta|gabarito)[^:]*:\s*(?:letra\s*)?\(?\s*([A-Ea-e])\b/i);
     if (m && atual) { atual.c = 'ABCDE'.indexOf(m[2].toUpperCase()); if (atual.c > 3 && !atual.ops[4]) atual.c = -1; return; }
     if (atual && /^(resposta|gabarito)[^:]*:/i.test(l)) { atual.ruim = 'falta a letra da resposta (A, B, C ou D) na linha "Resposta:"'; atual.c = 0; return; }
     m = l.match(/^(?:explica[çc][ãa]o|coment[áa]rio)\s*:?\s*(.*)$/i);
     if (m && atual) { atual.e = m[1].trim(); atual.temExp = true; return; }
+    if (m && escAtual && !solto.length) { escAtual.e = m[1].trim(); return; }   // comentário/expectativa da questão escrita
     if (atual && (atual.temExp || atual.c >= 0)) { fechar(); solto = [l]; return; }
     if (atual && atual.ops.length) { atual.ops[atual.ops.length - 1] += ' ' + l; return; }
     solto.push(l);
@@ -796,16 +804,16 @@ function montarAnos_(conf, conteudo, docs, anterior) {
       if (!u) return;
       const cap = u.caps[n], ant = antFix[d.id];
       cap.atualizadoFix = d.atualizado;
-      if (ant && ant.a && ant.at === d.atualizado) { cap.fix = JSON.parse(JSON.stringify(ant.a)); cap.fixErros = ant.err || []; }
+      if (ant && ant.a && ant.at === d.atualizado && ant.a.fv === 30) { cap.fix = JSON.parse(JSON.stringify(ant.a)); cap.fixErros = ant.err || []; }
       else {
         try {
-          const lido = lerAvaliacao_(DocumentApp.openById(d.id).getBody().getText());
+          const lido = lerAvaliacao_(DocumentApp.openById(d.id).getBody().getText(), true);
           cap.fixErros = lido.erros.filter(e => !/por aluno/.test(e));
           if (lido.perguntas.length) { cap.fix = avaliacaoPublica_(d.id, lido); cap.fix.prazoDoc = lido.prazo || ''; }
         } catch (err) { Logger.log('Não consegui ler a fixação ' + d.id + ': ' + err); if (ant) { cap.fix = ant.a; cap.fixErros = ant.err || []; } }
       }
       if (!cap.fix) return;
-      cap.fix.tipo = 'fix'; cap.fix.valor = 10; cap.fix.qtd = cap.fix.qs.length;
+      cap.fix.tipo = 'fix'; cap.fix.valor = 10; cap.fix.qtd = cap.fix.qs.length; cap.fix.fv = 30;
       if (d.teste) cap.fix.teste = true; else delete cap.fix.teste;
       cap.fix.prazo = prazoFix_(fConf, u.n, cap.fix.prazoDoc);
     });
@@ -1544,6 +1552,8 @@ function painelAcao_(b) {
     if (a === 'oc.mudar') return ocultosMudar_(b);
     if (a === 'fix.ler') return { ok: true, fix: fixConf_() };
     if (a === 'fix.salvar') return fixSalvar_(b);
+    if (a === 'esc.listar') return escListar_(b);
+    if (a === 'esc.salvar') return escSalvar_(b);
     if (a === 'conf.ler') return confLer_();
     if (a === 'conf.salvar') return confSalvar_(b);
     return { ok: false, erro: 'Ação desconhecida.' };
@@ -1612,7 +1622,7 @@ function notasPainel_(b) {
   const v = ult > 1 ? sh.getRange(2, 1, ult - 1, 7).getValues() : [];
   const porTurma = {};
   turmas.forEach(t => {
-    const feitos = v.filter(l => String(l[2]) === t).map(l => ({ nome: String(l[3] || l[4] || ''), nota: Number(l[6]) }));
+    const feitos = v.filter(l => String(l[2]) === t).map(l => ({ nome: String(l[3] || l[4] || ''), nota: l[6] === '' ? null : Number(l[6]) }));
     const ja = feitos.map(f => chaveNome_(f.nome));
     const lista = alunosDaTurma_(t);
     porTurma[t] = { feitos: feitos.sort((x, y) => x.nome.localeCompare(y.nome)), faltam: lista.filter(n => ja.indexOf(chaveNome_(n)) < 0), total: lista.length };
@@ -1761,8 +1771,12 @@ function gabaritoDepoisDoPrazo_(b) {
     const info = avaliacaoPublicada_(String(b.doc || ''));
     if (!info) return { ok: false, erro: 'Esta atividade não está mais disponível.' };
     if (!info.aval.teste && !encerrada_(info.aval.prazo)) return { ok: false, erro: 'O gabarito aparece depois do prazo.' };
-    const lido = lerAvaliacao_(DocumentApp.openById(info.aval.doc).getBody().getText());
-    return { ok: true, qs: lido.perguntas.map(p => ({ h: hashTexto_(p.q), c: hashTexto_(p.a[p.c]), e: p.e || '' })) };
+    const lido = lerAvaliacao_(DocumentApp.openById(info.aval.doc).getBody().getText(), !!info.fix);
+    const r = { ok: true, qs: lido.perguntas.map(p => p.esc ? { h: hashTexto_(p.q), esc: p.esc, e: p.e || '' } : { h: hashTexto_(p.q), c: hashTexto_(p.a[p.c]), e: p.e || '' }) };
+    // v30: nota corrigida da questão escrita (só do próprio aluno: o app manda a chave secreta que recebeu ao enviar)
+    const tok = String(b.tok || '').replace(/[^\w-]/g, '');
+    if (tok) { const lin = linhaPorTok_(abaNotas_(info), tok); if (lin) r.meu = { nota: lin.nota, esc: lin.cor.esc || {}, situ: lin.situ }; }
+    return r;
   } catch (err) { return { ok: false, erro: 'Não foi possível buscar o gabarito agora.' }; }
 }
 const CHAVES_CONF_ = [
@@ -2226,7 +2240,7 @@ function hashTexto_(s) {
   for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
   return h.toString(36);
 }
-function lerAvaliacao_(texto) {
+function lerAvaliacao_(texto, comEscrita) {
   const linhas = String(texto || '').split(/\r?\n/);
   let valor = 10, prazo = '', qtd = 10;
   const erros = [], resto = [];
@@ -2244,6 +2258,16 @@ function lerAvaliacao_(texto) {
     resto.push(l0);
   });
   const r = lerRevisao_(resto.join('\n'));
+  // v30: questões escritas só nas atividades de fixação; os pontos delas saem dos 10 da atividade
+  const escs = r.perguntas.filter(p => p.esc);
+  if (escs.length) {
+    const soma = escs.reduce((t, p) => t + p.esc, 0), nObj = r.perguntas.length - escs.length;
+    let motivo = '';
+    if (!comEscrita) motivo = 'questão escrita só funciona nas atividades de fixação';
+    else if (soma >= valor && nObj) motivo = 'as questões escritas somam ' + String(soma).replace('.', ',') + ' pontos e não sobra nada para as objetivas (a atividade vale ' + valor + ')';
+    else if (soma > valor) motivo = 'as questões escritas somam mais que ' + valor + ' pontos';
+    if (motivo) { erros.push('Questão escrita ficou de fora: ' + motivo + '.'); r.perguntas = r.perguntas.filter(p => !p.esc); }
+  }
   const vistos = {};
   r.perguntas.forEach((p, i) => { const h = hashTexto_(p.q); if (vistos[h]) erros.push('Questão ' + (i + 1) + ' repete o enunciado de outra.'); vistos[h] = 1; });
   if (r.perguntas.length && r.perguntas.length < qtd) erros.push('O Doc tem ' + r.perguntas.length + ' questão(ões) completas, menos que as ' + qtd + ' por aluno. Cada aluno vai receber todas.');
@@ -2253,7 +2277,7 @@ function avaliacaoPublica_(docId, lido) {
   return {
     doc: docId, valor: lido.valor, prazo: lido.prazo, qtd: Math.min(lido.qtd, lido.perguntas.length),
     // alternativas em ordem alfabética: nem a ordem do Doc vai para o app
-    qs: lido.perguntas.map(p => { const o = { h: hashTexto_(p.q), q: p.q, a: p.a.slice().sort((x, y) => x.localeCompare(y, 'pt')) }; if (p.v) o.v = p.v; return o; })
+    qs: lido.perguntas.map(p => { const o = p.esc ? { h: hashTexto_(p.q), q: p.q, esc: p.esc } : { h: hashTexto_(p.q), q: p.q, a: p.a.slice().sort((x, y) => x.localeCompare(y, 'pt')) }; if (p.v) o.v = p.v; return o; })
   };
 }
 function chaveNome_(nome) { return semAcento_(nome).toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim(); }
@@ -2394,24 +2418,38 @@ function receberAvaliacao_(b) {
     const kA = 'aval|' + dia + '|' + disp, nA = parseInt(cache.get(kA) || '0', 10);
     if (nA >= 6 && !info.aval.teste) return { ok: false, erro: 'Muitos envios por este celular hoje. Fale com o professor.' };
     // gabarito: lido do Doc agora (nunca sai do robô)
-    const lido = lerAvaliacao_(DocumentApp.openById(info.aval.doc).getBody().getText());
-    const gab = {};
-    lido.perguntas.forEach((p, i) => { gab[hashTexto_(p.q)] = { n: i + 1, certa: hashTexto_(p.a[p.c]) }; });
+    const lido = lerAvaliacao_(DocumentApp.openById(info.aval.doc).getBody().getText(), !!info.fix);
+    const gab = {}, escQ = {};
+    let escTotal = 0, nObj = 0;
+    lido.perguntas.forEach((p, i) => {
+      if (p.esc) { escQ[hashTexto_(p.q)] = { n: i + 1, pts: p.esc }; escTotal += p.esc; }
+      else { gab[hashTexto_(p.q)] = { n: i + 1, certa: hashTexto_(p.a[p.c]) }; nObj++; }
+    });
     const resp = (Array.isArray(b.resp) ? b.resp : []).slice(0, 60);
-    const vistas = {};
+    const vistas = {}, escritas = {};
     let validas = 0, acertos = 0;
     const detalhe = [];
     resp.forEach(r => {
-      const g = gab[String(r.h || '')];
-      if (!g || vistas[r.h]) return;
-      vistas[r.h] = 1; validas++;
+      const h = String(r.h || '');
+      if (vistas[h]) return;
+      if (escQ[h]) { vistas[h] = 1; escritas[h] = { t: escTexto_(r.t, 3000), p: null, c: '' }; detalhe.push({ n: escQ[h].n, esc: true, branco: !escritas[h].t }); return; }
+      const g = gab[h];
+      if (!g) return;
+      vistas[h] = 1; validas++;
       const ok = String(r.r || '') === g.certa;
       if (ok) acertos++;
       detalhe.push({ n: g.n, ok: ok, branco: !r.r });
     });
-    if (!validas) return { ok: false, erro: 'As questões mudaram. Feche e abra a atividade de novo.' };
-    const qtd = Math.max(validas, info.aval.qtd);
-    const nota = Math.round(acertos * (info.aval.valor / qtd) * 100) / 100;
+    if (!validas && !Object.keys(escritas).length) return { ok: false, erro: 'As questões mudaram. Feche e abra a atividade de novo.' };
+    // questões escritas em branco: zero automático; as respondidas esperam a correção do professor
+    Object.keys(escQ).forEach(h => { if (!escritas[h]) escritas[h] = { t: '', p: null, c: '' }; if (!escritas[h].t) escritas[h].p = 0; });
+    const temEsc = escTotal > 0;
+    const pendente = Object.keys(escritas).some(h => escritas[h].p === null);
+    const qtd = temEsc ? nObj : Math.max(validas, info.aval.qtd);
+    const valorObj = info.aval.valor - escTotal;
+    const obj = qtd ? Math.round(acertos * (valorObj / qtd) * 100) / 100 : 0;
+    const nota = pendente ? '' : obj;   // com escrita em branco: nota já fechada (escrita = 0)
+    const tok = Utilities.getUuid().replace(/-/g, '');
     const seg = Math.max(0, Math.min(36000, parseInt(b.tempo, 10) || 0));
     const tempo = Math.floor(seg / 60) + ' min ' + ('0' + (seg % 60)).slice(-2) + ' s';
     detalhe.sort((x, y) => x.n - y.n);
@@ -2421,17 +2459,94 @@ function receberAvaliacao_(b) {
       const sh = abaNotas_(info);
       if (jaEnviou_(sh, v.chave)) return { ok: false, ja: true, erro: 'Já existe uma atividade enviada com este nome na Turma ' + v.turma + '. Cada estudante só pode fazer uma vez.' };
       const saidas = Math.max(0, Math.min(999, parseInt(b.saidas, 10) || 0)), fora = Math.max(0, Math.min(36000, parseInt(b.fora, 10) || 0));
-      if (sh.getLastColumn() < 12) sh.getRange(1, 11, 1, 2).setValues([['Saiu do app (vezes)', 'Tempo fora do app']]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F');
+      cabecalhoNotas_(sh);
       sh.appendRow([new Date(), info.ano + 'º', v.turma, v.oficial, v.nome, acertos + ' de ' + qtd, nota, tempo,
-        detalhe.map(x => 'Q' + x.n + (x.branco ? ' –' : x.ok ? ' ✓' : ' ✗')).join(' · '), v.chave,
-        saidas, Math.floor(fora / 60) + ' min ' + ('0' + (fora % 60)).slice(-2) + ' s']);
+        detalhe.map(x => 'Q' + x.n + (x.esc ? (x.branco ? ' escrita em branco' : ' escrita') : x.branco ? ' –' : x.ok ? ' ✓' : ' ✗')).join(' · '), v.chave,
+        saidas, Math.floor(fora / 60) + ' min ' + ('0' + (fora % 60)).slice(-2) + ' s',
+        temEsc ? obj : '', temEsc && !pendente ? 0 : '', temEsc ? (pendente ? 'aguardando correção' : 'corrigida') : '',
+        temEsc ? escritasLegiveis_(escritas, escQ) : '', JSON.stringify(temEsc ? { tok: tok, esc: escritas } : { tok: tok })]);
     } finally { lock.releaseLock(); }
     cache.put(kA, String(nA + 1), 21600);
-    return { ok: true, nota: nota, valor: info.aval.valor };
+    if (temEsc) return { ok: true, nota: pendente ? null : obj, obj: obj, objMax: valorObj, escPend: pendente, valor: info.aval.valor, tok: tok };
+    return { ok: true, nota: nota, valor: info.aval.valor, tok: tok };
   } catch (err) {
     Logger.log('Avaliação: ' + err);
     return { ok: false, erro: 'Não foi possível enviar agora. Suas respostas continuam guardadas no celular.' };
   }
+}
+
+/* v30: colunas extras da aba de notas (saídas do app e questões escritas) */
+const CAB_EXTRA_ = ['Saiu do app (vezes)', 'Tempo fora do app', 'Objetivas (pontos)', 'Escrita (pontos)', 'Situação', 'Respostas escritas', 'Dados da correção (não editar)'];
+function cabecalhoNotas_(sh) {
+  if (sh.getLastColumn() >= 17 && String(sh.getRange(1, 17).getValue())) return;
+  sh.getRange(1, 11, 1, CAB_EXTRA_.length).setValues([CAB_EXTRA_]).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1D3F8F').setWrap(true);
+  sh.setColumnWidth(16, 60 * 7);
+  try { sh.hideColumns(17); } catch (e) { }
+}
+/** Texto escrito pelo aluno (ou comentário): mantém os parágrafos. */
+function escTexto_(s, max) {
+  return String(s || '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, max);
+}
+function escritasLegiveis_(escritas, escQ) {
+  return Object.keys(escritas).map(h => 'Q' + ((escQ[h] || {}).n || '?') + (escritas[h].p != null ? ' (' + String(escritas[h].p).replace('.', ',') + ' pt)' : '') + ': ' + (escritas[h].t || '(em branco)') + (escritas[h].c ? '\n   Comentário: ' + escritas[h].c : '')).join('\n\n');
+}
+/** Linha da aba de notas pela chave secreta que o app recebeu ao enviar. */
+function linhaPorTok_(sh, tok) {
+  const ult = sh.getLastRow();
+  if (ult < 2 || sh.getLastColumn() < 17) return null;
+  const v = sh.getRange(2, 1, ult - 1, 17).getValues();
+  for (let i = 0; i < v.length; i++) {
+    let cor = {}; try { cor = JSON.parse(String(v[i][16] || '{}')); } catch (e) { }
+    if (cor.tok === tok) return { linha: i + 2, nota: v[i][6] === '' ? null : Number(v[i][6]), cor: cor, situ: String(v[i][14] || '') };
+  }
+  return null;
+}
+/** Painel: lista as questões escritas de uma fixação, por turma, para o professor corrigir. */
+function escListar_(b) {
+  const info = avaliacaoPublicada_(String(b.doc || ''));
+  if (!info) return { ok: false, erro: 'Esta atividade não está publicada no app.' };
+  const lido = lerAvaliacao_(DocumentApp.openById(info.aval.doc).getBody().getText(), true);
+  const qs = lido.perguntas.filter(p => p.esc).map(p => ({ h: hashTexto_(p.q), q: p.q, esc: p.esc, n: lido.perguntas.indexOf(p) + 1, e: p.e || '' }));
+  const escTotal = qs.reduce((t, q) => t + q.esc, 0);
+  const sh = abaNotas_(info), ult = sh.getLastRow(), alunos = [];
+  if (ult >= 2 && sh.getLastColumn() >= 17) {
+    sh.getRange(2, 1, ult - 1, 17).getValues().forEach((l, i) => {
+      let cor = {}; try { cor = JSON.parse(String(l[16] || '{}')); } catch (e) { }
+      if (!cor.esc) return;
+      alunos.push({ linha: i + 2, turma: String(l[2]), nome: String(l[3] || l[4] || ''), quando: l[0] instanceof Date ? Utilities.formatDate(l[0], GEO.FUSO, 'dd/MM HH:mm') : String(l[0]),
+        saidas: Number(l[10]) || 0, fora: String(l[11] || ''), obj: Number(l[12]) || 0, nota: l[6] === '' ? null : Number(l[6]), esc: cor.esc });
+    });
+  }
+  return { ok: true, titulo: info.titulo, rot: info.rot, ano: info.ano, turmas: info.turmas, valor: info.aval.valor, objMax: info.aval.valor - escTotal, qs: qs, alunos: alunos };
+}
+/** Painel: grava os pontos (e o comentário) da questão escrita de um aluno; com tudo corrigido, fecha a nota. */
+function escSalvar_(b) {
+  const info = avaliacaoPublicada_(String(b.doc || ''));
+  if (!info) return { ok: false, erro: 'Esta atividade não está publicada no app.' };
+  const lido = lerAvaliacao_(DocumentApp.openById(info.aval.doc).getBody().getText(), true);
+  const max = {}; lido.perguntas.forEach(p => { if (p.esc) max[hashTexto_(p.q)] = { pts: p.esc, n: lido.perguntas.indexOf(p) + 1 }; });
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = abaNotas_(info), linha = parseInt(b.linha, 10);
+    if (!(linha >= 2 && linha <= sh.getLastRow())) return { ok: false, erro: 'Envio não encontrado. Atualize a lista.' };
+    const l = sh.getRange(linha, 1, 1, 17).getValues()[0];
+    let cor = {}; try { cor = JSON.parse(String(l[16] || '{}')); } catch (e) { }
+    if (!cor.esc) return { ok: false, erro: 'Este envio não tem questão escrita.' };
+    Object.keys(b.cor || {}).forEach(h => {
+      if (!cor.esc[h] || !max[h]) return;
+      const p = Number(b.cor[h].p);
+      if (b.cor[h].p === null || b.cor[h].p === '' || isNaN(p)) cor.esc[h].p = null;
+      else cor.esc[h].p = Math.max(0, Math.min(max[h].pts, Math.round(p * 2) / 2));
+      cor.esc[h].c = escTexto_(b.cor[h].c, 600);
+    });
+    const hs = Object.keys(cor.esc), pend = hs.some(h => cor.esc[h].p === null);
+    const soma = hs.reduce((t, h) => t + (cor.esc[h].p || 0), 0), obj = Number(l[12]) || 0;
+    const nota = pend ? '' : Math.round((obj + soma) * 100) / 100;
+    sh.getRange(linha, 7).setValue(nota);
+    sh.getRange(linha, 14, 1, 4).setValues([[pend ? '' : soma, pend ? 'aguardando correção' : 'corrigida', escritasLegiveis_(cor.esc, max), JSON.stringify(cor)]]);
+    return { ok: true, nota: nota === '' ? null : nota, pend: pend };
+  } finally { lock.releaseLock(); }
 }
 
 /* ================================================================== */

@@ -6,7 +6,7 @@
  * o app só grava em células de lançamento (sem fórmula) e lê os resultados.
  */
 
-const VERSAO_ROBO = 'v11'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
+const VERSAO_ROBO = 'v12'; // numeração própria do robô do GeoNotas (veja geonotas/NOVIDADES.md)
 
 const CONFIG = {
   ANO: 2026,
@@ -343,16 +343,17 @@ function importarAutomatico() {
     let forms = [];
     try { forms = listarFormularios_(turma).filter(f => f.cap); } catch (e) { log.push(turma + ': ' + e.message); }
     const ano = anoDaTurma_(turma), envApp = (app.envios[ano] || []).filter(x => x.turma === turma && !regApp.ids[x.id]);
+    const pend = (app.pend[ano] || []).filter(x => x.turma === turma);
     const caps = {};
     forms.filter(f => f.novas).forEach(f => caps[f.cap] = 1);
     envApp.forEach(x => caps[x.cap] = 1);
     Object.keys(caps).map(Number).forEach(cap => {
-      try { importarCap_(turma, cap, forms.filter(f => f.cap === cap && f.novas), envApp.filter(x => x.cap === cap), regApp, log); }
+      try { importarCap_(turma, cap, forms.filter(f => f.cap === cap && f.novas), envApp.filter(x => x.cap === cap), regApp, log, pend.filter(x => x.cap === cap)); }
       catch (e) { log.push(turma + ' · cap. ' + cap + ': ' + e.message); }
     });
     // depois do prazo (+3 dias para envios guardados sem internet chegarem): quem não enviou fica com zero
     Object.keys(app.prazos[ano] || {}).forEach(cap => {
-      try { zerarQuemNaoEnviou_(turma, Number(cap), app.prazos[ano][cap], log); } catch (e) { log.push(turma + ' · cap. ' + cap + ' (zero): ' + e.message); }
+      try { zerarQuemNaoEnviou_(turma, Number(cap), app.prazos[ano][cap], log, pend.filter(x => x.cap === Number(cap))); } catch (e) { log.push(turma + ' · cap. ' + cap + ' (zero): ' + e.message); }
     });
   });
   salvarRegistroApp_(regApp);
@@ -361,7 +362,7 @@ function importarAutomatico() {
 }
 
 /** Junta formulário e app num capítulo: vale o PRIMEIRO envio de cada aluno, venha de onde vier. */
-function importarCap_(turma, cap, forms, envApp, regApp, log) {
+function importarCap_(turma, cap, forms, envApp, regApp, log, pend) {
   const sh = sheetFor_(turma, 'notas'), dados = readSheet_(sh, 'notas'), cols = colunasCap_(dados, cap);
   if (!cols) { log.push(turma + ' · cap. ' + cap + ': não achei a coluna da atividade na aba ' + sh.getName()); return; }
   const alunos = dados.rows.map(r => ({ r: r.r, nome: r.nome }));
@@ -380,9 +381,11 @@ function importarCap_(turma, cap, forms, envApp, regApp, log) {
     if (c.certeza === 'certo' && c.r) cand.push({ fonte: 'app', id: x.id, r: c.r, nota: x.nota, quando: x.quando });
     else log.push(turma + ' · cap. ' + cap + ' (app): confira o nome "' + x.nome + '" — não achei na planilha com segurança');
   });
+  (pend || []).forEach(x => { const c = casarNome_(x.nome, alunos); if (c.certeza === 'certo' && c.r) cand.push({ fonte: 'pend', r: c.r, quando: x.quando }); });
   cand.sort((a, b) => String(a.quando).localeCompare(String(b.quando)));
   const visto = {}, itens = [];
   cand.forEach(x => {
+    if (x.fonte === 'pend') { visto[x.r] = 1; return; }       // envio do app ainda em correção: ele é o primeiro, os seguintes não valem
     const marcar = () => { if (x.fonte === 'app') regApp.ids[x.id] = 1; else regs[x.fonte].ids[x.id] = 1; };
     marcar();
     if (visto[x.r]) return;                     // segundo envio do mesmo aluno: não vale
@@ -400,16 +403,22 @@ function importarCap_(turma, cap, forms, envApp, regApp, log) {
 
 /** Envios das Atividades de Fixação do GeoEstudos (planilha "GeoEstudos - Notas das atividades") e os prazos (arquivo de dados do app). */
 function fixacoesDoApp_() {
-  const out = { envios: {}, prazos: {} };
+  const out = { envios: {}, prazos: {}, pend: {} };
   try {
     const it = DriveApp.getFilesByName('GeoEstudos - Notas das atividades (não apagar)');
     if (it.hasNext()) {
       SpreadsheetApp.open(it.next()).getSheets().forEach(sh => {
         const m = sh.getName().match(/^(\d)º ano · Fixação (\d+)(?!.*teste)/);
         if (!m || sh.getLastRow() < 2) return;
-        const v = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues();
+        const v = sh.getRange(2, 1, sh.getLastRow() - 1, Math.max(10, Math.min(15, sh.getLastColumn()))).getValues();
         v.forEach((l, k) => {
-          if (!(l[0] instanceof Date) || l[6] === '' || l[6] == null) return;
+          if (!(l[0] instanceof Date)) return;
+          if (l[6] === '' || l[6] == null) {
+            // v12: questão escrita aguardando a correção do professor: a nota entra depois; até lá ninguém zera nem conta outro envio
+            if (/aguardando/i.test(String(l[14] || ''))) (out.pend[m[1]] = out.pend[m[1]] || []).push({ cap: Number(m[2]), turma: String(l[2]),
+              nome: String(l[3] && !/^\(/.test(String(l[3])) ? l[3] : l[4]), quando: l[0].toISOString() });
+            return;
+          }
           (out.envios[m[1]] = out.envios[m[1]] || []).push({ id: sh.getSheetId() + '|' + (l[9] || k), cap: Number(m[2]), turma: String(l[2]),
             nome: String(l[3] && !/^\(/.test(String(l[3])) ? l[3] : l[4]), nota: Number(l[6]), quando: l[0].toISOString() });
         });
@@ -435,7 +444,7 @@ function salvarRegistroApp_(reg) {
   PropertiesService.getScriptProperties().setProperty('imp_app', JSON.stringify({ ids: reg.ids, zeros: reg.zeros || {} }));
 }
 /** Três dias depois do prazo, quem não tem nada na atividade fica com 0 (uma vez só por turma e capítulo). */
-function zerarQuemNaoEnviou_(turma, cap, prazo, log) {
+function zerarQuemNaoEnviou_(turma, cap, prazo, log, pend) {
   const lim = new Date(prazo + 'T23:59:59'); lim.setDate(lim.getDate() + 3);
   if (new Date() < lim) return;
   const reg = registroApp_(), k = turma + '|' + cap + '|' + prazo;
@@ -443,7 +452,11 @@ function zerarQuemNaoEnviou_(turma, cap, prazo, log) {
   const sh = sheetFor_(turma, 'notas'), dados = readSheet_(sh, 'notas'), cols = colunasCap_(dados, cap);
   if (!cols) return;
   let n = 0;
+  // quem enviou com questão escrita ainda não corrigida não fica com zero; se houver, espera a próxima rodada
+  const emCorrecao = {}, lista = dados.rows.map(r => ({ r: r.r, nome: r.nome }));
+  (pend || []).forEach(x => { const c = casarNome_(x.nome, lista); if (c.r) emCorrecao[c.r] = 1; });
   dados.rows.forEach(r => {
+    if (emCorrecao[r.r]) return;
     const m = r.cells[cols.marca.c], nt = cols.nota ? r.cells[cols.nota.c] : null;
     const vazio = cols.nota ? String(nt.v == null ? '' : nt.v) === '' : m.v !== true && String(m.v == null ? '' : m.v) === '';
     if (!vazio) return;
