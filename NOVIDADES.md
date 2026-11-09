@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.23.2 · 09/11/2026 (correção)
+
+- Onde a fixação já existe no app, o Calendário ("Fazer a atividade no app") e o botão do topo do resumo levam para a atividade no app, e não mais para o formulário.
+
 ## 1.23.1 · 09/11/2026 (correção)
 
 - Atividade (fixação e avaliativa): quando a questão era maior que a tela (vídeo + enunciado longo), o topo ficava escondido e não dava para rolar até o vídeo. Agora a tela rola normalmente, do vídeo até os botões.

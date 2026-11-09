@@ -2080,7 +2080,8 @@ function evCard(e){
   const {d,m}=dataBR(e.data),c=e.cap?capOf(e.cap):null,past=e.data<HOJE;
   const tit=e.titulo.replace(/^(Entrega do caderno|Atividade de fixação)\s*·\s*/i,'');
   const acts=[];
-  if(e.link)acts.push(`<a class="btn ev-go" href="${esc(e.link)}" target="_blank" rel="noopener">${e.tipo==='atividade'?'Fazer a atividade':'Abrir link'}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`);
+  if(e.tipo==='atividade'&&c&&!c.tema&&fixVisivel(c))acts.push(`<button class="btn ev-go" data-act="${c.id}">Fazer a atividade no app</button>`);
+  else if(e.link)acts.push(`<a class="btn ev-go" href="${esc(e.link)}" target="_blank" rel="noopener">${e.tipo==='atividade'?'Fazer a atividade':'Abrir link'}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`);
   else if((e.tipo==='atividade'||e.tipo==='tema')&&c&&c.atividade)acts.push(`<a class="btn ev-go" href="${esc(c.atividade)}" target="_blank" rel="noopener">Fazer a atividade<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>`);
   if(c&&c.resumo)acts.push(`<button class="btn btn-ghost ev-res" data-cap="${c.id}">${c.tema?'Abrir aula':'Abrir resumo'}</button>`);
   const done=e.tipo==='caderno'&&c&&isCopied(c.id)?`<span class="ev-ok">${CHECK} Resumo copiado</span>`:(e.tipo==='atividade'||e.tipo==='tema')&&c&&isSent(c.id)?`<span class="ev-ok">${CHECK} Atividade enviada</span>`:'';
@@ -2668,7 +2669,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.23.1',APP_DATA='2026-11-09';
+const APP_VERSAO='1.23.2',APP_DATA='2026-11-09';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3022,7 +3023,7 @@ function vCap(n){
   return `<article class="section">
     <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button><button class="tool foco-btn" id="focoBtn" aria-label="Ler em tela inteira">${FOCOIC}<span>Tela inteira</span></button></div>
     ${girarDica()}
-    <div><span class="ypill">${y.label} · Unidade ${c.u} · Capítulo ${n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo">Resumo</span> ${c.atividade?(isSent(n)?`<button class="qact ok" data-jump="1">${CHECK}Atividade enviada</button>`:`<button class="qact" data-jump="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg>Atividade de fixação · vale nota</button>`):''}
+    <div><span class="ypill">${y.label} · Unidade ${c.u} · Capítulo ${n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo">Resumo</span> ${temAtvCap(c)?(isSent(n)?`<button class="qact ok" data-jump="1">${CHECK}Atividade enviada</button>`:`<button class="qact" data-jump="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></svg>Atividade de fixação · vale nota</button>`):''}
     ${pCad?`<div class="prazo">Entrega do caderno: <b>${dm(pCad)}</b> · ${quando(pCad).toLowerCase()}</div>`:''}</div>
     ${S.tip?`<div class="tip"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none;color:var(--pen)"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra. Para corrigir uma marcação, toque nela: dá para trocar a cor, ajustar o trecho ou apagar. O texto do resumo não muda.</span><button id="tipOk">Entendi</button></div>`:''}
     ${profEditCap(c)}
