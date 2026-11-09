@@ -2513,6 +2513,8 @@ function converterFormulariosEmDocs() {
     if (pasta.getFilesByName(alvo).hasNext()) { rel.push('já existia: ' + ano + 'º ano · ' + alvo); continue; }
     let form;
     try { form = FormApp.openById(f.getId()); } catch (e) { rel.push('NÃO ABRIU: ' + nome + ' (' + e.message + ')'); continue; }
+    const videos = videosDoFormulario_(f.getId());   // links do YouTube (interface oficial do Forms); [] se não der
+    let kv = 0;
     const doc = DocumentApp.create(alvo), corpo = doc.getBody();
     const cab = x => !x || /^atividade$/i.test(x) || /U\s*\d\s*-?\s*C\s*\d/i.test(x) || /ANO$|^GEO\b/i.test(x);
     let segs = nome.split('|').map(x => x.trim()).filter(x => !cab(x));
@@ -2521,13 +2523,20 @@ function converterFormulariosEmDocs() {
     corpo.appendParagraph(alvo + ' – ' + tit).setHeading(DocumentApp.ParagraphHeading.HEADING1);
     corpo.appendParagraph('Prazo: ');
     corpo.appendParagraph('Convertido do formulário: ' + f.getUrl());
+    const desc = (form.getDescription() || '').trim();
+    if (desc) corpo.appendParagraph(desc);
     let n = 0, revisar = 0;
     form.getItems().forEach(item => {
       const tipo = item.getType(), T = FormApp.ItemType;
       const enun = (item.getTitle() || '').trim(), ajuda = (item.getHelpText() || '').trim();
       if (tipo === T.SECTION_HEADER || tipo === T.PAGE_BREAK) { if (enun) corpo.appendParagraph('— ' + enun + ' —'); return; }
       if (tipo === T.IMAGE) { corpo.appendParagraph('[imagem: ' + (enun || 'sem título') + ' — copie do formulário original]'); revisar++; return; }
-      if (tipo === T.VIDEO) { corpo.appendParagraph('[vídeo: ' + (enun || '') + ' — ver formulário original]'); return; }
+      if (tipo === T.VIDEO) {
+        const url = videos[kv++] || '';
+        if (url) corpo.appendParagraph('Vídeo: ' + url + (enun ? '  (' + enun + ')' : ''));
+        else { corpo.appendParagraph('Vídeo: ?  ← REVISAR: copie o link do vídeo "' + (enun || 'sem título') + '" do formulário original'); revisar++; }
+        return;
+      }
       if (/\b(nome|turma|n[uú]mero da chamada|nº da chamada|e-?mail)\b/i.test(enun) && (tipo === T.TEXT || tipo === T.LIST || tipo === T.MULTIPLE_CHOICE)) return; // identificação: o app já pede
       n++;
       const L = 'ABCDEFGHIJ';
@@ -2560,5 +2569,13 @@ function converterFormulariosEmDocs() {
   rel.sort();
   Logger.log('Pasta: ' + raiz.getUrl() + '\n' + rel.join('\n'));
   return rel;
+}
+/** Links do YouTube dos vídeos do formulário, na ordem em que aparecem (Google Forms API). */
+function videosDoFormulario_(id) {
+  try {
+    const r = UrlFetchApp.fetch('https://forms.googleapis.com/v1/forms/' + id, { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
+    if (r.getResponseCode() !== 200) { Logger.log('Vídeos não lidos (' + r.getResponseCode() + '): ' + r.getContentText().slice(0, 200)); return []; }
+    return (JSON.parse(r.getContentText()).items || []).filter(i => i.videoItem && i.videoItem.video).map(i => i.videoItem.video.youtubeUri || '');
+  } catch (e) { Logger.log('Vídeos não lidos: ' + e.message); return []; }
 }
 function pastaFilha_(pai, nome) { const i = pai.getFoldersByName(nome); return i.hasNext() ? i.next() : pai.createFolder(nome); }
