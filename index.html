@@ -814,7 +814,9 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .nf-h{display:flex;gap:12px;align-items:center}.nf-h b{display:block;font-size:1.05rem}.nf-n{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--pen);color:var(--on-pen);font-family:var(--display);font-weight:800;font-size:1.05rem}
 .nf-l{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;line-height:1.5}.nf-ir{align-self:flex-start;font-weight:700}
 .nf-media{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;background:var(--pen-soft);border:2px solid var(--pen);border-radius:16px;padding:14px}.nf-media>b{font-family:var(--display);font-size:1.25rem}
-.onde{display:flex;flex-direction:column;gap:10px}.cont-atv .cont-ic{background:var(--hl-soft);color:var(--ink)}
+.onde{display:flex;flex-direction:column;gap:10px}
+.tt-sala{display:inline-block;font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--year) 12%,var(--surface));color:var(--ink)}
+.tt-emsala{display:flex;gap:12px;align-items:flex-start}.tt-emsala b{display:block;margin-bottom:2px}.cont-atv .cont-ic{background:var(--hl-soft);color:var(--ink)}
 .sb-p{margin:0;line-height:1.6}
 .sb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .sb-list li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;line-height:1.45}
@@ -1428,11 +1430,14 @@ function ocEvento(e){
   return false;
 }
 var OC_K='';
+var TT_ATV=false;   // atividades das aulas de aprofundamento no app (desligadas: são feitas em sala)
 function aplicarDados(){
   YEARS={};TURMAS=[];T2A={};if(!DATA||!DATA.anos)return;
   const ehProf=(()=>{const t=store.get('profTok',null);return !!(t&&t.token&&t.exp>Date.now())})();
   OC_K=ocChave();
-  const tAt=turmaSegura(),anos=(!ehProf&&tAt&&ocTem())?ocAplicar(JSON.parse(JSON.stringify(DATA.anos)),tAt):DATA.anos;
+  const tAt=turmaSegura();let anos=(!ehProf&&tAt&&ocTem())?ocAplicar(JSON.parse(JSON.stringify(DATA.anos)),tAt):DATA.anos;
+  // v1.26: as atividades das aulas de aprofundamento são feitas em sala; o app não mostra nenhuma (nem formulário, nem avaliativa)
+  if(!TT_ATV){if(anos===DATA.anos)anos=JSON.parse(JSON.stringify(anos));anos.forEach(a=>(a.unidades||[]).forEach(u=>(u.temas||[]).forEach(t=>{t.atividade='';t.atividadeTexto='';t.pdfAtv='';t.aval=null})))}
   for(const a of anos){
     const units={};a.unidades.forEach(u=>units[u.n]=u);
     const com=a.unidades.filter(u=>u.inicio&&u.inicio<=HOJE).sort((p,q)=>p.inicio<q.inicio?1:-1),at=com.length?com[0].n:a.atual;
@@ -2518,6 +2523,7 @@ const TOURS={
     {alvo:'#copyBtn',t:'Terminou de estudar? Marque aqui',x:'Assim você acompanha o que já estudou. Fica salvo só no seu celular.'},
     {alvo:'.avcard',t:'Atividade avaliativa: vale nota',x:'Antes de começar, leia a aula. Informe a sua turma e o seu nome completo, como está na chamada. São 10 questões sorteadas, você faz uma única vez e, no fim, aparece só a sua nota.',opcional:true},
     {alvo:'#actBox',t:'Atividade da aula',x:'Esta atividade vale ponto na recuperação paralela. Respeite o prazo e, quando terminar, marque “Já fiz esta atividade”.',opcional:true},
+    {alvo:'.tt-emsala',t:'Atividade em sala',x:'A atividade desta aula é feita em sala, em grupo, com o professor. Estude o texto antes.',opcional:true},
     {alvo:'.duvbtn',t:'Ficou com dúvida?',x:'Pergunte ao professor sobre esta aula. A resposta vem na aula ou em “Dúvidas respondidas”.',opcional:true}
   ],
   atividades:[
@@ -2696,7 +2702,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.25.0',APP_DATA='2026-11-10';
+const APP_VERSAO='1.26.0',APP_DATA='2026-11-10';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2972,7 +2978,7 @@ function vTurma(){
       `<div class="capgrid">${capsDe(y,ua).filter(c=>!c.ocR).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
     ${acts.length?secFold('atvs','Atividades de fixação','ano','atv',(()=>{const pend=acts.filter(c=>!isSent(c.n)),pr=pend.map(c=>prazoAtv(c)).filter(x=>x&&x>=HOJE).sort()[0];return `${acts.length} ${acts.length===1?'atividade':'atividades'} · ${sent} ${sent===1?'enviada':'enviadas'}${pr?' · próximo prazo '+dm(pr):''}`})(),
       `<div class="atvlist">${acts.map(atvCard).join('')}</div>`):''}
-    ${temasDe(y,ua).length?secFold('temas','Aulas de aprofundamento','ano','globo',`${temasDe(y,ua).length} ${temasDe(y,ua).length===1?'aula extra':'aulas extras'} · valem ponto`,
+    ${temasDe(y,ua).length?secFold('temas','Aulas de aprofundamento','ano','globo',`${temasDe(y,ua).length} ${temasDe(y,ua).length===1?'aula extra':'aulas extras'} · ${TT_ATV?'valem ponto':'atividade em sala'}`,
       `<div class="capgrid">${temasDe(y,ua).map(temaBtn).join('')}</div>`):''}
     </div>
     <p class="sf-grupo">Da turma</p>
@@ -3032,7 +3038,7 @@ function vResumos(){
       <div class="unit-head"><span class="eyebrow">Unidade ${u} · ${est}</span><b class="unit-t">${esc(un.titulo)}</b></div>
       <div class="ul-sec">${SECIC.livro}<b>Resumos dos capítulos</b><span>${un.caps.filter(c=>c.resumo).length} de ${un.caps.filter(c=>!c.ocR).length}</span></div>
       ${un.caps.filter(c=>!c.ocR).map(capRow).join('')||'<div class="cap off"><span class="t meta">Nenhum capítulo cadastrado.</span></div>'}
-      ${(un.temas||[]).filter(temaVisivel).length?`<div class="ul-sec tt-sec">${SECIC.globo}<b>Aulas de aprofundamento</b><span>valem ponto</span></div>${un.temas.filter(temaVisivel).map(temaRow).join('')}`:''}
+      ${(un.temas||[]).filter(temaVisivel).length?`<div class="ul-sec tt-sec">${SECIC.globo}<b>Aulas de aprofundamento</b><span>${TT_ATV?'valem ponto':'atividade em sala'}</span></div>${un.temas.filter(temaVisivel).map(temaRow).join('')}`:''}
       ${temPub?`<div class="offnote">${CHECK} Os resumos ficam guardados no celular para ler sem internet.</div>`:''}
     </div>
     ${temPub?'':`<p class="meta" style="margin:0">Os resumos desta unidade aparecem aqui quando o professor publicá-los.</p>`}
@@ -3096,11 +3102,11 @@ function girarDica(){
 }
 addEventListener('orientationchange',()=>{if(S.cap)store.set('girouDica',(store.get('girouDica',0)||0)+1)});
 function vTema(n,c){
-  const y=Y(),done=isCopied(n),sent=isSent(n),pr=prazoDe(n,'tema');
+  const y=Y(),done=isCopied(n),sent=isSent(n),pr=TT_ATV?prazoDe(n,'tema'):'';
   return `<article class="section">
     <div class="reader-bar"><button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button><button class="tool foco-btn" id="focoBtn" aria-label="Ler em tela inteira">${FOCOIC}<span>Tela inteira</span></button></div>
     ${girarDica()}
-    <div><span class="ypill">${y.label} · Unidade ${c.u} · Aula de aprofundamento ${c.n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo tt-lbl">Aula extra</span> <button class="qact tt-q${sent?' ok':''}" data-jump="1">${sent?CHECK+'Atividade feita':'Vale ponto · recuperação paralela'}</button>
+    <div><span class="ypill">${y.label} · Unidade ${c.u} · Aula de aprofundamento ${c.n}</span><h1 style="margin-top:8px">${esc(c.titulo)}</h1><span class="t-resumo tt-lbl">Aula extra</span> ${TT_ATV?`<button class="qact tt-q${sent?' ok':''}" data-jump="1">${sent?CHECK+'Atividade feita':'Vale ponto · recuperação paralela'}</button>`:'<span class="tt-sala">Recuperação paralela · atividade em sala</span>'}
     ${pr?`<div class="prazo">Prazo da atividade: <b>${dm(pr)}</b> · ${quando(pr).toLowerCase()}</div>`:''}</div>
     ${S.tip?`<div class="tip"><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra.</span><button id="tipOk">Entendi</button></div>`:''}
     ${profEditCap(c)}
@@ -3112,7 +3118,7 @@ function vTema(n,c){
     </div>
     ${avCard(c,n)}
     ${pdfCard(pdfDe(c),'Aula em PDF','Para imprimir, guardar ou enviar a um colega.','res')}
-    ${temAtv(c)||!avVisivel(c)?`    <div class="card act tt-act" id="actBox">
+    ${TT_ATV&&(temAtv(c)||!avVisivel(c))?`    <div class="card act tt-act" id="actBox">
       <div class="act-head"><span class="act-ic tt-ic">${TTIC}</span><span><b class="act-t">Atividade da aula de aprofundamento</b><br><span class="act-sub">Aula ${c.n} · ${esc(c.titulo)}</span></span><span class="vale">Vale ponto</span></div>
       <p class="act-why">Esta atividade vale ponto na recuperação paralela.${pr?` <b>Prazo: ${dm(pr)}.</b>`:''}</p>
       ${c.atividadeTexto?`<div class="tt-texto">${md(c.atividadeTexto)}</div>`:''}
@@ -3121,6 +3127,7 @@ function vTema(n,c){
       ${temAtv(c)?`<button class="copy-btn${sent?' on':''}" id="sentBtn" aria-pressed="${sent}">${sent?CHECK+' Atividade feita':'Já fiz esta atividade'}</button><span class="meta">${c.atividade?'Depois de enviar o formulário, volte aqui e marque.':'Siga as orientações do professor para a entrega e marque aqui quando terminar.'}</span>`
       :`<p class="meta" style="margin-block:0"><b>Aguarde:</b> a atividade desta aula será publicada em breve. Você recebe um aviso quando ela sair.</p>`}
     </div>`:''}
+    ${TT_ATV?'':`<div class="card tt-emsala"><span class="fxc-ic">${TTIC}</span><span><b>A atividade desta aula é feita em sala</b><span class="meta">Em grupo, com o professor, a partir deste texto. Ela vale ponto na recuperação paralela.</span></span></div>`}
     ${duvidaCard()}
   </article>`;
 }
@@ -4396,7 +4403,7 @@ function vAtividades(){
       ${atuais.length?`<div class="bar" role="img" aria-label="${sent} de ${atuais.length} enviadas"><i style="width:${Math.round(sent/atuais.length*100)}%"></i></div><span class="at-sub">${sent} de ${atuais.length} atividades enviadas</span>`:''}</div>
     <div class="atv-regra"><b>Como funciona</b><span>Cada atividade vale de 0 a 10, e a média delas é a sua <b>Nota 2</b>. Vale só o primeiro envio, até o prazo.</span><button class="link nf-ir" data-gonotas="1">Como a nota é formada ›</button></div>
     ${atuais.length?`<div class="atvlist">${atuais.map(atvCard).join('')}</div>`:'<div class="card empty-card"><b>Nenhuma atividade publicada nesta unidade</b><span class="meta">Quando o professor publicar, ela aparece aqui.</span></div>'}
-    ${(()=>{const ts=[...y.list].sort((a,b)=>(b.n===y.atual)-(a.n===y.atual)||b.n-a.n).filter(u=>liberada(u.n,y)).flatMap(u=>(u.temas||[]).filter(t=>t.resumo||temAtv(t)));
+    ${!TT_ATV?'':(()=>{const ts=[...y.list].sort((a,b)=>(b.n===y.atual)-(a.n===y.atual)||b.n-a.n).filter(u=>liberada(u.n,y)).flatMap(u=>(u.temas||[]).filter(t=>t.resumo||temAtv(t)));
       const tf=ts.filter(t=>isSent('t'+t.n)).length;
       return ts.length?`<div class="atv-top tt-top"><div class="at-row"><span class="at-ic" aria-hidden="true">${SECIC.globo}</span><span class="at-tx"><b>Aulas de aprofundamento</b><span>Aulas extras · recuperação paralela · vale ponto</span></span><span class="at-num">${tf}/${ts.length}</span></div></div><div class="atvlist">${ts.map(ttAtvCard).join('')}</div>`:''})()}
     ${outras.length?`<div class="sfolds">${outras.map(u=>{const l=u.caps.filter(temAtvCap),e=l.filter(c=>isSent(c.n)).length;return secFold('atv-u'+u.n,'Atividades · Unidade '+u.n,'ano','atv',`${l.length} ${l.length===1?'atividade':'atividades'} · ${e} ${e===1?'enviada':'enviadas'}`,`<div class="atvlist">${l.map(atvCard).join('')}</div>`)}).join('')}</div>`:''}

@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.26.0 · 10/11/2026
+
+- Aulas de aprofundamento **sem atividade no app**: as atividades são feitas em sala, em grupo. Saíram o cartão de atividade (formulário), a atividade avaliativa, o prazo e o bloco "Aulas de aprofundamento" da aba Atividades. No fim da aula, um aviso: "A atividade desta aula é feita em sala". O texto da aula continua igual. (Chave `TT_ATV` no código: os Docs e as notas antigas ficam guardados.)
+
 ## 1.25.0 · 10/11/2026
 
 - **Como sua nota é formada:** página nova no menu lateral (Nota 1: desempenho e caderno; Nota 2: atividades de fixação; Nota 3: prova; média do período; recuperação paralela pelas aulas de aprofundamento; recuperação). Atalhos na aba Atividades ("Como a nota é formada ›") e em Sobre (o texto antigo, desatualizado, foi trocado).
