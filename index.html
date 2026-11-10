@@ -810,6 +810,11 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .achado{background:color-mix(in srgb,var(--hl) 50%,transparent);border-radius:6px;box-shadow:0 0 0 4px color-mix(in srgb,var(--hl) 50%,transparent);transition:background 1s}
 /* Sobre o app */
 .sobre .sb-lead{font-size:1rem;line-height:1.6;margin:0}
+.nf{display:flex;flex-direction:column;gap:14px}.nf-card{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.nf-h{display:flex;gap:12px;align-items:center}.nf-h b{display:block;font-size:1.05rem}.nf-n{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--pen);color:var(--on-pen);font-family:var(--display);font-weight:800;font-size:1.05rem}
+.nf-l{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;line-height:1.5}.nf-ir{align-self:flex-start;font-weight:700}
+.nf-media{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;background:var(--pen-soft);border:2px solid var(--pen);border-radius:16px;padding:14px}.nf-media>b{font-family:var(--display);font-size:1.25rem}
+.onde{display:flex;flex-direction:column;gap:10px}.cont-atv .cont-ic{background:var(--hl-soft);color:var(--ink)}
 .sb-p{margin:0;line-height:1.6}
 .sb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .sb-list li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;line-height:1.45}
@@ -2023,7 +2028,18 @@ function continuarCard(un){
   if(un!=null&&+c.u!==+un)return '';
   if(u.pct>=97)return '';
   const dias=Math.floor((Date.now()-u.t)/864e5),quando=dias<=0?'hoje':dias===1?'ontem':'há '+dias+' dias';
-  return `<button class="card contbtn" data-continuar="1"><span class="cont-ic" aria-hidden="true">${SECIC.livro}</span><span class="cont-tx"><span class="eyebrow">Continuar de onde parei</span><b>${c.tema?'Aprofundamento '+c.n:'Cap. '+c.n} · ${esc(c.titulo)}</b><span class="cont-bar" aria-hidden="true"><i style="width:${u.pct}%"></i></span><span class="meta">${u.pct}% lido · ${quando}</span></span>${CHEVR}</button>`;
+  return `<button class="card contbtn" data-continuar="1"><span class="cont-ic" aria-hidden="true">${SECIC[c.tema?'globo':'livro']}</span><span class="cont-tx"><span class="eyebrow">${c.tema?'Aula de aprofundamento '+c.n:'Resumo · Capítulo '+c.n}</span><b>${esc(c.titulo)}</b><span class="cont-bar" aria-hidden="true"><i style="width:${u.pct}%"></i></span><span class="meta">${u.pct}% lido · ${quando}</span></span>${CHEVR}</button>`;
+}
+
+/* v1.25: seção "Onde você parou": o texto que o aluno estava lendo/copiando e a atividade começada e não enviada */
+function ondePareiHtml(un){
+  const tx=continuarCard(un);
+  const y=Y(),and=avAnd(),atv=capsDe(y,un).filter(c=>fixVisivel(c)&&and[c.fix.doc]&&!avFeitas()[c.fix.doc]&&!avFechada(c.fix)).sort((a,b)=>(and[b.fix.doc].ini||0)-(and[a.fix.doc].ini||0))[0];
+  let ac='';
+  if(atv){const x=and[atv.fix.doc],r=Object.keys(x.resp||{}).length,n=x.ids.length;
+    ac=`<button class="card contbtn cont-atv" data-act="${atv.n}"><span class="cont-ic" aria-hidden="true">${FIXIC}</span><span class="cont-tx"><span class="eyebrow">Atividade de fixação · Cap. ${atv.n}</span><b>${esc(atv.titulo)}</b><span class="cont-bar" aria-hidden="true"><i style="width:${Math.round(r/n*100)}%"></i></span><span class="meta">${r} de ${n} respondidas${atv.fix.prazo?' · até '+dm(atv.fix.prazo):''}</span></span>${CHEVR}</button>`}
+  if(!tx&&!ac)return '';
+  return `<p class="sf-grupo">Onde você parou</p><div class="onde">${tx}${ac}</div>`;
 }
 
 /* Busca nos resumos e Temas do ano (sem acento, sem maiúsculas) */
@@ -2330,6 +2346,29 @@ function semDados(){
 
 /* Sobre o app: finalidade pedagógica, privacidade e base legal (texto para alunos e famílias),
    organizado em seções que abrem ao toque, para não entregar um bloco de texto longo. */
+/* v1.25: página "Como sua nota é formada" (menu lateral; atalhos na aba Atividades e em Sobre) */
+function vNotas(){
+  const nota=(n,t,sub,corpo)=>`<div class="nf-card"><div class="nf-h"><span class="nf-n">${n}</span><span><b>${t}</b><span class="meta">${sub}</span></span></div>${corpo}</div>`;
+  return `<section class="section nf">
+    <div class="home-head">${GLOBO_HH}<span class="eyebrow">Geografia · Prof. Haroldo Matos</span><h1 class="home-t">Como sua nota é formada</h1></div>
+    <p class="sb-lead">Em cada período (bimestre) você tem <b>3 notas</b>, de 0 a 10. A média do período é a soma das três dividida por 3. Para ser aprovado, a média precisa ser <b>7,0 ou mais</b>.</p>
+    ${nota('1','Desempenho e caderno','Média de duas notas',`
+      <ul class="nf-l"><li><b>Desempenho:</b> a avaliação do professor sobre a sua assiduidade, disciplina, empenho e compromisso, na sala e fora dela.</li>
+      <li><b>Caderno:</b> os resumos copiados no caderno e entregues. Cada resumo vale uma parte da nota. Com 4 resumos no período, cada um vale 2,5: entregou os 4, tirou 10; entregou 3, tirou 7,5.</li></ul>
+      <p class="sb-conta">Nota 1 = (Desempenho + Caderno) ÷ 2</p>`)}
+    ${nota('2','Atividades de fixação','As atividades de cada capítulo, aqui no app',`
+      <ul class="nf-l"><li>Cada atividade vale de 0 a 10. Vale só o <b>primeiro envio</b>, até o prazo.</li><li>Atividade não enviada vale 0.</li></ul>
+      <p class="sb-conta">Nota 2 = soma das notas das atividades ÷ número de atividades</p>
+      ${S.turma&&DATA?`<button class="link nf-ir" data-goatv="1">Ver as minhas atividades ›</button>`:""}`)}
+    ${nota('3','Prova','Em sala',`<p style="margin:0">Prova escrita, individual e <b>sem consulta</b>, feita em sala de aula.</p>`)}
+    <div class="nf-media"><span class="eyebrow">Média do período</span><b>(Nota 1 + Nota 2 + Nota 3) ÷ 3</b><span class="meta">Exemplo: Nota 1 = 8,0 · Nota 2 = 6,5 · Nota 3 = 7,0 → (8,0 + 6,5 + 7,0) ÷ 3 = <b>7,2</b></span></div>
+    ${nota('+','Recuperação paralela','Aulas de aprofundamento',`
+      <p style="margin:0">Durante o período há <b>duas aulas de aprofundamento</b>, cada uma com a sua atividade, feita geralmente em sala, em grupo, a partir de um texto-base lido com o professor. A média dessas atividades é a <b>nota de aprofundamento</b>.</p>
+      <p class="sb-conta">Se a nota de aprofundamento for maior que a mais baixa das 3 notas, ela substitui essa nota, e a média é calculada de novo.</p>
+      <p class="meta" style="margin:0">Ela nunca diminui a sua média: só entra se ajudar.</p>`)}
+    ${nota('R','Recuperação','Para quem fica abaixo de 7,0',`<p style="margin:0">Quem, mesmo com a recuperação paralela, ficar com média abaixo de 7,0 faz a recuperação com o professor, em sala. No <b>4º período</b>, há também a <b>recuperação final</b>, e o resultado do ano (aprovação ou retenção) é definido junto com a escola.</p>`)}
+  </section>`;
+}
 function vSobre(){
   const ok=(t,d)=>`<li><span class="sb-ok" aria-hidden="true">✓</span><span><b>${t}</b>${d?`<br><span class="meta">${d}</span>`:''}</span></li>`;
   const no=(t,d)=>`<li><span class="sb-no" aria-hidden="true">✕</span><span><b>${t}</b>${d?`<br><span class="meta">${d}</span>`:''}</span></li>`;
@@ -2351,25 +2390,8 @@ function vSobre(){
       <p>O GeoEstudos é uma iniciativa pedagógica do tipo <b>recurso educacional digital complementar às aulas presenciais</b>, feita também para que os <b>pais e responsáveis acompanhem</b> o que seus filhos estudam na disciplina de Geografia e se estão cumprindo com suas obrigações estudantis.</p>
       <p>O GeoEstudos mantém <b>marcadores de cumprimento de tarefas</b>. Contudo, mesmo que o aluno marque um resumo ou aula de aprofundamento como feita, <b>a comprovação pelos pais só se dá a partir da supervisão de seus cadernos</b>. Esses cadernos são verificados e avaliados pelo Prof. Haroldo Matos.</p>`)}
     ${bloco('ano','cal','Como funcionam as avaliações de Geografia','As 3 notas do período e as recuperações',`
-      <p><b>Três notas por período.</b> A cada período, a disciplina de Geografia tem <b>3 (três) notas</b>. Elas são somadas e divididas por 3 para formar a média do período. A <b>média mínima para aprovação é 7,0 (sete)</b>.</p>
-      <div class="sb-notas">
-        <div class="sb-nota"><span class="sn-n">1</span><b>Desempenho e caderno</b><span>Média entre a <b>Nota de Desempenho</b> (participação, engajamento nas aulas e nas tarefas e convivência em sala) e a <b>Nota de Caderno</b> (os resumos copiados e entregues nas datas marcadas).</span></div>
-        <div class="sb-nota"><span class="sn-n">2</span><b>Atividade conforme a turma</b><span>O instrumento varia de acordo com o nível e as necessidades de cada turma (por exemplo, trabalho, pesquisa, seminário ou atividade em grupo) e é informado aos estudantes com antecedência.</span></div>
-        <div class="sb-nota"><span class="sn-n">3</span><b>Prova em sala</b><span>Avaliação com <b>10 questões objetivas</b>, valendo 10 pontos.</span></div>
-      </div>
-      <p class="sb-conta">Média do período = (Nota 1 + Nota 2 + Nota 3) ÷ 3</p>
-      <p><b>Recuperação paralela.</b> Ao longo do período, o Prof. Haroldo Matos desenvolve a <b>recuperação paralela</b> com as <b>aulas de aprofundamento</b> e as atividades ligadas a elas, inclusive as atividades avaliativas feitas aqui no app. Ela é aberta a todos: pode <b>melhorar a média</b> de quem já alcançou 7,0 e, sobretudo, ajudar quem ainda não alcançou a chegar lá, <b>evitando a recuperação de período</b>.</p>
-      <p>A forma de usar a nota da recuperação paralela é definida pelo professor <b>conforme a realidade de cada turma</b>, e a turma é informada. São duas possibilidades:</p>
-      <div class="sb-notas">
-        <div class="sb-nota"><span class="sn-n">A</span><b>Substitui a menor nota</b><span>Se a nota da recuperação paralela for maior que alguma das 3 notas do período, ela <b>substitui a mais baixa</b>, e a média é calculada de novo.</span></div>
-        <div class="sb-nota"><span class="sn-n">B</span><b>Média com a nota do período</b><span>A nota da recuperação paralela e a média do período são somadas e divididas por 2.</span></div>
-      </div>
-      <p>Nos dois casos, <b>a recuperação paralela não diminui a nota</b>: se o resultado for menor que a média que o estudante já tinha, prevalece a média anterior. Exemplo na forma B: média 7,5 e recuperação paralela 5,0 → a conta daria 6,25, mas fica 7,5.</p>
-      <p><b>Recuperação de período.</b> Quem, mesmo depois da recuperação paralela, ficar com média abaixo de 7,0 faz uma tarefa definida pelo professor: avaliação em sala, atividade ou trabalho escrito para casa, ou outro instrumento adequado à turma.</p>
-      <p class="sb-conta">Média final = (média após a recuperação paralela + nota da recuperação de período) ÷ 2<small>Exemplo: média 5,0 e recuperação 9,0 → (5,0 + 9,0) ÷ 2 = 7,0.</small></p>
-      <p><b>Aqui também a recuperação não diminui a nota.</b> Se o resultado da conta for menor que a média que o estudante já tinha, <b>prevalece a média anterior</b>. Exemplo: média 6,0 e recuperação 4,0 → a conta daria 5,0, mas fica 6,0. A média final é a nota registrada no boletim.</p>
-      <p><b>Frequência.</b> A presença é controlada à parte, no diário de classe: a LDB exige frequência mínima de 75% das horas letivas para a aprovação (art. 24, VI).</p>
-      <p><b>Para as famílias.</b> As marcações de tarefa feitas no app ajudam a acompanhar, mas a comprovação está no caderno, que o professor verifica e avalia (veja “Para pais e responsáveis”). A base legal da avaliação contínua e da recuperação paralela está no tema “Currículo, livro didático e avaliação”.</p>`)}
+      <p>A cada período, a disciplina de Geografia tem <b>3 notas</b>: desempenho e caderno, atividades de fixação e prova. A média do período é a soma das três dividida por 3, e a <b>média mínima para aprovação é 7,0</b>. As aulas de aprofundamento funcionam como <b>recuperação paralela</b>.</p>
+      <button class="btn btn-ghost" data-gonotas="1">Ver como cada nota é formada</button>`)}
     ${bloco('ano','atv','Currículo, livro didático e avaliação','Rede Municipal de São Luís, coleção Teláris Essencial, DCTMA, BNCC e LDB',`
       <p><b>Currículo.</b> Os conteúdos e as atividades <b>obedecem ao currículo previsto pela Rede Municipal de Ensino de São Luís</b> para os anos finais do Ensino Fundamental, em consonância com o <b>Documento Curricular do Território Maranhense (DCTMA)</b>, e <b>seguem as diretrizes da BNCC</b>.</p>
       <p><b>Livro didático.</b> Os resumos e as aulas de aprofundamento derivam do livro didático adotado pela <b>Secretaria Municipal de Educação de São Luís (SEMED)</b>: a coleção <b>Teláris Essencial: Geografia</b>, de Anselmo Lázaro Branco, Bruno Silva Prado e Eduardo Campos (São Paulo: Ática, 2022), aprovada no <b>Programa Nacional do Livro e do Material Didático (PNLD 2024)</b> para os anos finais do Ensino Fundamental. Cada ano usa o volume correspondente: <b>7º ano</b> nas turmas 71 e 72, <b>8º ano</b> nas turmas 81 e 82 e <b>9º ano</b> nas turmas 91 e 92. Os resumos seguem a sequência de unidades e capítulos de cada volume, e as aulas de aprofundamento partem dos capítulos do livro para aprofundá-los.</p>
@@ -2674,7 +2696,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.24.0',APP_DATA='2026-11-09';
+const APP_VERSAO='1.25.0',APP_DATA='2026-11-10';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -2754,7 +2776,7 @@ function vHome(){
 
 /* Menu lateral (☰): o que é acessório sai da página inicial e fica aqui */
 const BRAND_D="M808.52,426.51v283.65c0,18.9-15.31,34.24-34.24,34.24h-158.64c-31.47,0-59.65,14.04-78.65,36.16l-.03.03c-.55.65-1.1,1.27-1.61,1.95-.07.1-.17.21-.27.31-5.68,6.3-13.94,10.24-23.08,10.24s-17.36-3.94-23.08-10.24c-.1-.1-.17-.21-.27-.31-.41-.55-.89-1.1-1.37-1.64-18.97-22.32-47.29-36.5-78.92-36.5h-158.64c-18.9,0-34.24-15.34-34.24-34.24v-280.22c0-20.82,16.85-37.66,37.66-37.66h155.21c57.25,0,103.65,46.4,103.65,103.61,0-57.22,46.4-103.61,103.65-103.61h158.64c18.93,0,34.24,15.31,34.24,34.24Z";
-const MNIC={hist:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',sino:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',inicio:'<path d="M3 11l9-7 9 7v9H3z"/>',guia:'<circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-4 1 2-5z"/>',inst:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 7v7m-3-3l3 3 3-3"/>',prof:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',sobre:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 11l7.6-4M8.2 13l7.6 4"/>',cores:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',painel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h3M8 16h6"/>'};
+const MNIC={notas:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',hist:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',sino:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',inicio:'<path d="M3 11l9-7 9 7v9H3z"/>',guia:'<circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-4 1 2-5z"/>',inst:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 7v7m-3-3l3 3 3-3"/>',prof:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',sobre:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 11l7.6-4M8.2 13l7.6 4"/>',cores:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',painel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h3M8 16h6"/>'};
 function menuAbrir(){
   if(document.querySelector('.drw-ov'))return;
   const ico=ic=>`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MNIC[ic]}</svg>`;
@@ -2773,6 +2795,7 @@ function menuAbrir(){
     <div class="drw-g drw-g1">
       ${it('inicio','inicio','Início','','',naHome)}
       ${it('guia','guia','Guia do estudante','Como usar o app, passo a passo','',naGuia)}
+      ${it('notas','notas','Como sua nota é formada','As 3 notas, a média e a recuperação','',S.tab==='notas')}
     </div>
     ${grp(S.turma?'Sua turma · '+esc(S.turma):'',(S.turma?it('recados','hist','Recados anteriores','Os que você já leu'):'')+(pt?it('avisos','sino','Avisos no celular',pt.length?'Turma'+(pt.length>1?'s ':' ')+esc(listaT(pt)):'Toque para ativar',avisoChip):''))}
     ${grp('Ajustes',it('cores','cores','Cores do app',modo)+(standalone()?'':it('instalar','inst','Instalar no celular','Ícone na tela e uso sem internet')))}
@@ -2785,6 +2808,7 @@ function menuAbrir(){
     const b=e.target.closest('[data-mn]');if(!b)return;const a=b.dataset.mn;fechar();
     if(a==='inicio'){S.cap=null;go('home')}
     else if(a==='guia')go('guia');
+    else if(a==='notas')go('notas');
     else if(a==='sobre')go('sobre');
     else if(a==='prof')go('prof');
     else if(a==='instalar'){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(()=>{deferredPrompt=null})}else installHelp()}
@@ -2941,10 +2965,11 @@ function vTurma(){
       <div style="font-size:.86rem">${sent} de ${acts.length} atividades de fixação enviadas</div>`:''}
     </div>
     ${avisosHtml()}
+    ${ondePareiHtml(ua)}
     <p class="sf-grupo">Para estudar</p>
     <div class="sfolds">
     ${secFold('resumos','Resumos da Unidade '+ua,'ano','livro',total?`${total} ${total===1?'resumo':'resumos'} · ${done} ${done===1?'copiado':'copiados'} no caderno`:'Nenhum resumo publicado ainda',
-      `${continuarCard(ua)}<div class="capgrid">${capsDe(y,ua).filter(c=>!c.ocR).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
+      `<div class="capgrid">${capsDe(y,ua).filter(c=>!c.ocR).map(capBtn).join('')||'<div class="card empty-card"><b>Nenhum resumo publicado ainda</b></div>'}</div>`)}
     ${acts.length?secFold('atvs','Atividades de fixação','ano','atv',(()=>{const pend=acts.filter(c=>!isSent(c.n)),pr=pend.map(c=>prazoAtv(c)).filter(x=>x&&x>=HOJE).sort()[0];return `${acts.length} ${acts.length===1?'atividade':'atividades'} · ${sent} ${sent===1?'enviada':'enviadas'}${pr?' · próximo prazo '+dm(pr):''}`})(),
       `<div class="atvlist">${acts.map(atvCard).join('')}</div>`):''}
     ${temasDe(y,ua).length?secFold('temas','Aulas de aprofundamento','ano','globo',`${temasDe(y,ua).length} ${temasDe(y,ua).length===1?'aula extra':'aulas extras'} · valem ponto`,
@@ -4369,7 +4394,7 @@ function vAtividades(){
     <div><span class="ypill">${y.label} · Turma ${esc(S.turma)}</span><h1 style="margin-top:6px">Atividades</h1></div>
     <div class="atv-top"><div class="at-row"><span class="at-ic" aria-hidden="true">${SECIC.atv}</span><span class="at-tx"><b>Atividades de fixação</b><span>Unidade ${y.atual} · vale nota</span></span>${atuais.length?`<span class="at-num">${sent}/${atuais.length}</span>`:''}</div>
       ${atuais.length?`<div class="bar" role="img" aria-label="${sent} de ${atuais.length} enviadas"><i style="width:${Math.round(sent/atuais.length*100)}%"></i></div><span class="at-sub">${sent} de ${atuais.length} atividades enviadas</span>`:''}</div>
-    <div class="atv-regra"><b>Como funciona</b><span>Responda com atenção e uma única vez: vale a resposta mais antiga. Depois de enviar o formulário, volte aqui e toque em <b>Já enviei</b>.</span></div>
+    <div class="atv-regra"><b>Como funciona</b><span>Cada atividade vale de 0 a 10, e a média delas é a sua <b>Nota 2</b>. Vale só o primeiro envio, até o prazo.</span><button class="link nf-ir" data-gonotas="1">Como a nota é formada ›</button></div>
     ${atuais.length?`<div class="atvlist">${atuais.map(atvCard).join('')}</div>`:'<div class="card empty-card"><b>Nenhuma atividade publicada nesta unidade</b><span class="meta">Quando o professor publicar, ela aparece aqui.</span></div>'}
     ${(()=>{const ts=[...y.list].sort((a,b)=>(b.n===y.atual)-(a.n===y.atual)||b.n-a.n).filter(u=>liberada(u.n,y)).flatMap(u=>(u.temas||[]).filter(t=>t.resumo||temAtv(t)));
       const tf=ts.filter(t=>isSent('t'+t.n)).length;
@@ -4408,14 +4433,14 @@ function render(){
   if(adjusting)cancelAdjust();
   hideBar();
   if(S.tab==='prof'&&!PROF())S.tab='home';
-  if(S.tab!=='sobre'&&S.tab!=='prof'&&S.tab!=='guia'&&(S.tab!=='home'||S.cap)&&(!DATA||!S.turma||!YEARS[anoT()])){S.tab='home';S.cap=null}
+  if(S.tab!=='sobre'&&S.tab!=='prof'&&S.tab!=='guia'&&S.tab!=='notas'&&(S.tab!=='home'||S.cap)&&(!DATA||!S.turma||!YEARS[anoT()])){S.tab='home';S.cap=null}
   document.querySelector('.tabs').hidden=!S.turma||!DATA||(S.tab==='home'&&!S.cap&&!S.turma);
   const tl=document.querySelector('[data-tab=turma] .tl');if(tl)tl.textContent=S.turma?'Turma '+S.turma:'Turma';
   const dot=document.querySelector('[data-tab=turma]');if(dot)dot.classList.toggle('has-new',!!(S.turma&&DATA&&(avisosNovos().length||muralNaoLidos(S.turma))));
   document.body.classList.toggle('lendo',!!S.cap);
   if(!S.cap&&document.body.classList.contains('foco'))focoSair();
   document.body.classList.remove('y7','y8','y9','my7','my8','my9');if(S.turma&&S.tab!=='home')document.body.classList.add('y'+anoT());if(MINHA&&T2A[MINHA])document.body.classList.add('my'+T2A[MINHA]);
-  $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre,prof:vProf,guia:vGuia}[S.tab]();
+  $('#view').innerHTML=S.cap?vCap(S.cap):{home:vHome,turma:vTurma,resumos:vResumos,atividades:vAtividades,calendario:vCalendario,sobre:vSobre,prof:vProf,guia:vGuia,notas:vNotas}[S.tab]();
   if(S.tab==='home'&&!S.cap){const d0=diaLista()[0],el=document.getElementById('dia');if(d0&&el&&el.open&&!diaVistos().includes(d0.id))setTimeout(()=>diaMarcar(d0.id),1500)}
   if(PROF()&&!S.cap&&['resumos','atividades','calendario'].includes(S.tab)&&S.turma)$('#view').insertAdjacentHTML('afterbegin',profTurmas());
   if(PROF())$('#view').insertAdjacentHTML('afterbegin',profBarra());
@@ -4529,6 +4554,7 @@ document.addEventListener('click',ev=>{
   const pin=t.closest('.pin');if(pin){viewNote(pin.dataset.note);return}
   const sp=t.closest('.ann');if(sp&&getSelection().isCollapsed&&!adjusting){const ids=sp.dataset.ids.split(' ');const k=ids.indexOf(editing);editing=k>0?ids[k-1]:ids[ids.length-1];pending=null;showBar('edit');if(ids.length>1)toast('Há '+ids.length+' marcações aqui. Toque de novo para editar a outra.');return}
   if(pendingRender&&(t.closest('.tab')||t.closest('[data-back]')||t.closest('[data-go]')))pendingRender=false;
+  if(t.closest('[data-goatv]'))return go('atividades');if(t.closest('[data-gonotas]'))return go('notas');
   const tab=t.closest('.tab');if(tab){if(tab.dataset.tab==='turma')return abrirTurmas(tab);return go(tab.dataset.tab)}
   if(t.closest('#profEntrar'))return PROF()?go('prof'):profEntrar();
   if(t.closest('#profSair'))return profSair();

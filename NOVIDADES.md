@@ -8,6 +8,11 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.25.0 · 10/11/2026
+
+- **Como sua nota é formada:** página nova no menu lateral (Nota 1: desempenho e caderno; Nota 2: atividades de fixação; Nota 3: prova; média do período; recuperação paralela pelas aulas de aprofundamento; recuperação). Atalhos na aba Atividades ("Como a nota é formada ›") e em Sobre (o texto antigo, desatualizado, foi trocado).
+- **Onde você parou:** seção própria na página da turma, acima de "Para estudar", com o texto que o aluno estava lendo/copiando (resumo ou aula de aprofundamento, cada um com seu rótulo e ícone) e a atividade de fixação começada e não enviada (abre na questão em que parou). Saiu de dentro de "Resumos da Unidade".
+
 ## 1.24.0 · 09/11/2026
 
 - No fim do resumo, a atividade de fixação virou um **convite discreto** (cartão claro, borda tracejada): "Quer fazer a atividade de fixação? … Se quiser, faça agora. Ou depois, pela aba Atividades". Sem a lista de regras (elas aparecem na identificação, antes de começar). Parou no meio: "Continuar agora". Já enviou: uma linha com a nota.
