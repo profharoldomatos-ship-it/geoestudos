@@ -1797,7 +1797,7 @@ const SPK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="c
 const ttsOk=()=>'speechSynthesis' in window&&'SpeechSynthesisUtterance' in window;
 const TTS={on:false,parado:false,idx:0,blocos:[],partes:[],p:0,vel:store.get('ttsVel',1)};
 function vozPT(){const vs=speechSynthesis.getVoices();return vs.find(v=>/^pt[-_]BR/i.test(v.lang))||vs.find(v=>/^pt/i.test(v.lang))||null}
-if(ttsOk())speechSynthesis.onvoiceschanged=()=>{};
+// v1.26.1: a voz só é preparada quando o aluno toca em "Ouvir". Prepará-la ao abrir o app acordava o serviço de voz do Android, e o celular mostrava o microfone "em uso pelo Chrome".
 function partesDe(txt){const out=[];txt.replace(/\s+/g,' ').trim().split(/(?<=[.!?;:])\s+/).forEach(f=>{while(f.length>220){const k=f.lastIndexOf(' ',220);out.push(f.slice(0,k>40?k:220));f=f.slice(k>40?k+1:220)}if(f)out.push(f)});return out}
 
 /* ===== Revisão rápida: autoavaliação sem nota =====
@@ -1966,6 +1966,7 @@ function muralFold(){
   return secFold('mural','Mural de avisos','turma','mega',resumo,pe+corpo,nov?`<span class="sf-badge">${nov} ${nov===1?'novo':'novos'}</span>`:'');
 }
 function ttsDica(){
+  if(!speechSynthesis.getVoices().length)return;   // vozes ainda carregando: não dá para saber se falta o português
   const n=store.get('ttsDica',0);const semPT=!vozPT()||!/^pt[-_]BR/i.test((vozPT()||{}).lang||'');
   if(n<0||(n>=3&&!semPT))return;store.set('ttsDica',n+1);
   document.querySelector('.ttsdica')?.remove();
@@ -1980,7 +1981,7 @@ function ttsIniciar(){
   TTS.blocos=[...document.querySelectorAll('.resumo [data-b], .tt-texto [data-b]')];
   if(!TTS.blocos.length)return;
   const topo=TTS.blocos.findIndex(b=>b.getBoundingClientRect().bottom>90);
-  TTS.idx=Math.max(0,topo);TTS.on=true;TTS.parado=false;setTimeout(ttsDica,400);ttsBarra();ttsBloco();
+  TTS.idx=Math.max(0,topo);TTS.on=true;TTS.parado=false;if(!speechSynthesis.getVoices().length)speechSynthesis.onvoiceschanged=()=>{speechSynthesis.onvoiceschanged=null};setTimeout(ttsDica,1500);ttsBarra();ttsBloco();
 }
 function ttsBloco(){
   document.querySelectorAll('.falando').forEach(e=>e.classList.remove('falando'));
@@ -2702,7 +2703,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.26.0',APP_DATA='2026-11-10';
+const APP_VERSAO='1.26.1',APP_DATA='2026-11-19';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
