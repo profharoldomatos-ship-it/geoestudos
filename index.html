@@ -815,6 +815,9 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .nf-l{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;line-height:1.5}.nf-ir{align-self:flex-start;font-weight:700}
 .nf-media{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;background:var(--pen-soft);border:2px solid var(--pen);border-radius:16px;padding:14px}.nf-media>b{font-family:var(--display);font-size:1.25rem}
 .onde{display:flex;flex-direction:column;gap:10px}
+.top-prof{display:flex;flex-direction:column;gap:8px;border:1.5px dashed color-mix(in srgb,var(--year) 45%,transparent)}
+.top-l{margin:0;padding:0;list-style:none;color:var(--muted);display:flex;flex-direction:column;gap:4px;line-height:1.4}.top-l li{padding-left:22px;position:relative}.top-l li::before{content:'🔒';position:absolute;left:0;font-size:.8em;top:.15em}.top-px{color:var(--ink);font-weight:700}
+.top-a{display:flex;flex-wrap:wrap;gap:8px}
 .tt-sala{display:inline-block;font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--year) 12%,var(--surface));color:var(--ink)}
 .tt-emsala{display:flex;gap:12px;align-items:flex-start}.tt-emsala b{display:block;margin-bottom:2px}.cont-atv .cont-ic{background:var(--hl-soft);color:var(--ink)}
 .sb-p{margin:0;line-height:1.6}
@@ -1486,6 +1489,7 @@ function liberarRascunho(c){
     ${op('manter',av.rasc?'Deixar em rascunho':'Manter em teste',av.rasc?'A avaliação continua fora do app.':'Continua só no modo professor.',!av.rasc)}</div>`;
   sheet(`<h2>Liberar para os alunos?</h2><p style="margin:0"><b>${esc(nome)}</b></p><p class="meta" style="margin:0">${c.tema?'A aula'+(c.atividadeTexto?' e a atividade':''):'O resumo'} passa${c.tema&&c.atividadeTexto?'m':''} a aparecer para as turmas do ${esc(Y().label)} em 1 a 3 minutos. No Drive, a marca “[rascunho]” sai do nome do arquivo.</p>
     ${avHtml}
+    ${!c.tema?`<label class="lb-op lb-top"><input type="checkbox" id="lbTop"><span><b>Liberar só o tópico 1</b><small>O resto você libera depois, no próprio resumo (modo professor).</small></span></label>`:''}
     <div class="pav-bts"><button class="btn btn-primary" id="lbSim">Liberar agora</button><button class="btn btn-ghost" data-close>Agora não</button></div>`,
   (o,close)=>{const b=o.querySelector('#lbSim'),pzI=o.querySelector('#lbPrazo');
     if(pzI)pzI.addEventListener('focus',()=>{const r=o.querySelector('input[name=lbav][value=alunos]');if(r)r.checked=true});
@@ -1494,7 +1498,8 @@ function liberarRascunho(c){
     const modo=av?(o.querySelector('input[name=lbav]:checked')||{}).value||'manter':'manter',prazo=pzI?pzI.value:'';
     if(modo==='alunos'&&(!prazo||prazo<HOJE)){toast('Escolha a data do prazo (hoje ou depois).');pzI&&pzI.focus();return}
     b.disabled=true;b.textContent='Liberando…';
-    try{for(const id of docs){const j=await ppChamar({acao:'rasc.publicar',id});if(!j.ok){volta();close();return toast(j.erro||'Não foi possível liberar.')}}
+    try{if(o.querySelector('#lbTop')?.checked&&c.doc){const jt=await ppChamar({acao:'top.liberar',doc:c.doc,n:1});if(!jt.ok){volta();return toast(jt.erro||'Não foi possível liberar só o tópico 1.')}}
+      for(const id of docs){const j=await ppChamar({acao:'rasc.publicar',id});if(!j.ok){volta();close();return toast(j.erro||'Não foi possível liberar.')}}
       let msgAv='';
       if(av&&modo!=='manter'){const j=await ppChamar({acao:'rasc.aval',id:av.doc,modo,prazo});
         msgAv=j.ok?(modo==='teste'?' A avaliação ficou em teste: só você vê.':` A avaliação sai para os alunos, com prazo em ${dm(prazo)}.`):' A aula saiu, mas a avaliação não: '+(j.erro||'tente pelo Painel › Rascunhos.')}
@@ -1540,7 +1545,9 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const Y=()=>YEARS[anoT()]||{list:[],units:{}};
 const key=n=>anoT()+'-'+n;
-const isCopied=n=>!!S.copied[key(n)];
+// v1.27: com o resumo liberado por tópicos, "copiado" guarda até que tópico o aluno copiou
+const isCopied=n=>{const v=S.copied[key(n)];if(!v)return false;if(v===true)return true;const c=capOf(n);return !!(c&&c.top&&v>=c.top.lib)};
+const copiadoAte=n=>{const v=S.copied[key(n)];return typeof v==='number'?v:0};
 /* v1.22: Atividade de Fixação feita no app (Doc "NN Fixação") conta como enviada sozinha */
 const fixVisivel=c=>!!(c&&c.fix&&c.fix.qs&&c.fix.qs.length&&(!c.fix.teste||PROF()));
 const temAtvCap=c=>!!(c&&(c.atividade||fixVisivel(c)));
@@ -2703,7 +2710,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.26.1',APP_DATA='2026-11-19';
+const APP_VERSAO='1.27.0',APP_DATA='2026-11-19';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3066,9 +3073,10 @@ function vCap(n){
     ${profEditCap(c)}
     <div class="read-tools"><button class="tool rt-back" data-back aria-label="Voltar aos resumos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button><button class="tool" id="apresBtn" aria-label="Apresentar na TV ou no projetor">${APRIC}<span class="rt-lbl">Apresentar</span></button></div>
     <div class="paper"><div class="resumo" style="--fs:${S.size}"></div></div>
+    ${topBreve(c,n)}
     <div class="card copy-card${done?' is-done':''}">
-      <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${done?CHECK+' Copiado no caderno':'Já copiei este resumo no caderno'}</button>
-      <span class="meta">Marque quando terminar de copiar. Fica salvo só no seu celular.</span>
+      <button class="copy-btn" id="copyBtn" aria-pressed="${done}">${copyRot(c,n,done)}</button>
+      <span class="meta">${c.top&&!done&&copiadoAte(n)?'O resumo ganhou mais conteúdo: copie a parte nova e marque de novo.':'Marque quando terminar de copiar. Fica salvo só no seu celular.'}</span>
     </div>
     ${avCard(c,n)}
     ${revCard(c,n)}
@@ -3154,6 +3162,21 @@ function profEdit(itens){
   return `<div class="profedit"><span class="pe-t">${PROFIC}Professor</span><div class="pe-b">${ok.map(([l,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}${EXTIC}</a>`).join('')}</div></div>`;
 }
 function pastaUnidade(ano,u,temas){const a=(profP().anos||[]).find(x=>String(x.ano)===String(ano));const un=a&&(a.unidades||[]).find(x=>+x.n===+u);return un?(temas?un.temas||un.url:un.url):''}
+/* v1.27: resumo liberado aos poucos, por tópicos (## do Doc). O robô publica só os liberados e manda c.top={lib,total,prox:[títulos]} */
+function copyRot(c,n,done){
+  if(!c.top||!PROF())return done?CHECK+' Copiado no caderno':'Já copiei este resumo no caderno';
+  const l=c.top.lib;return done?`${CHECK} Copiado até o tópico ${l}`:copiadoAte(n)?`Já copiei até o tópico ${l}`:(l===1?'Já copiei o tópico 1':`Já copiei os tópicos 1 a ${l}`);
+}
+function topBreve(c,n){
+  // v1.27: só o professor vê a liberação por tópicos; o aluno vê apenas o que já foi liberado
+  if(!PROF()||!c.doc||!(c.top||c.ntop>1))return '';
+  const t=c.top,d=esc(c.doc);
+  if(!t)return `<div class="card top-prof"><span class="eyebrow">Liberação por tópicos · só você vê</span><span class="meta">Os alunos veem <b>todos os ${c.ntop} tópicos</b>.</span><div class="top-a"><button class="btn btn-ghost" data-top="1" data-topdoc="${d}">Liberar aos poucos: só o tópico 1</button></div></div>`;
+  return `<div class="card top-prof"><span class="eyebrow">Liberação por tópicos · só você vê</span>
+    <span class="meta">Os alunos veem <b>${t.lib} de ${t.total} tópicos</b> (até o fim do tópico ${t.lib}).</span>
+    <div class="top-a"><button class="btn fxc-go" data-top="${t.lib+1}" data-topdoc="${d}">Liberar o tópico ${t.lib+1}</button>${t.lib>1?`<button class="btn btn-ghost" data-top="${t.lib-1}" data-topdoc="${d}">Voltar um</button>`:''}<button class="btn btn-ghost" data-top="0" data-topdoc="${d}">Liberar tudo</button></div>
+    <span class="meta">Ao liberar mais, os alunos da turma recebem um aviso. Leva de 1 a 3 minutos para aparecer.</span></div>`;
+}
 function profEditCap(c){
   if(!PROF()||!c)return '';
   const y=Y(),P=profP();
@@ -4613,7 +4636,11 @@ document.addEventListener('click',ev=>{
   if(t.closest('#pushRecheck'))return rechecarPush(true);
   if(t.closest('#retryBtn')){LOAD='carregando';render();return carregar()}
   if(t.closest('#installBtn')){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(()=>{deferredPrompt=null})}else installHelp();return}
-  if(t.closest('#copyBtn')){const k=key(S.cap),c=capOf(S.cap);let gain=false;if(S.copied[k])delete S.copied[k];else{S.copied[k]=true;gain=true}store.set('copied',S.copied);const y=scrollY;render();scrollTo(0,y);
+  const tpb=t.closest('[data-top]');if(tpb){const n=+tpb.dataset.top;tpb.disabled=true;
+    ppChamar({acao:'top.liberar',doc:tpb.dataset.topdoc,n}).then(j=>{if(!j.ok){tpb.disabled=false;return toast(j.erro||'Não foi possível mudar.')}
+      const c=(Y().list||[]).flatMap(u=>u.caps||[]).find(x=>x.doc===tpb.dataset.topdoc);if(c){if(n===0||n>=(c.ntop||0))delete c.top;else c.top={lib:n,total:c.ntop}}render();
+      toast(n===0?'Tudo liberado. Aparece para os alunos em 1 a 3 minutos.':`Os alunos vão ver até o tópico ${n} em 1 a 3 minutos.`)}).catch(()=>{tpb.disabled=false;toast('Sem conexão. Tente de novo com internet.')});return}
+  if(t.closest('#copyBtn')){const k=key(S.cap),c=capOf(S.cap);let gain=false;if(isCopied(S.cap))delete S.copied[k];else{S.copied[k]=c.top?c.top.lib:true;gain=true}store.set('copied',S.copied);const y=scrollY;render();scrollTo(0,y);
     if(gain&&c.tema){cheer('resumo',`Aula de aprofundamento ${c.n} registrada como estudada.`);return}
     if(gain){const all=pubs(Y()).every(x=>isCopied(x.n));all&&c.u===Y().atual?cheer('unidade',`Todos os resumos da Unidade ${c.u} copiados no caderno.`):cheer('resumo',`Resumo do Capítulo ${c.n} registrado como copiado.`)}return}
   const sb=t.closest('#sentBtn')||t.closest('[data-sent]');if(sb){const n=sb.dataset.sent?capId(sb.dataset.sent):S.cap,k=key(n);let gain=false;if(S.sent[k])delete S.sent[k];else{S.sent[k]=true;gain=true}store.set('sent',S.sent);const y=scrollY;render();scrollTo(0,y);

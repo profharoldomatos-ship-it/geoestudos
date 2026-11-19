@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-09 · questões escritas nas fixações v30';
+const VERSAO_ROBO = '2026-11-19 · resumo liberado por tópicos v31';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -724,6 +724,7 @@ function montarAnos_(conf, conteudo, docs, anterior) {
     });
   }));
   // PDF gerado do próprio Doc (refeito só quando o Doc muda)
+  const topLib = topLer_();
   let pdfsNovos = 0;
   const pdfDe = (id, at, nome) => {
     const ant = antPdf[id];
@@ -760,12 +761,14 @@ function montarAnos_(conf, conteudo, docs, anterior) {
       cap.doc = d.id;
       cap.atualizado = d.atualizado;
       const ant = antCaps[d.id];
-      if (ant && ant.resumo && ant.atualizado === d.atualizado) cap.resumo = ant.resumo;
+      // v31: resumo liberado por tópicos publica só um trecho; aí o texto inteiro é lido de novo do Doc
+      if (ant && ant.resumo && ant.atualizado === d.atualizado && !ant.top) cap.resumo = ant.resumo;
       else {
         try { cap.resumo = docParaTexto_(DocumentApp.openById(d.id)); }
         catch (err) { Logger.log('Não consegui ler o Doc ' + d.id + ': ' + err); cap.resumo = ant ? ant.resumo : ''; }
       }
-      cap.pdfDoc = pdfDe(d.id, d.atualizado, 'GeoEstudos · ' + ano + 'º ano · Cap. ' + n + ' – ' + (cap.titulo || d.nome));
+      topicosAplicar_(cap, topLib[d.id]);
+      cap.pdfDoc = cap.top ? '' : pdfDe(d.id, d.atualizado, 'GeoEstudos · ' + ano + 'º ano · Cap. ' + n + ' – ' + (cap.titulo || d.nome));
     });
     // Revisão rápida: perguntas do Doc "NN Revisão" (o app sorteia 6 e embaralha as alternativas)
     const rAno = (docs.revs || {})[ano] || {};
@@ -935,6 +938,20 @@ function calcularAvisos_(dados, anterior, conf) {
       const exc = turmasOcultas_(dados.ocultos, a, c.n, 'resumo');
       if (exc.length < a.turmas.length) avisos.push(Object.assign({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Resumo novo no app', texto: 'Capítulo ' + c.n + ': ' + c.titulo + '. Leia e copie no caderno.', cap: c.n }, exc.length ? { exceto: exc } : {}));
     }
+  })));
+
+  // v31: aviso quando o professor libera mais tópicos de um resumo (sem dizer o que falta)
+  const antTop = {};
+  anterior.anos.forEach(a => a.unidades.forEach(u => u.caps.forEach(c => { if (c.doc && c.resumo) antTop[a.ano + '-' + c.n] = c.top ? c.top.lib : 999; })));
+  dados.anos.forEach(a => a.unidades.forEach(u => u.caps.forEach(c => {
+    const k = a.ano + '-' + c.n, antes = antTop[k];
+    if (antes === undefined || antes === 999 || !c.resumo) return;
+    const agoraLib = c.top ? c.top.lib : 999;
+    if (agoraLib <= antes) return;
+    const id = 'rt-' + k + '-' + (c.top ? c.top.lib : 'tudo');
+    if (ja[id]) return;
+    const exc = turmasOcultas_(dados.ocultos, a, c.n, 'resumo');
+    if (exc.length < a.turmas.length) avisos.push(Object.assign({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Resumo atualizado', texto: 'Capítulo ' + c.n + ': ' + c.titulo + '. Saiu mais uma parte do resumo. Leia e copie no caderno.', cap: c.n }, exc.length ? { exceto: exc } : {}));
   })));
 
   const antTemas = {};
@@ -1552,6 +1569,7 @@ function painelAcao_(b) {
     if (a === 'oc.mudar') return ocultosMudar_(b);
     if (a === 'fix.ler') return { ok: true, fix: fixConf_() };
     if (a === 'fix.salvar') return fixSalvar_(b);
+    if (a === 'top.liberar') return topLiberar_(b);
     if (a === 'esc.listar') return escListar_(b);
     if (a === 'esc.salvar') return escSalvar_(b);
     if (a === 'conf.ler') return confLer_();
@@ -1743,6 +1761,39 @@ function ocultosMudar_(b) {
     PropertiesService.getScriptProperties().setProperty('ocultos', JSON.stringify(oc));
     agendarAtualizacaoPainel_();
     return { ok: true, ocultos: oc };
+  } finally { lock.releaseLock(); }
+}
+/* ------------------------------------------------------------------ */
+/* v31: resumo liberado aos poucos, por tópicos (títulos "##" do Doc)   */
+/* ------------------------------------------------------------------ */
+/** { idDoDoc: quantos tópicos os alunos veem } — resumo sem entrada = inteiro. */
+function topLer_() {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('topLib') || '{}') || {}; } catch (e) { return {}; }
+}
+/** Corta o resumo no fim do tópico liberado. Publica cap.ntop (total de tópicos) e, se cortado, cap.top = {lib, total}; o PDF some até liberar tudo. */
+function topicosAplicar_(cap, lib) {
+  const partes = String(cap.resumo || '').split(/(?=^## )/m);
+  const ntop = partes.length - 1;
+  cap.ntop = ntop;
+  delete cap.top;
+  if (!lib || ntop < 2 || lib >= ntop) return;
+  cap.resumo = partes.slice(0, lib + 1).join('').replace(/\s+$/, '');
+  cap.top = { lib: lib, total: ntop };
+  cap.pdf = '';
+}
+/** Painel: quantos tópicos de um resumo os alunos veem (n = 0: tudo). */
+function topLiberar_(b) {
+  const doc = String(b.doc || '').replace(/[^\w-]/g, ''), n = parseInt(b.n, 10);
+  if (!doc) return { ok: false, erro: 'Resumo não encontrado.' };
+  if (!(n >= 0 && n <= 99)) return { ok: false, erro: 'Número de tópicos inválido.' };
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return { ok: false, erro: 'O robô está ocupado agora. Tente de novo em alguns segundos.' };
+  try {
+    const t = topLer_();
+    if (n === 0) delete t[doc]; else t[doc] = n;
+    PropertiesService.getScriptProperties().setProperty('topLib', JSON.stringify(t));
+    agendarAtualizacaoPainel_();
+    return { ok: true, lib: n };
   } finally { lock.releaseLock(); }
 }
 /* ------------------------------------------------------------------ */

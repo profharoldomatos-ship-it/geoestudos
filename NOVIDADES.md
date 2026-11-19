@@ -8,6 +8,12 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.27.0 · 19/11/2026 (com o robô v31)
+
+- **Resumo liberado por tópicos** (os títulos "##" do Doc). No modo professor, no fim do resumo: "Os alunos veem 3 de 5 tópicos" com **Liberar o tópico 4**, **Voltar um** e **Liberar tudo**; num resumo inteiro, "Liberar aos poucos: só o tópico 1". No "Liberar para os alunos" dos rascunhos de resumo: opção **Liberar só o tópico 1**.
+- O aluno vê só o que foi liberado, sem nenhuma indicação do que falta. Ao liberar mais, a turma recebe o aviso "Resumo atualizado". O "Já copiei" volta a ficar pendente quando sai parte nova.
+- O robô publica só o trecho liberado (o resto não vai para os dados do app) e tira o PDF do resumo até liberar tudo.
+
 ## 1.26.1 · 19/11/2026 (correção)
 
 - O app não prepara mais a voz do "Ouvir" ao abrir: isso acordava o serviço de voz do Android, que mostrava o microfone "em uso pelo Chrome". Agora a voz só é chamada quando o aluno toca em "Ouvir".
