@@ -1493,7 +1493,7 @@ function liberarRascunho(c){
     ${op('manter',av.rasc?'Deixar em rascunho':'Manter em teste',av.rasc?'A avaliação continua fora do app.':'Continua só no modo professor.',!av.rasc)}</div>`;
   sheet(`<h2>Liberar para os alunos?</h2><p style="margin:0"><b>${esc(nome)}</b></p><p class="meta" style="margin:0">${c.tema?'A aula'+(c.atividadeTexto?' e a atividade':''):'O resumo'} passa${c.tema&&c.atividadeTexto?'m':''} a aparecer para as turmas do ${esc(Y().label)} em 1 a 3 minutos. No Drive, a marca “[rascunho]” sai do nome do arquivo.</p>
     ${avHtml}
-    ${!c.tema?`<label class="lb-op lb-top"><input type="checkbox" id="lbTop"><span><b>Liberar só o tópico 1</b><small>O resto você libera depois, no próprio resumo (modo professor).</small></span></label>`:''}
+    <label class="lb-op lb-top"><input type="checkbox" id="lbTop"><span><b>Liberar só o tópico 1</b><small>O resto você libera depois, no topo ${c.tema?'da aula':'do resumo'} (modo professor).</small></span></label>
     <div class="pav-bts"><button class="btn btn-primary" id="lbSim">Liberar agora</button><button class="btn btn-ghost" data-close>Agora não</button></div>`,
   (o,close)=>{const b=o.querySelector('#lbSim'),pzI=o.querySelector('#lbPrazo');
     if(pzI)pzI.addEventListener('focus',()=>{const r=o.querySelector('input[name=lbav][value=alunos]');if(r)r.checked=true});
@@ -2719,7 +2719,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.28.1',APP_DATA='2026-11-25';
+const APP_VERSAO='1.28.2',APP_DATA='2026-11-25';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
