@@ -10,6 +10,8 @@ A versão aparece no fim da página do app e no painel do professor. O robô tem
 
 ## 1.28.2 · 25/11/2026
 
+- Manual do Professor: capítulo 23 novo, "Liberar textos por tópicos" (págs. 65–66), com entrada no sumário.
+
 - "Liberar só o tópico 1" também no "Liberar para os alunos" dos rascunhos de **aula de aprofundamento**.
 
 ## 1.28.1 · 25/11/2026 (com o robô v33)
