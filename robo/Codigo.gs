@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-19 · resumo liberado por tópicos v31';
+const VERSAO_ROBO = '2026-11-25 · liberação por tópicos com lista v32';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -1570,6 +1570,7 @@ function painelAcao_(b) {
     if (a === 'fix.ler') return { ok: true, fix: fixConf_() };
     if (a === 'fix.salvar') return fixSalvar_(b);
     if (a === 'top.liberar') return topLiberar_(b);
+    if (a === 'top.titulos') return topTitulos_(b);
     if (a === 'esc.listar') return escListar_(b);
     if (a === 'esc.salvar') return escSalvar_(b);
     if (a === 'conf.ler') return confLer_();
@@ -1780,6 +1781,15 @@ function topicosAplicar_(cap, lib) {
   cap.resumo = partes.slice(0, lib + 1).join('').replace(/\s+$/, '');
   cap.top = { lib: lib, total: ntop };
   cap.pdf = '';
+}
+/** Painel: títulos de todos os tópicos de um resumo (para o professor marcar até onde liberar). */
+function topTitulos_(b) {
+  const doc = String(b.doc || '').replace(/[^\w-]/g, '');
+  if (!doc) return { ok: false, erro: 'Resumo não encontrado.' };
+  try {
+    const txt = docParaTexto_(DocumentApp.openById(doc));
+    return { ok: true, titulos: txt.split('\n').filter(l => /^## /.test(l)).map(l => l.slice(3).trim()) };
+  } catch (e) { return { ok: false, erro: 'Não consegui ler o Doc do resumo.' }; }
 }
 /** Painel: quantos tópicos de um resumo os alunos veem (n = 0: tudo). */
 function topLiberar_(b) {

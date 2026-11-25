@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.28.0 · 25/11/2026 (com o robô v32)
+
+- **Liberação por tópicos no topo do resumo** (modo professor): caixa recolhível que mostra o estado ("Os alunos veem 3 de 5 tópicos") e, aberta, a lista de todos os tópicos do Doc com caixas de marcar. Marcar um tópico marca os anteriores; desmarcar um desmarca os seguintes. "Salvar liberação" grava. O robô v32 envia os títulos dos tópicos ainda não liberados (só para o professor).
+
 ## 1.27.0 · 19/11/2026 (com o robô v31)
 
 - **Resumo liberado por tópicos** (os títulos "##" do Doc). No modo professor, no fim do resumo: "Os alunos veem 3 de 5 tópicos" com **Liberar o tópico 4**, **Voltar um** e **Liberar tudo**; num resumo inteiro, "Liberar aos poucos: só o tópico 1". No "Liberar para os alunos" dos rascunhos de resumo: opção **Liberar só o tópico 1**.
