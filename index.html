@@ -1514,7 +1514,7 @@ document.addEventListener('change',e=>{const x=e.target.closest&&e.target.closes
   const b=document.getElementById('topBox'),i=+x.dataset.topi;
   b.querySelectorAll('[data-topi]').forEach(y=>{const k=+y.dataset.topi;if(x.checked&&k<i)y.checked=true;if(!x.checked&&k>i)y.checked=false});
   const sv=document.getElementById('topSalvar');if(sv)sv.disabled=topMarcados()===+b.dataset.toplib});
-document.addEventListener('toggle',e=>{if(e.target.id==='topBox'&&e.target.open)topTitulos(e.target.dataset.topdoc)},true);
+document.addEventListener('toggle',e=>{if(e.target.id==='topBox'&&e.target.open)topTitulos(e.target.dataset.topdoc,e.target.dataset.toptema)},true);
 aplicarDados();
 
 /* "Minha turma": a turma do aluno, fixa. Os avisos ficam presos a ela; ver outra turma não muda nada. */
@@ -2719,7 +2719,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.28.0',APP_DATA='2026-11-25';
+const APP_VERSAO='1.28.1',APP_DATA='2026-11-25';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3128,6 +3128,7 @@ function vTema(n,c){
     ${pr?`<div class="prazo">Prazo da atividade: <b>${dm(pr)}</b> · ${quando(pr).toLowerCase()}</div>`:''}</div>
     ${S.tip?`<div class="tip"><span><b>Dica de estudo:</b> selecione qualquer trecho do texto para usar marca-texto, sublinhar, comentar ou pesquisar o significado de uma palavra.</span><button id="tipOk">Entendi</button></div>`:''}
     ${profEditCap(c)}
+    ${topBreve(c,n)}
     <div class="read-tools"><button class="tool rt-back" data-back aria-label="Voltar aos resumos"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Resumos</button>${ttsOk()?`<button class="tool" id="ttsBtn" aria-label="Ouvir o texto">${SPK}Ouvir</button>`:''}<button class="tool" id="readBtn" aria-label="Opções de leitura">Aa</button><button class="tool" id="listBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Marcações <span class="count" id="annCount">0</span></button><button class="tool" id="apresBtn" aria-label="Apresentar na TV ou no projetor">${APRIC}<span class="rt-lbl">Apresentar</span></button></div>
     <div class="paper"><div class="resumo" style="--fs:${S.size}"></div></div>
     <div class="card copy-card${done?' is-done':''}">
@@ -3182,19 +3183,23 @@ const TOPT={};
 function topBreve(c,n){
   if(!PROF()||!c.doc||!(c.top||c.ntop>1))return '';
   const t=c.top,tot=t?t.total:c.ntop,lib=t?t.lib:tot,d=esc(c.doc);
-  const conhecidos=(c.resumo||'').split('\n').filter(l=>/^## /.test(l)).map(l=>l.slice(3).trim());
+  const conhecidos=topTitulosTxt(c.resumo,c.tema);
   const tit=TOPT[c.doc]||conhecidos;
   const itens=[];for(let i=1;i<=tot;i++)itens.push(`<label class="top-i"><input type="checkbox" data-topi="${i}"${i<=lib?' checked':''}><span>${tit[i-1]?esc(tit[i-1]):'Tópico '+i}</span></label>`);
-  return `<details class="card top-prof" id="topBox" data-topdoc="${d}" data-toptot="${tot}" data-toplib="${lib}">
+  return `<details class="card top-prof" id="topBox" data-topdoc="${d}" data-toptema="${c.tema?1:''}" data-toptot="${tot}" data-toplib="${lib}">
     <summary><span class="top-sum"><span class="eyebrow">Liberação por tópicos · só você vê</span><b>${lib>=tot?`Os alunos veem todos os ${tot} tópicos`:`Os alunos veem ${lib} de ${tot} tópicos`}</b></span><span class="top-chev" aria-hidden="true">▾</span></summary>
-    <p class="meta" style="margin:0">Marque até que tópico os alunos podem ver. Marcar um tópico marca também os anteriores.</p>
+    <p class="meta" style="margin:0">${c.tema?'Os tópicos são as linhas em negrito numeradas do Doc (1., 2. … ou A:, B: …). ':''}Marque até que tópico os alunos podem ver. Marcar um tópico marca também os anteriores.</p>
     <div class="top-lista" role="group" aria-label="Tópicos liberados">${itens.join('')}</div>
     <div class="top-a"><button class="btn fxc-go" id="topSalvar" disabled>Salvar liberação</button></div>
     <span class="meta">Ao liberar mais, os alunos da turma recebem um aviso. Leva de 1 a 3 minutos para aparecer.</span></details>`;
 }
+/* mesma regra do robô: resumo usa os títulos "##"; aula de aprofundamento usa as linhas em negrito numeradas ("**1. …**", "**A: …**") */
+function topTitulosTxt(txt,tema){const lin=String(txt||'').split('\n'),h2=[],ng=[];
+  lin.forEach(l=>{if(/^## /.test(l))h2.push(l.slice(3).trim());if(/^\*\*(\d{1,2}|[A-Z])\s*[.:)–-](?!\d)/.test(l))ng.push(l.replace(/\*\*/g,'').trim())});
+  return tema&&ng.length>=2?ng:h2}
 function topMarcados(){const b=document.getElementById('topBox');return b?b.querySelectorAll('[data-topi]:checked').length:0}
-async function topTitulos(doc){
-  if(TOPT[doc])return;try{const j=await ppChamar({acao:'top.titulos',doc});if(j.ok&&j.titulos&&j.titulos.length){TOPT[doc]=j.titulos;
+async function topTitulos(doc,tema){
+  if(TOPT[doc])return;try{const j=await ppChamar({acao:'top.titulos',doc,tema:!!tema});if(j.ok&&j.titulos&&j.titulos.length){TOPT[doc]=j.titulos;
     document.querySelectorAll('#topBox [data-topi]').forEach(x=>{const tt=j.titulos[+x.dataset.topi-1];if(tt)x.nextElementSibling.textContent=tt})}}catch(e){}
 }
 function profEditCap(c){
@@ -4659,7 +4664,7 @@ document.addEventListener('click',ev=>{
   if(t.closest('#topSalvar')){const b=document.getElementById('topBox'),bt=t.closest('#topSalvar'),tot=+b.dataset.toptot,k=topMarcados();
     if(!k)return toast('Marque pelo menos o tópico 1.');const n=k>=tot?0:k;bt.disabled=true;bt.textContent='Salvando…';
     ppChamar({acao:'top.liberar',doc:b.dataset.topdoc,n}).then(j=>{if(!j.ok){bt.disabled=false;bt.textContent='Salvar liberação';return toast(j.erro||'Não foi possível salvar.')}
-      const c=(Y().list||[]).flatMap(u=>u.caps||[]).find(x=>x.doc===b.dataset.topdoc);if(c){if(n===0)delete c.top;else c.top={lib:n,total:tot}}render();
+      const c=(Y().list||[]).flatMap(u=>[...(u.caps||[]),...(u.temas||[])]).find(x=>x.doc===b.dataset.topdoc);if(c){if(n===0)delete c.top;else c.top={lib:n,total:tot}}render();
       toast(n===0?'Tudo liberado. Aparece para os alunos em 1 a 3 minutos.':`Os alunos vão ver até o tópico ${n} em 1 a 3 minutos.`)}).catch(()=>{bt.disabled=false;bt.textContent='Salvar liberação';toast('Sem conexão. Tente de novo com internet.')});return}
   if(t.closest('#copyBtn')){const k=key(S.cap),c=capOf(S.cap);let gain=false;if(isCopied(S.cap))delete S.copied[k];else{S.copied[k]=c.top?c.top.lib:true;gain=true}store.set('copied',S.copied);const y=scrollY;render();scrollTo(0,y);
     if(gain&&c.tema){cheer('resumo',`Aula de aprofundamento ${c.n} registrada como estudada.`);return}

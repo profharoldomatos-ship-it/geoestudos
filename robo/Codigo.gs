@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-25 · liberação por tópicos com lista v32';
+const VERSAO_ROBO = '2026-11-25 · liberação por tópicos também nas aulas de aprofundamento v33';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -716,7 +716,7 @@ function montarAnos_(conf, conteudo, docs, anterior) {
       if (c.fix) antFix[c.fix.doc] = { at: c.atualizadoFix, a: c.fix, err: c.fixErros };
     });
     (u.temas || []).forEach(t => {
-      if (t.doc) antTxt[t.doc] = { at: t.atualizado, txt: t.resumo };
+      if (t.doc && !t.top) antTxt[t.doc] = { at: t.atualizado, txt: t.resumo };   // texto cortado por tópicos não serve de cache
       if (t.docAtividade) antTxt[t.docAtividade] = { at: t.atualizadoAtividade, txt: t.atividadeTexto };
       if (t.doc && t.pdfDoc) antPdf[t.doc] = { at: t.atualizado, pdf: t.pdfDoc };
       if (t.docAtividade && t.pdfAtv) antPdf[t.docAtividade] = { at: t.atualizadoAtividade, pdf: t.pdfAtv };
@@ -767,7 +767,7 @@ function montarAnos_(conf, conteudo, docs, anterior) {
         try { cap.resumo = docParaTexto_(DocumentApp.openById(d.id)); }
         catch (err) { Logger.log('Não consegui ler o Doc ' + d.id + ': ' + err); cap.resumo = ant ? ant.resumo : ''; }
       }
-      topicosAplicar_(cap, topLib[d.id]);
+      topicosAplicar_(cap, topLib[d.id], 'cap');
       cap.pdfDoc = cap.top ? '' : pdfDe(d.id, d.atualizado, 'GeoEstudos · ' + ano + 'º ano · Cap. ' + n + ' – ' + (cap.titulo || d.nome));
     });
     // Revisão rápida: perguntas do Doc "NN Revisão" (o app sorteia 6 e embaralha as alternativas)
@@ -833,7 +833,8 @@ function montarAnos_(conf, conteudo, docs, anterior) {
       if (d.aula) {
         if (!t.titulo) t.titulo = d.aula.nome;
         t.doc = d.aula.id; t.atualizado = d.aula.atualizado; t.resumo = textoDoc(d.aula);
-        t.pdfDoc = pdfDe(d.aula.id, d.aula.atualizado, 'GeoEstudos · ' + ano + 'º ano · Aula de aprofundamento ' + n + ' – ' + (t.titulo || d.aula.nome));
+        topicosAplicar_(t, topLib[d.aula.id], 'tema');
+        t.pdfDoc = t.top ? '' : pdfDe(d.aula.id, d.aula.atualizado, 'GeoEstudos · ' + ano + 'º ano · Aula de aprofundamento ' + n + ' – ' + (t.titulo || d.aula.nome));
       }
       if (d.atividade) {
         t.docAtividade = d.atividade.id; t.atualizadoAtividade = d.atividade.atualizado; t.atividadeTexto = textoDoc(d.atividade);
@@ -952,6 +953,20 @@ function calcularAvisos_(dados, anterior, conf) {
     if (ja[id]) return;
     const exc = turmasOcultas_(dados.ocultos, a, c.n, 'resumo');
     if (exc.length < a.turmas.length) avisos.push(Object.assign({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Resumo atualizado', texto: 'Capítulo ' + c.n + ': ' + c.titulo + '. Saiu mais uma parte do resumo. Leia e copie no caderno.', cap: c.n }, exc.length ? { exceto: exc } : {}));
+  })));
+
+  // v33: o mesmo aviso para as aulas de aprofundamento liberadas por tópicos
+  const antTopT = {};
+  anterior.anos.forEach(a => a.unidades.forEach(u => (u.temas || []).forEach(t => { if (t.resumo) antTopT[a.ano + '-' + t.n] = t.top ? t.top.lib : 999; })));
+  dados.anos.forEach(a => a.unidades.forEach(u => (u.temas || []).forEach(t => {
+    const k = a.ano + '-' + t.n, antes = antTopT[k];
+    if (antes === undefined || antes === 999 || !t.resumo) return;
+    const agoraLib = t.top ? t.top.lib : 999;
+    if (agoraLib <= antes) return;
+    const id = 'rtt-' + k + '-' + (t.top ? t.top.lib : 'tudo');
+    if (ja[id]) return;
+    const exc = turmasOcultas_(dados.ocultos, a, 't' + t.n, 'aula');
+    if (exc.length < a.turmas.length) avisos.push(Object.assign({ id: id, quando: agora, ano: a.ano, tipo: 'resumo', titulo: 'Aula de aprofundamento atualizada', texto: 'Aula de aprofundamento ' + t.n + ': ' + t.titulo + '. Saiu mais uma parte do texto.', cap: 't' + t.n }, exc.length ? { exceto: exc } : {}));
   })));
 
   const antTemas = {};
@@ -1772,15 +1787,27 @@ function topLer_() {
   try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('topLib') || '{}') || {}; } catch (e) { return {}; }
 }
 /** Corta o resumo no fim do tópico liberado. Publica cap.ntop (total de tópicos) e, se cortado, cap.top = {lib, total}; o PDF some até liberar tudo. */
-function topicosAplicar_(cap, lib) {
-  const partes = String(cap.resumo || '').split(/(?=^## )/m);
-  const ntop = partes.length - 1;
-  cap.ntop = ntop;
-  delete cap.top;
+/** Onde começa cada tópico. Resumo de capítulo: títulos "## ". Aula de aprofundamento: linhas inteiras em negrito
+    que começam com número ou letra ("**1. …**", "**A: …**"); se não houver, os "## ". */
+function topicosDe_(lin, modo) {
+  const h2 = [], neg = [];
+  lin.forEach((l, i) => {
+    if (/^## /.test(l)) h2.push({ i: i, t: l.slice(3).trim() });
+    if (/^\*\*(\d{1,2}|[A-Z])\s*[.:)–-](?!\d)/.test(l)) neg.push({ i: i, t: l.replace(/\*\*/g, '').trim() });
+  });
+  return modo === 'tema' && neg.length >= 2 ? neg : h2;
+}
+/** Corta o texto no fim do tópico liberado. Publica obj.ntop e, se cortado, obj.top = {lib, total}; o PDF some até liberar tudo. */
+function topicosAplicar_(obj, lib, modo) {
+  const lin = String(obj.resumo || '').split('\n'), tp = topicosDe_(lin, modo), ntop = tp.length;
+  obj.ntop = ntop;
+  delete obj.top;
   if (!lib || ntop < 2 || lib >= ntop) return;
-  cap.resumo = partes.slice(0, lib + 1).join('').replace(/\s+$/, '');
-  cap.top = { lib: lib, total: ntop };
-  cap.pdf = '';
+  const corte = lin.slice(0, tp[lib].i);
+  while (corte.length && (/^\s*$/.test(corte[corte.length - 1]) || /^#{1,3} /.test(corte[corte.length - 1]))) corte.pop();   // sem título solto no fim
+  obj.resumo = corte.join('\n');
+  obj.top = { lib: lib, total: ntop };
+  obj.pdf = '';
 }
 /** Painel: títulos de todos os tópicos de um resumo (para o professor marcar até onde liberar). */
 function topTitulos_(b) {
@@ -1788,7 +1815,7 @@ function topTitulos_(b) {
   if (!doc) return { ok: false, erro: 'Resumo não encontrado.' };
   try {
     const txt = docParaTexto_(DocumentApp.openById(doc));
-    return { ok: true, titulos: txt.split('\n').filter(l => /^## /.test(l)).map(l => l.slice(3).trim()) };
+    return { ok: true, titulos: topicosDe_(txt.split('\n'), b.tema ? 'tema' : 'cap').map(x => x.t) };
   } catch (e) { return { ok: false, erro: 'Não consegui ler o Doc do resumo.' }; }
 }
 /** Painel: quantos tópicos de um resumo os alunos veem (n = 0: tudo). */
