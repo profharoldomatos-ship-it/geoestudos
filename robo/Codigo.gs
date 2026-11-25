@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-25 · liberação por tópicos também nas aulas de aprofundamento v33';
+const VERSAO_ROBO = '2026-11-25 · tópicos "**1 Título**" nas aulas de aprofundamento v34';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -1788,12 +1788,12 @@ function topLer_() {
 }
 /** Corta o resumo no fim do tópico liberado. Publica cap.ntop (total de tópicos) e, se cortado, cap.top = {lib, total}; o PDF some até liberar tudo. */
 /** Onde começa cada tópico. Resumo de capítulo: títulos "## ". Aula de aprofundamento: linhas inteiras em negrito
-    que começam com número ou letra ("**1. …**", "**A: …**"); se não houver, os "## ". */
+    que começam com número ou letra ("**1. …**", "**1 …**", "**A: …**"); se não houver, os "## ". */
 function topicosDe_(lin, modo) {
   const h2 = [], neg = [];
   lin.forEach((l, i) => {
     if (/^## /.test(l)) h2.push({ i: i, t: l.slice(3).trim() });
-    if (/^\*\*(\d{1,2}|[A-Z])\s*[.:)–-](?!\d)/.test(l)) neg.push({ i: i, t: l.replace(/\*\*/g, '').trim() });
+    if (/^\*\*((\d{1,2}|[A-Z])\s*[.:)–-](?!\d)|\d{1,2}\s+[A-Za-zÀ-ú])/.test(l)) neg.push({ i: i, t: l.replace(/\*\*/g, '').trim() });
   });
   return modo === 'tema' && neg.length >= 2 ? neg : h2;
 }

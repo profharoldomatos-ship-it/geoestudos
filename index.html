@@ -2719,7 +2719,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.28.2',APP_DATA='2026-11-25';
+const APP_VERSAO='1.28.3',APP_DATA='2026-11-25';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3195,7 +3195,7 @@ function topBreve(c,n){
 }
 /* mesma regra do robô: resumo usa os títulos "##"; aula de aprofundamento usa as linhas em negrito numeradas ("**1. …**", "**A: …**") */
 function topTitulosTxt(txt,tema){const lin=String(txt||'').split('\n'),h2=[],ng=[];
-  lin.forEach(l=>{if(/^## /.test(l))h2.push(l.slice(3).trim());if(/^\*\*(\d{1,2}|[A-Z])\s*[.:)–-](?!\d)/.test(l))ng.push(l.replace(/\*\*/g,'').trim())});
+  lin.forEach(l=>{if(/^## /.test(l))h2.push(l.slice(3).trim());if(/^\*\*((\d{1,2}|[A-Z])\s*[.:)–-](?!\d)|\d{1,2}\s+[A-Za-zÀ-ú])/.test(l))ng.push(l.replace(/\*\*/g,'').trim())});
   return tema&&ng.length>=2?ng:h2}
 function topMarcados(){const b=document.getElementById('topBox');return b?b.querySelectorAll('[data-topi]:checked').length:0}
 async function topTitulos(doc,tema){
