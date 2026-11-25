@@ -8,6 +8,10 @@ Formato **MAIOR.MENOR.CORREÇÃO** (versionamento semântico):
 
 A versão aparece no fim da página do app e no painel do professor. O robô tem numeração própria (v15, v16…), mostrada no painel e na página de situação.
 
+## 1.29.0 · 25/11/2026 (com o robô v35)
+
+- Texto liberado por tópicos: **no modo professor, o texto aparece inteiro**, com uma faixa amarela "Os alunos veem até aqui" antes do primeiro tópico guardado; o que vem depois fica com uma borda tracejada. Os alunos continuam vendo só o trecho liberado.
+
 ## 1.28.3 · 25/11/2026 (com o robô v34)
 
 - Aulas de aprofundamento: o robô e o app reconhecem também tópicos em negrito sem ponto depois do número ("**1 Números e conceitos**"), como na aula do 8º ano "Maranhão e Nordeste: periferia do quê?".

@@ -815,6 +815,8 @@ body.m-claro{--alerta-soft:#FBECEC;--alerta-ink:#8E1F1F} body.m-sepia{--alerta-s
 .nf-l{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;line-height:1.5}.nf-ir{align-self:flex-start;font-weight:700}
 .nf-media{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;background:var(--pen-soft);border:2px solid var(--pen);border-radius:16px;padding:14px}.nf-media>b{font-family:var(--display);font-size:1.25rem}
 .onde{display:flex;flex-direction:column;gap:10px}
+.top-fim{display:flex;flex-direction:column;gap:2px;margin:.6em 0;padding:10px 14px;border-radius:12px;background:#FFE9A8;border:2px solid #E0A800;color:#3B2F00;font-size:.92rem;line-height:1.35}
+.top-fim b{font-size:1rem;background:none;padding:0}.top-pos{border-left:3px dashed #E0A800;padding-left:10px;margin-left:-13px}
 .top-prof summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer}.top-prof summary::-webkit-details-marker{display:none}
 .top-sum{display:flex;flex-direction:column;gap:2px;flex:1}.top-chev{font-size:1.1rem;transition:transform .2s}.top-prof[open] .top-chev{transform:rotate(180deg)}
 .top-lista{display:flex;flex-direction:column;gap:6px}.top-i{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);line-height:1.35;cursor:pointer}
@@ -1632,7 +1634,11 @@ function loadAnn(){ANN=store.get(annKey(),[])}
 function saveAnn(){store.set(annKey(),ANN)}
 function paintResumo(){
   const el=$('.resumo'),cc=capOf(S.cap);if(!el||!cc||!cc.resumo)return;
-  el.innerHTML=md(cc.resumo);
+  // v1.29: com o texto liberado por tópicos, o professor vê o texto inteiro e uma faixa marcando até onde os alunos veem
+  const profTop=PROF()&&cc.top&&cc.doc,inteiro=profTop?TOPF[cc.doc]:null;
+  if(profTop&&!inteiro)topCarregar(cc);
+  el.innerHTML=md(inteiro||cc.resumo);
+  if(profTop)topMarca(el,cc,!!inteiro);
   const blocks=[...el.querySelectorAll('[data-b]')];
   for(const a of ANN){
     a.lost=false;let t=blocks[a.b]?.textContent;
@@ -2719,7 +2725,7 @@ function vGuia(){
 /* Conteúdo Geográfico do Dia: postado pelo professor na planilha de Configurações (aba Conteúdo do Dia) */
 const DIA_IC='<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="14" ry="34"/><path d="M50 16v68M16 50h68"/></g></svg>';
 /* Versão do app: MAIOR.MENOR.CORREÇÃO. Atualize junto com o histórico em NOVIDADES.md */
-const APP_VERSAO='1.28.3',APP_DATA='2026-11-25';
+const APP_VERSAO='1.29.0',APP_DATA='2026-11-25';
 const versaoTexto=()=>'GeoEstudos · Versão '+APP_VERSAO+' · atualizado em '+APP_DATA.split('-').reverse().join('/');
 const diaLista=()=>(DATA&&DATA.dia)||[];
 const DIA_DECO='<svg class="dia-deco" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><g transform="rotate(-20 50 50)"><circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="15" ry="38"/><ellipse cx="50" cy="50" rx="29" ry="38"/><path d="M50 12v76M12 50h76M17.5 31h65M17.5 69h65"/></g></svg>';
@@ -3197,6 +3203,19 @@ function topBreve(c,n){
 function topTitulosTxt(txt,tema){const lin=String(txt||'').split('\n'),h2=[],ng=[];
   lin.forEach(l=>{if(/^## /.test(l))h2.push(l.slice(3).trim());if(/^\*\*((\d{1,2}|[A-Z])\s*[.:)–-](?!\d)|\d{1,2}\s+[A-Za-zÀ-ú])/.test(l))ng.push(l.replace(/\*\*/g,'').trim())});
   return tema&&ng.length>=2?ng:h2}
+const TOPF={};
+function topCarregar(c){if(TOPF[c.doc]||topCarregar.em===c.doc)return;topCarregar.em=c.doc;
+  ppChamar({acao:'top.titulos',doc:c.doc,tema:!!c.tema}).then(j=>{topCarregar.em='';if(j.ok&&j.texto){TOPF[c.doc]=j.texto;if(j.titulos)TOPT[c.doc]=j.titulos;const cc=capOf(S.cap);if(cc&&cc.doc===c.doc)paintResumo()}}).catch(()=>{topCarregar.em=''})}
+/* faixa "os alunos veem até aqui" antes do primeiro tópico guardado; o resto fica com uma borda tracejada */
+function topMarca(el,c,inteiro){
+  const lib=c.top.lib,fim=document.createElement('div');fim.className='top-fim';fim.setAttribute('role','note');
+  if(!inteiro){fim.innerHTML=`<b>Os alunos veem até aqui</b><span>Carregando o restante do texto, que só você vê…</span>`;el.appendChild(fim);return}
+  const tits=topTitulosTxt(TOPF[c.doc],c.tema),alvo=tits[lib];if(!alvo)return;
+  const nrm=x=>x.replace(/\s+/g,' ').trim();
+  const blocos=[...el.children],i=blocos.findIndex(b=>nrm(b.textContent).startsWith(nrm(alvo).slice(0,40)));if(i<0)return;
+  fim.innerHTML=`<b>Os alunos veem até aqui</b><span>Daqui para baixo, só você vê (tópicos ${lib+1} a ${c.top.total}).</span>`;
+  el.insertBefore(fim,blocos[i]);blocos.slice(i).forEach(b=>b.classList.add('top-pos'));
+}
 function topMarcados(){const b=document.getElementById('topBox');return b?b.querySelectorAll('[data-topi]:checked').length:0}
 async function topTitulos(doc,tema){
   if(TOPT[doc])return;try{const j=await ppChamar({acao:'top.titulos',doc,tema:!!tema});if(j.ok&&j.titulos&&j.titulos.length){TOPT[doc]=j.titulos;

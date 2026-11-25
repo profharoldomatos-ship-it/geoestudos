@@ -23,7 +23,7 @@
  * Não é preciso mexer no código. Tudo o que muda no dia a dia fica nas planilhas, nos Docs e nas agendas.
  */
 
-const VERSAO_ROBO = '2026-11-25 · tópicos "**1 Título**" nas aulas de aprofundamento v34';
+const VERSAO_ROBO = '2026-11-25 · professor vê o texto inteiro com a marca dos tópicos v35';
 
 const GEO = {
   PASTA_APP: '1518J7jjnHF7idCCQp0FY9-uzzJCMHDSq',              // pasta "App Geografia"
@@ -1815,7 +1815,7 @@ function topTitulos_(b) {
   if (!doc) return { ok: false, erro: 'Resumo não encontrado.' };
   try {
     const txt = docParaTexto_(DocumentApp.openById(doc));
-    return { ok: true, titulos: topicosDe_(txt.split('\n'), b.tema ? 'tema' : 'cap').map(x => x.t) };
+    return { ok: true, titulos: topicosDe_(txt.split('\n'), b.tema ? 'tema' : 'cap').map(x => x.t), texto: txt };   // v35: o texto inteiro, só para o professor
   } catch (e) { return { ok: false, erro: 'Não consegui ler o Doc do resumo.' }; }
 }
 /** Painel: quantos tópicos de um resumo os alunos veem (n = 0: tudo). */
